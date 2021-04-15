@@ -63,7 +63,7 @@
   until:        result is succeeded
   retries:      10
   delay:        6
-  delegate_to:  localhost
+  delegate_to:  localhost                                                         # Causes action to happen  on the Ansible Controller
   become:       no
 
 - name:         "Register BOM: {{ bom_base_name }}"
@@ -101,7 +101,7 @@
   until:        result is succeeded
   retries:      10
   delay:        6
-  delegate_to:  localhost
+  delegate_to:  localhost                                                         # Causes action to happen  on the Ansible Controller
   become:       no
   loop:         "{{ bom.materials.dependencies | flatten(levels=1) }}"
   when:         bom.materials.dependencies is defined
