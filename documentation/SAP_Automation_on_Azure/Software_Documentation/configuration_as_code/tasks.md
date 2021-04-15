@@ -45,6 +45,7 @@
 | Task #   | Description Short | Playbook         | role | OS              | Description |
 | -------- | ----------------- | ---------------- | ---- | --------------- | ----------- |
 |  4.0.0   | ----------------- | DB HANA          | ---- | --------------- | ----------- |
+|  4.0.0.1 | task
 |  4.0.1   | ----------------- | DB HANA HSR      | ---- | --------------- | ----------- |
 |  4.1     | ----------------- | DB DB2           | ---- | --------------- | ----------- |
 
@@ -56,11 +57,16 @@
 | Task #   | Description Short | Playbook         | role | OS              | Description |
 | -------- | ----------------- | ---------------- | ---- | --------------- | ----------- |
 |  5.0.0   | ----------------- | SAP SCS          | ---- | --------------- | ----------- |
+|  5.0.0.0 | Install           |                  |      |                 | Register BOM<br>Create INI from Template<br>SWPM Install |
 |  5.0.1   | ----------------- | SAP ERS          | ---- | --------------- | ----------- |
 |  5.1     | ----------------- | SAP DB LOAD      | ---- | --------------- | ----------- |
+|  5.1.0   | Install           |                  |      |                 | Register BOM<br>Create INI from Template<br>SWPM Install |
 |  5.2     | ----------------- | SAP PAS          | ---- | --------------- | ----------- |
+|  5.2.0   | Install           |                  |      |                 | Register BOM<br>Create INI from Template<br>SWPM Install |
 |  5.3     | ----------------- | SAP APP          | ---- | --------------- | ----------- |
+|  5.3.0   | Install           |                  |      |                 | Register BOM<br>Create INI from Template<br>SWPM Install |
 |  5.4     | ----------------- | SAP WEB          | ---- | --------------- | ----------- |
+|  5.4.0   | Install           |                  |      |                 | Register BOM<br>Create INI from Template<br>SWPM Install |
 
 ---
 <br><br>
