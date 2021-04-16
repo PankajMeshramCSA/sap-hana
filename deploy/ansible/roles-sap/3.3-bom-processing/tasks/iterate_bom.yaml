@@ -62,8 +62,8 @@
   retries:  10
   delay:    6
   loop:     "{{ bom.materials.media|flatten(levels=1) }}"
-  # when:     item.download is undefined or
-  #           item.download
+  when:     item.download is undefined or
+            item.download
 
 
 # extract files SAPCAR
