@@ -13,6 +13,7 @@
 # Locals:
 #   bom
 #   item
+#   result
 
 
 
@@ -24,7 +25,7 @@
 
 #------------------<DEBUGGING>-------------------
 - debug:  
-    msg:      "{{ item.archive }}"
+    msg:      "Archive: {{ item.archive }}"
   loop:       "{{ bom.materials.media|flatten(levels=1) }}"
 #------------------</DEBUGGING>------------------
 
@@ -33,6 +34,13 @@
 
 
 # Download Files
+#------------------<DEBUGGING>-------------------
+- debug:  
+    msg:      "URL: {{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
+  loop:       "{{ bom.materials.media|flatten(levels=1) }}"
+#------------------</DEBUGGING>------------------
+
+
 - name: "BOM: Download Files"
   get_url:
     # url:    "{{ item.url }}{% if sapbom.sasToken is not undefined %}{{ sapbom.sasToken }}{% endif %}"
