@@ -14,6 +14,13 @@
 #   bom
 #   item
 #   result
+#
+# BOM Fields:
+#   download
+#   archive
+#   permissions
+#   
+
 
 
 
@@ -24,9 +31,9 @@
     name:       bom
 
 #------------------<DEBUGGING>-------------------
-- debug:  
-    msg:      "Archive: {{ item.archive }}"
-  loop:       "{{ bom.materials.media|flatten(levels=1) }}"
+# - debug:  
+#     msg:      "Archive: {{ item.archive }}"
+#   loop:       "{{ bom.materials.media|flatten(levels=1) }}"
 #------------------</DEBUGGING>------------------
 
 # Create download Directories
@@ -35,20 +42,17 @@
 
 # Download Files
 #------------------<DEBUGGING>-------------------
-- debug:  
-    msg:      
-      - "URL : {{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
-      - "DEST: {{ target_media_location }}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
-      - "MODE: {% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
-  loop:       "{{ bom.materials.media|flatten(levels=1) }}"
+# - debug:  
+#     msg:      
+#       - "URL : {{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
+#       - "DEST: {{ target_media_location }}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+#       - "MODE: {% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
+#   loop:       "{{ bom.materials.media|flatten(levels=1) }}"
 #------------------</DEBUGGING>------------------
 
 
 - name: "BOM: Download Files"
   get_url:
-    # url:    "{{ item.url }}{% if sapbom.sasToken is not undefined %}{{ sapbom.sasToken }}{% endif %}"
-    # dest:   "{{ item.fileName }}"
-    # mode:   "{% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
     url:    "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
     dest:   "{{ target_media_location }}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
     mode:   "{% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
