@@ -28,7 +28,7 @@
 - name:         "Register BOM: {{ bom_iterator }}"
   include_vars:
     file:       "{{ inventory_dir }}/{{ bom_iterator }}.yaml"
-    name:       bom
+    name:       _bom
 
 #------------------<DEBUGGING>-------------------
 # - debug:  
@@ -61,7 +61,7 @@
   until:    result is succeeded
   retries:  10
   delay:    6
-  loop:     "{{ bom.materials.media|flatten(levels=1) }}"
+  loop:     "{{ _bom.materials.media|flatten(levels=1) }}"
   when:     item.download is undefined or
             item.download
 
