@@ -40,6 +40,12 @@
 
 # - import_tasks: pre_checks.yaml
 
+# Register BOM
+- name:         "Register BOM: {{ bom_iterator }}"
+  include_vars:
+    file:       "{{ inventory_dir }}/{{ bom_iterator }}.yaml"
+    name:       bom
+
 - include_tasks:  "iterate_bom.yaml"
   vars:
     bom_iterator: "{{ bom_base_name }}"
