@@ -41,7 +41,7 @@
 # - import_tasks: pre_checks.yaml
 
 # Register BOM
-- name:         "Register BOM: {{ bom_iterator }}"
+- name:         "Register BOM: {{ bom_base_name }}"
   include_vars:
     file:       "{{ inventory_dir }}/{{ bom_base_name }}.yaml"
     name:       bom
@@ -52,7 +52,7 @@
 
 - include_tasks:  "iterate_bom.yaml"
   vars:
-    bom_iterator: "{{ bom_dependency.name }}"
+    bom_iterator: "{{ item.name }}"
   loop:           "{{ bom.materials.dependencies | flatten(levels=1) }}"
     # loop_var:     bom_dependency
   when:           bom.materials.dependencies is defined
