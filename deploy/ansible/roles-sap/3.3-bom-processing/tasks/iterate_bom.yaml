@@ -53,17 +53,18 @@
 
 - name: "BOM: Download Files"
   get_url:
-    url:    "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
-    dest:   "{{ target_media_location }}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
-    mode:   "{% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
+    url:    "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ bom_media.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
+    dest:   "{{ target_media_location }}/{% if bom_media.filename is undefined %}{{ bom_media.archive }}{% else %}{{ bom_media.filename }}{% endif %}"
+    mode:   "{% if bom_media.permissions is undefined %}0644{% else %}{{ bom_media.permissions }}{% endif %}"
 
   register: result
   until:    result is succeeded
   retries:  10
   delay:    6
   loop:     "{{ bom.materials.media|flatten(levels=1) }}"
-  when:     item.download is undefined or
-            item.download
+  loop_var:  bom_media
+  when:     bom_media.download is undefined or
+            bom_media.download
 
 
 # extract files SAPCAR
