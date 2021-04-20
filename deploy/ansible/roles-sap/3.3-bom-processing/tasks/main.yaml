@@ -43,7 +43,7 @@
 # Register BOM
 - name:         "Register BOM: {{ bom_iterator }}"
   include_vars:
-    file:       "{{ inventory_dir }}/{{ bom_iterator }}.yaml"
+    file:       "{{ inventory_dir }}/{{ bom_base_name }}.yaml"
     name:       bom
 
 - include_tasks:  "iterate_bom.yaml"
