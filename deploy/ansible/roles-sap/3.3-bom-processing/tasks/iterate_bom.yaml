@@ -5,7 +5,7 @@
 # Inputs:
 #   target_media_location             Default     /usr/sap/install
 #   inventory_dir
-#   bom_base_name
+#   bom_iterator
 #   sapbits_location_base_path
 #   sapbits_bom_files
 #   sapbits_sas_token
@@ -25,9 +25,9 @@
 
 
 # Register BOM
-- name:         "Register BOM: {{ bom_base_name }}"
+- name:         "Register BOM: {{ bom_iterator }}"
   include_vars:
-    file:       "{{ inventory_dir }}/{{ bom_base_name }}.yaml"
+    file:       "{{ inventory_dir }}/{{ bom_iterator }}.yaml"
     name:       bom
 
 #------------------<DEBUGGING>-------------------
@@ -71,9 +71,9 @@
 # extract files unrar
 
 # Remove BOM from Ansible Controller
-# - name: "Ensure {{ bom_base_name }} is absent"
+# - name: "Ensure {{ bom_iterator }} is absent"
 #   file:
-#     path: "{{ inventory_dir }}/{{ bom_base_name }}_bom.yaml"
+#     path: "{{ inventory_dir }}/{{ bom_iterator }}_bom.yaml"
 #     state: absent
 #   delegate_to: localhost
 

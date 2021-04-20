@@ -31,13 +31,24 @@
       - "target_media_location | trim | length != 0"                            #   and given a value
 # -------------------------------------+---------------------------------------8
 
+
+
+
 #----------------------------------------
 # BEGIN - OLD CODE
 #----------------------------------------
 
 # - import_tasks: pre_checks.yaml
 
-- include_tasks: "{{ iterator }}"
+- include_tasks:  "iterate_bom.yaml"
   vars:
-    # iterator: "./iterate_bom.yaml"
-    iterator: "iterate_bom.yaml"
+    bom_iterator: "{{ bom_base_name }}"
+    # iterator:     "./iterate_bom.yaml"
+    # iterator:     "iterate_bom.yaml"
+
+- include_tasks:  "iterate_bom.yaml"
+  vars:
+    bom_iterator: "{{ item.name }}"
+  loop:           "{{ bom.materials.dependencies | flatten(levels=1) }}"
+  when:           bom.materials.dependencies is defined
+                  and (bom.materials.dependencies|length>0)
