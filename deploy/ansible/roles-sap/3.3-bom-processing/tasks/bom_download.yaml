@@ -90,16 +90,16 @@
 
 
 # extract files SAPCAR
-# - name:      "BOM: Extract File, SAPCAR"
-#   command:   "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
-#   args:
-#     chdir:   "{{ item.extractDir }}"
-#     creates: "{{ item.creates }}"
-#   loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
-#   when:      (    item.extract is not undefined
-#               and item.extract                  )
-#               # and (item.fileName|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
-#               and {% if item.filename is undefined %}(item.archive|regex_search('[^.]+(?=\\.*$)')|upper=="SAR"){% else %}(item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR"){% endif %}
+- name:      "BOM: Extract File, SAPCAR"
+  command:   "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+  args:
+    chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
+    creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
+  loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
+  when:      (    item.extract is not undefined
+              and item.extract                  )
+              and ({% if item.filename is undefined %}item.archive{% else %}item.filename{% endif %}|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
+              # and (item.fileName|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
 
 # extract files unzip
 # extract files unrar
