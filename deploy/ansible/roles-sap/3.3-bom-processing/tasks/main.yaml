@@ -12,40 +12,31 @@
 
 - import_tasks:     pre_checks.yaml
 
+
+
 # Register BOM
 - name:             "Register BOM: {{ bom_base_name }}"
   include_vars:
     file:           "{{ inventory_dir }}/{{ bom_base_name }}.yaml"
     name:           bom
 
-# - include_tasks:    "iterate_bom.yaml"
-#   vars:
-#     bom_iterator:   "{{ bom_base_name }}"
 
-# - include_tasks:    "iterate_bom.yaml"
-#   vars:
-#     bom_iterator:   "{{ bom_dependency.name }}"
-#   loop:             "{{ bom.materials.dependencies | flatten(levels=1) }}"
-#   loop_control:
-#     loop_var:       bom_dependency
-#   when:             bom.materials.dependencies is defined
-#                     and (bom.materials.dependencies|length>0)
+# TODO:
+#       Enhance so a single task loops over bas bom and dependencies
+
+- include_tasks:    "bom_download.yaml"
+  vars:
+    bom_iterator:   "{{ bom_base_name }}"
 
 
 
-- debug:
-    var:       bom.materials.dependencies
-    verbosity: 0
+- include_tasks:    "bom_download.yaml"
+  vars:
+    bom_iterator:   "{{ bom_dependency.name }}"
+  loop:             "{{ bom.materials.dependencies | flatten(levels=1) }}"
+  loop_control:
+    loop_var:       bom_dependency
+  when:             bom.materials.dependencies is defined
+                    and (bom.materials.dependencies|length>0)
 
-# - include_tasks:    "iterate_bom.yaml"
-#   vars:
-#     bom_iterator:   "{{ bom_dependency.name }}"
-#   # loop:             "[{ 'name': '{{ bom_base_name }}' }] | {{ bom.materials.dependencies | flatten(levels=1) }} | list"
-#   loop:             "{{ bom.materials.dependencies | flatten(levels=1) | combine(bom_base_name, list_merge='prepend') }}"
-#     # - "name: {{ bom_base_name }}"
-#     # - "{{ bom.materials.dependencies | flatten(levels=1) }}"
-
-#   loop_control:
-#     loop_var:       bom_dependency
-#   when:             bom.materials.dependencies is defined
-#                     and (bom.materials.dependencies|length>0)
+...
