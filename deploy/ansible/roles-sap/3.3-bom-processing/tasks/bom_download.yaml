@@ -103,8 +103,8 @@
                   or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
 
 
-# extract files SAPCAR
-- name:      "BOM: Extract File, SAPCAR"
+# extract files UNRAR
+- name:      "BOM: Extract File, UNRAR"
   command:   "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
   args:
     chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
