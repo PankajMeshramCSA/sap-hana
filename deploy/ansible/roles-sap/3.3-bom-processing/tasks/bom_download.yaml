@@ -103,9 +103,8 @@
                   or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
 
 
-
-# extract files unrar
-- name:      "BOM: Extract File, UNRAR"
+# extract files SAPCAR
+- name:      "BOM: Extract File, SAPCAR"
   command:   "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
   args:
     chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
@@ -113,8 +112,9 @@
   loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
   when:      (      item.extract is not undefined
                 and item.extract                  )
-                and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR")
-                  or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="RAR") )
+                and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
+                  or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
+
 
 
 
