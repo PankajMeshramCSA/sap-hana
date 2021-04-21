@@ -74,24 +74,24 @@
 #------------------</DEBUGGING>------------------
 
 
-- name: "BOM: Download Files"
-  get_url:
-    url:    "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
-    dest:   "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
-    mode:   "{% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
+# - name: "BOM: Download Files"
+#   get_url:
+#     url:    "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
+#     dest:   "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+#     mode:   "{% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
 
-  register: result
-  until:    result is succeeded
-  retries:  10
-  delay:    6
-  loop:     "{{ _bom.materials.media|flatten(levels=1) }}"
-  when:     item.download is undefined or
-            item.download
+#   register: result
+#   until:    result is succeeded
+#   retries:  10
+#   delay:    6
+#   loop:     "{{ _bom.materials.media|flatten(levels=1) }}"
+#   when:     item.download is undefined or
+#             item.download
 
 
 # extract files SAPCAR
 - name:      "BOM: Extract File, SAPCAR"
-  command:   "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+  command:   "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
   args:
     chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
     creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
