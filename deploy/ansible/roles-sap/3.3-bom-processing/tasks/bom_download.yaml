@@ -112,8 +112,8 @@
   loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
   when:      (      item.extract is not undefined
                 and item.extract                  )
-                and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
-                  or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
+                and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR")
+                  or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="RAR") )
 
 
 
