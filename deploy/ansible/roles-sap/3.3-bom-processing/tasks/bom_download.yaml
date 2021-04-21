@@ -105,27 +105,27 @@
 
 
 # extract files unrar
-- name:      "BOM: Extract File, UNRAR"
-  command:   unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+- name:       "BOM: Extract File, UNRAR"
+  command:    unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
   args:
-    chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
-    creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
-  loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
-  when:      (      item.extract is not undefined
-                and item.extract                  )
-                and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR")
-                  or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="RAR") )
+    chdir:    "{{ target_media_location }}/{{ item.extractDir }}"
+    creates:  "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
+  loop:       "{{ _bom.materials.media|flatten(levels=1) }}"
+  when:       (      item.extract is not undefined
+                and  item.extract                  )
+                and  ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR")
+                  or   (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="RAR") )
 
 
 
 # extract files unzip
 - name:         "BOM: Extract File, UNZIP"
   unarchive:
-    src:        "{{ item.fileName }}"
-    dest:       "{{ item.extractDir }}"
+    src:        "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+    dest:       "{{ target_media_location }}/{{ item.extractDir }}"
     remote_src: yes
-    creates:    "{{ item.creates }}"
-  loop:         "{{ sapbom.billOfMaterials|flatten(levels=1) }}"
+    creates:    "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
+  loop:         "{{ _bom.materials.media|flatten(levels=1) }}"
   when:         (      item.extract is not undefined
                    and item.extract                  )
                    and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="ZIP")
