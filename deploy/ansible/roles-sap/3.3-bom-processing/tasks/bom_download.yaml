@@ -99,7 +99,7 @@
   when:      (     item.extract is not undefined
               and  item.extract                  )
               and ( (item.archive|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
-              or   (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
+                or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
               # and ({% if item.filename is undefined %}item.archive{% else %}item.filename{% endif %}|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
 
 # extract files unzip
