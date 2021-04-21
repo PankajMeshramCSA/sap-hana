@@ -10,51 +10,36 @@
 # -------------------------------------+---------------------------------------8
 
 
-
-# -------------------------------------+---------------------------------------8
-#
-# Description:  Validation for Prerequisites 
-#
-- name:   Check required variables are present and not empty
-  assert:
-    that:
-      - "sapbits_location_base_path is defined"                                 # Has the variable been defined
-      - "sapbits_location_base_path | trim | length != 0"                       #   and given a value
-
-      - "sapbits_bom_files is defined"                                          # Has the variable been defined
-      - "sapbits_bom_files | trim | length != 0"                                #   and given a value
-
-      - "bom_base_name is defined"                                              # Has the variable been defined
-      - "bom_base_name | trim | length != 0"                                    #   and given a value
-
-      - "target_media_location is defined"                                      # Has the variable been defined
-      - "target_media_location | trim | length != 0"                            #   and given a value
-# -------------------------------------+---------------------------------------8
-
-
-
-
-#----------------------------------------
-# BEGIN - OLD CODE
-#----------------------------------------
-
-# - import_tasks: pre_checks.yaml
+- import_tasks:     pre_checks.yaml
 
 # Register BOM
-- name:         "Register BOM: {{ bom_base_name }}"
+- name:             "Register BOM: {{ bom_base_name }}"
   include_vars:
-    file:       "{{ inventory_dir }}/{{ bom_base_name }}.yaml"
-    name:       bom
+    file:           "{{ inventory_dir }}/{{ bom_base_name }}.yaml"
+    name:           bom
 
-- include_tasks:  "iterate_bom.yaml"
-  vars:
-    bom_iterator: "{{ bom_base_name }}"
+# - include_tasks:    "iterate_bom.yaml"
+#   vars:
+#     bom_iterator:   "{{ bom_base_name }}"
 
-- include_tasks:  "iterate_bom.yaml"
+# - include_tasks:    "iterate_bom.yaml"
+#   vars:
+#     bom_iterator:   "{{ bom_dependency.name }}"
+#   loop:             "{{ bom.materials.dependencies | flatten(levels=1) }}"
+#   loop_control:
+#     loop_var:       bom_dependency
+#   when:             bom.materials.dependencies is defined
+#                     and (bom.materials.dependencies|length>0)
+
+
+
+- include_tasks:    "iterate_bom.yaml"
   vars:
-    bom_iterator: "{{ bom_dependency.name }}"
-  loop:           "{{ bom.materials.dependencies | flatten(levels=1) }}"
+    bom_iterator:   "{{ bom_dependency.name }}"
+  loop:
+    - "{{ bom_base_name }}"
+    - "{{ bom.materials.dependencies | flatten(levels=1) }}"
   loop_control:
-    loop_var:     bom_dependency
-  when:           bom.materials.dependencies is defined
-                  and (bom.materials.dependencies|length>0)
+    loop_var:       bom_dependency
+  when:             bom.materials.dependencies is defined
+                    and (bom.materials.dependencies|length>0)
