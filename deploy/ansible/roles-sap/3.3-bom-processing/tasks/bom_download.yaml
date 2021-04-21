@@ -36,6 +36,8 @@
 #   loop:       "{{ bom.materials.media|flatten(levels=1) }}"
 #------------------</DEBUGGING>------------------
 
+
+
 # Create download Directories
 - name:     "BOM: Create SAP download directories"
   file:
@@ -45,6 +47,8 @@
   loop:
     - { path: '/usr/sap/install/downloads' }
     - { path: '/usr/sap/install/download_basket' }
+
+
 
 # Create BOM Directories
 
@@ -63,7 +67,7 @@
 - name: "BOM: Download Files"
   get_url:
     url:    "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
-    dest:   "{{ target_media_location }}/{% if item.path is defined %}{{ item.path }}/{% endif %}{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+    dest:   "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
     mode:   "{% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
 
   register: result
