@@ -96,10 +96,11 @@
     chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
     creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
   loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
-  when:      (    item.extract is not undefined
-              and item.extract                  )
-              and ({% if item.filename is undefined %}item.archive{% else %}item.filename{% endif %}|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
-              # and (item.fileName|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
+  when:      (     item.extract is not undefined
+              and  item.extract                  )
+              and ( (item.archive|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
+              or   (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
+              # and ({% if item.filename is undefined %}item.archive{% else %}item.filename{% endif %}|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
 
 # extract files unzip
 # extract files unrar
