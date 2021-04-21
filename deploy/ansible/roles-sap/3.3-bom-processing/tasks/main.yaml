@@ -37,7 +37,7 @@
   vars:
     bom_iterator:   "{{ bom_dependency.name }}"
   # loop:             "[{ 'name': '{{ bom_base_name }}' }] | {{ bom.materials.dependencies | flatten(levels=1) }} | list"
-  loop:             "{{ {{ bom.materials.dependencies | flatten(levels=1) }} | combine({{ bom_base_name }}, list_merge='prepend') }}"
+  loop:             "{{ bom.materials.dependencies | flatten(levels=1) | combine({{ bom_base_name }}, list_merge='prepend') }}"
     # - "name: {{ bom_base_name }}"
     # - "{{ bom.materials.dependencies | flatten(levels=1) }}"
 
