@@ -89,6 +89,7 @@
 #             item.download
 
 
+
 # extract files SAPCAR
 - name:      "BOM: Extract File, SAPCAR"
   command:   "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
@@ -96,21 +97,47 @@
     chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
     creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
   loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
-  when:      (     item.extract is not undefined
-              and  item.extract                  )
-              and ( (item.archive|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
-                or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
-              # and ({% if item.filename is undefined %}item.archive{% else %}item.filename{% endif %}|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
+  when:      (      item.extract is not undefined
+                and item.extract                  )
+                and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
+                  or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
+
+
+
+# extract files unrar
+- name:      "BOM: Extract File, UNRAR"
+  command:   unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+  args:
+    chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
+    creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
+  loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
+  when:      (      item.extract is not undefined
+                and item.extract                  )
+                and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR")
+                  or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="RAR") )
+
+
 
 # extract files unzip
-# extract files unrar
+- name:         "BOM: Extract File, UNZIP"
+  unarchive:
+    src:        "{{ item.fileName }}"
+    dest:       "{{ item.extractDir }}"
+    remote_src: yes
+    creates:    "{{ item.creates }}"
+  loop:         "{{ sapbom.billOfMaterials|flatten(levels=1) }}"
+  when:         (      item.extract is not undefined
+                   and item.extract                  )
+                   and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="ZIP")
+                     or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="ZIP") )
+
 
 # Remove BOM from Ansible Controller
-# - name: "Ensure {{ bom_iterator }} is absent"
-#   file:
-#     path: "{{ inventory_dir }}/{{ bom_iterator }}_bom.yaml"
-#     state: absent
-#   delegate_to: localhost
+- name:         "Ensure {{ bom_iterator }} is absent"
+  file:
+    path:       "{{ inventory_dir }}/{{ bom_iterator }}.yaml"
+    state:      absent
+  delegate_to:  localhost
 
 # -------------------------------------+---------------------------------------8
 
