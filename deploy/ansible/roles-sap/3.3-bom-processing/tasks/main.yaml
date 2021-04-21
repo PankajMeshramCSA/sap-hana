@@ -36,9 +36,10 @@
 - include_tasks:    "iterate_bom.yaml"
   vars:
     bom_iterator:   "{{ bom_dependency.name }}"
-  loop:
+  loop:             "name: {{ bom_base_name }} | {{ bom.materials.dependencies | flatten(levels=1) }}"
     # - "name: {{ bom_base_name }}"
-    - "{{ bom.materials.dependencies | flatten(levels=1) }}"
+    # - "{{ bom.materials.dependencies | flatten(levels=1) }}"
+
   loop_control:
     loop_var:       bom_dependency
   when:             bom.materials.dependencies is defined
