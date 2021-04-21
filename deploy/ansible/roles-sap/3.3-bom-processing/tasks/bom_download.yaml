@@ -80,8 +80,16 @@
 
 
 # extract files SAPCAR
-# SWPM
-
+- name:      "BOM: Extract File, SAPCAR"
+  command:   "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+  args:
+    chdir:   "{{ item.extractDir }}"
+    creates: "{{ item.creates }}"
+  loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
+  when:      (    item.extract is not undefined
+              and item.extract                  )
+              # and (item.fileName|regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
+              and {% if item.filename is undefined %}(item.archive|regex_search('[^.]+(?=\\.*$)')|upper=="SAR"){% else %}(item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR"){% endif %}
 
 # extract files unzip
 # extract files unrar
