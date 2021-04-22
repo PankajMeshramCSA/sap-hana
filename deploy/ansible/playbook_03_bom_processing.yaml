@@ -6,7 +6,7 @@
 ---
 
 # Steps:
-#   01) NFS: Make Local Shares available
+#   01) NFS: Make Local Shares available via NFS Exports
 #   02) Process BOM (Download and Extract)
 #
 
@@ -70,15 +70,6 @@
 #---------------------------
 #  BEGIN: EXAMPLE
 #---------------------------
-
-# - hosts:        "{{ sapSid|lower }}scs00"
-#   name:         test
-#   remote_user:  ansible
-#   become:       yes
-#   become_user:  root
-#   gather_facts: true
-#   vars_files:
-#     - vars/default.yaml
 
 
 #   tasks:
