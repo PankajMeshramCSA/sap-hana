@@ -5,6 +5,11 @@
 # +------------------------------------4--------------------------------------*/
 ---
 
+# Steps:
+#   01) NFS: Make Local Shares available
+#   02) Process BOM (Download and Extract)
+#
+
 - hosts:          "{{ sap_sid|upper }}_SCS"
 
   name:           BOM Processing
@@ -56,8 +61,8 @@
   - include_role:
       name:     roles-sap-os/sap-exports                        # TODO: Centiq copy (rework needed)
 
-  - include_role:
-      name:     roles-sap/3.2-bom-fetch
+  # - include_role:
+  #     name:     roles-sap/3.2-bom-fetch
 
   - include_role:
       name:     roles-sap/3.3-bom-processing
