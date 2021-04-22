@@ -119,35 +119,36 @@
                 #   or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
 
 
-# # extract files UNRAR
-# - name:      "BOM: Extract File, UNRAR"
-#   command:   unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
-#   args:
-#     chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
-#     creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
-#   loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
-#   when:      (      item.extract is not undefined
-#                 and item.extract                  )
-#                 and (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR")
-# #                 and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR")
-# #                   or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="RAR") )
+# extract files UNRAR
+- name:      "BOM: Extract File, UNRAR"
+  command:   unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+  args:
+    chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
+    creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
+  loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
+  when:       
+    - item.extract is not undefined
+    - item.extract
+    - ( item.filename is undefined and (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR") ) or
+      ( item.filename is defined   and (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="RAR") )
 
 
 
 
-# # extract files unzip
-# - name:         "BOM: Extract File, UNZIP"
-#   unarchive:
-#     src:        "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
-#     dest:       "{{ target_media_location }}/{{ item.extractDir }}"
-#     remote_src: yes
-#     creates:    "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
-#   loop:         "{{ _bom.materials.media|flatten(levels=1) }}"
-#   when:         (      item.extract is not undefined
-#                    and item.extract                  )
-#                 and (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="ZIP")
-# #                    and ( ((item.archive |regex_search('[^.]+(?=\\.*$)')|upper)=="ZIP")
-# #                      or  ((item.filename|regex_search('[^.]+(?=\\.*$)')|upper)=="ZIP") )
+# extract files unzip
+- name:         "BOM: Extract File, UNZIP"
+  unarchive:
+    src:        "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+    dest:       "{{ target_media_location }}/{{ item.extractDir }}"
+    remote_src: yes
+    creates:    "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
+  loop:         "{{ _bom.materials.media|flatten(levels=1) }}"
+  when:       
+    - item.extract is not undefined
+    - item.extract
+    - ( item.filename is undefined and (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="ZIP") ) or
+      ( item.filename is defined   and (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="ZIP") )
+
 
 
 # Remove BOM from Ansible Controller
