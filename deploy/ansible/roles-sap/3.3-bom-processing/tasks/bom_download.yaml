@@ -74,6 +74,7 @@
 #------------------</DEBUGGING>------------------
 
 
+
 # - name: "BOM: Download Files"
 #   get_url:
 #     url:    "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
@@ -119,17 +120,17 @@
 
 
 # extract files unzip
-- name:         "BOM: Extract File, UNZIP"
-  unarchive:
-    src:        "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
-    dest:       "{{ target_media_location }}/{{ item.extractDir }}"
-    remote_src: yes
-    creates:    "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
-  loop:         "{{ _bom.materials.media|flatten(levels=1) }}"
-  when:         (      item.extract is not undefined
-                   and item.extract                  )
-                   and ( ((item.archive |regex_search('[^.]+(?=\\.*$)')|upper)=="ZIP")
-                     or  ((item.filename|regex_search('[^.]+(?=\\.*$)')|upper)=="ZIP") )
+# - name:         "BOM: Extract File, UNZIP"
+#   unarchive:
+#     src:        "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+#     dest:       "{{ target_media_location }}/{{ item.extractDir }}"
+#     remote_src: yes
+#     creates:    "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
+#   loop:         "{{ _bom.materials.media|flatten(levels=1) }}"
+#   when:         (      item.extract is not undefined
+#                    and item.extract                  )
+#                    and ( ((item.archive |regex_search('[^.]+(?=\\.*$)')|upper)=="ZIP")
+#                      or  ((item.filename|regex_search('[^.]+(?=\\.*$)')|upper)=="ZIP") )
 
 
 # Remove BOM from Ansible Controller
