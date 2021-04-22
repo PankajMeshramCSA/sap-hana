@@ -112,7 +112,7 @@
 # TODO:
 #       Enhance so a single task loops over bas bom and dependencies
 #
-- include_tasks:    "bom_download.yaml"
+- include_tasks:    "bom_processor.yaml"
   vars:
     bom_name:       "{{ bom_base_name }}"
 # -------------------------------------+---------------------------------------8
@@ -123,7 +123,7 @@
 #
 # Description:  Call BOM processor, passing dependent BOM names.
 #
-- include_tasks:    "bom_download.yaml"
+- include_tasks:    "bom_processor.yaml"
   vars:
     bom_name:       "{{ bom_dependency.name }}"
   loop:             "{{ bom.materials.dependencies | flatten(levels=1) }}"
