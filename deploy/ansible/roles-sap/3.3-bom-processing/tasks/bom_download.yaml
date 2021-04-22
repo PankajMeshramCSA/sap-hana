@@ -102,8 +102,8 @@
   when:       
     - item.extract is not undefined
     - item.extract
-    - ( item.filename is undefined and (item.archive|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") ) or
-      ( item.filename is defined and (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
+    - ( item.filename is undefined and (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="SAR") ) or
+      ( item.filename is defined   and (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
 
   # when:       (     item.extract is not undefined
   #               and item.extract                   )
