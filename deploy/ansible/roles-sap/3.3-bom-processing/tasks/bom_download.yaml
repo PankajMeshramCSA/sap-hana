@@ -51,14 +51,14 @@
 
 
 # Create BOM Directories
-# - name: "BOM: Create BOM directories"
-#   file:
-#     path:   "{{ target_media_location }}/{{ item.extractDir }}"
-#     state:  directory
-#     mode:   0755
-#   loop:     "{{ _bom.materials.media|flatten(levels=1) }}"
-#   when:     not (    (item.extractDir is undefined)
-#                   or (item.extractDir == '') )
+- name: "BOM: Create BOM directories"
+  file:
+    path:   "{{ target_media_location }}/{{ item.extractDir }}"
+    state:  directory
+    mode:   0755
+  loop:     "{{ _bom.materials.media|flatten(levels=1) }}"
+  when:     not (    (item.extractDir is undefined)
+                  or (item.extractDir == '') )
 
 
 
