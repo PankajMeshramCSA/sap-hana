@@ -38,85 +38,86 @@
 
 
 
-# Create download Directories
-- name:     "BOM: Create SAP download directories"
-  file:
-    path:   "{{ item.path }}"
-    state:  directory
-    mode:   0755
-  loop:
-    - { path: '/usr/sap/install/downloads' }
-    - { path: '/usr/sap/install/download_basket' }
+# # Create download Directories
+# - name:     "BOM: Create SAP download directories"
+#   file:
+#     path:   "{{ item.path }}"
+#     state:  directory
+#     mode:   0755
+#   loop:
+#     - { path: '/usr/sap/install/downloads' }
+#     - { path: '/usr/sap/install/download_basket' }
 
 
 
-# Create BOM Directories
-- name: "BOM: Create BOM directories"
-  file:
-    path:   "{{ target_media_location }}/{{ item.extractDir }}"
-    state:  directory
-    mode:   0755
-  loop:     "{{ _bom.materials.media|flatten(levels=1) }}"
-  when:     not (    (item.extractDir is undefined)
-                  or (item.extractDir == '') )
+# # Create BOM Directories
+# - name: "BOM: Create BOM directories"
+#   file:
+#     path:   "{{ target_media_location }}/{{ item.extractDir }}"
+#     state:  directory
+#     mode:   0755
+#   loop:     "{{ _bom.materials.media|flatten(levels=1) }}"
+#   when:     not (    (item.extractDir is undefined)
+#                   or (item.extractDir == '') )
 
 
 
 
-# Download Files
-#------------------<DEBUGGING>-------------------
-# - debug:  
-#     msg:      
-#       - "URL : {{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
-#       - "DEST: {{ target_media_location }}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
-#       - "MODE: {% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
-#   loop:       "{{ bom.materials.media|flatten(levels=1) }}"
-#------------------</DEBUGGING>------------------
+# # Download Files
+# #------------------<DEBUGGING>-------------------
+# # - debug:  
+# #     msg:      
+# #       - "URL : {{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
+# #       - "DEST: {{ target_media_location }}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+# #       - "MODE: {% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
+# #   loop:       "{{ bom.materials.media|flatten(levels=1) }}"
+# #------------------</DEBUGGING>------------------
 
 
 
-- name: "BOM: Download Files"
-  get_url:
-    url:    "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
-    dest:   "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
-    mode:   "{% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
+# # Loop throough BOM media files and download to correct location
+# - name: "BOM: Download Files"
+#   get_url:
+#     url:    "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
+#     dest:   "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+#     mode:   "{% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
 
-  register: result
-  until:    result is succeeded
-  retries:  10
-  delay:    6
-  loop:     "{{ _bom.materials.media|flatten(levels=1) }}"
-  when:     item.download is undefined or
-            item.download
-
-
-
-# # extract files SAPCAR
-# - name:      "BOM: Extract File, SAPCAR"
-#   command:   "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
-#   args:
-#     chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
-#     creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
-#   loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
-#   when:      (      item.extract is not undefined
-#                 and item.extract                  )
-#                 and (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
-#                 # and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
-#                 #   or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
+#   register: result
+#   until:    result is succeeded
+#   retries:  10
+#   delay:    6
+#   loop:     "{{ _bom.materials.media|flatten(levels=1) }}"
+#   when:     item.download is undefined or
+#             item.download
 
 
-# # extract files UNRAR
-# - name:      "BOM: Extract File, UNRAR"
-#   command:   unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
-#   args:
-#     chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
-#     creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
-#   loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
-#   when:      (      item.extract is not undefined
-#                 and item.extract                  )
-#                 and (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR")
-# #                 and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR")
-# #                   or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="RAR") )
+
+# extract files SAPCAR
+- name:      "BOM: Extract File, SAPCAR"
+  command:   "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+  args:
+    chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
+    creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
+  loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
+  when:      (      item.extract is not undefined
+                and item.extract                  )
+                and (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
+                # and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="SAR")
+                #   or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="SAR") )
+
+
+# extract files UNRAR
+- name:      "BOM: Extract File, UNRAR"
+  command:   unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+  args:
+    chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
+    creates: "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
+  loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
+  when:      (      item.extract is not undefined
+                and item.extract                  )
+                and (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR")
+#                 and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="RAR")
+#                   or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="RAR") )
 
 
 
