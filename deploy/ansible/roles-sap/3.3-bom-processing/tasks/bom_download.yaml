@@ -128,8 +128,8 @@
   loop:         "{{ _bom.materials.media|flatten(levels=1) }}"
   when:         (      item.extract is not undefined
                    and item.extract                  )
-                   and ( (item.archive |regex_search('[^.]+(?=\\.*$)')|upper=="ZIP")
-                     or  (item.filename|regex_search('[^.]+(?=\\.*$)')|upper=="ZIP") )
+                   and ( ((item.archive |regex_search('[^.]+(?=\\.*$)')|upper)=="ZIP")
+                     or  ((item.filename|regex_search('[^.]+(?=\\.*$)')|upper)=="ZIP") )
 
 
 # Remove BOM from Ansible Controller
