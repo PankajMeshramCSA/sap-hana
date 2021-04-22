@@ -5,7 +5,7 @@
 # Inputs:
 #   target_media_location             Default     /usr/sap/install
 #   inventory_dir
-#   bom_iterator
+#   bom_name
 #   sapbits_location_base_path
 #   sapbits_bom_files
 #   sapbits_sas_token
@@ -36,9 +36,9 @@
 
 
 #   01) Register BOM
-- name:         "Register BOM: {{ bom_iterator }}"
+- name:         "Register BOM: {{ bom_name }}"
   include_vars:
-    file:       "{{ inventory_dir }}/{{ bom_iterator }}.yaml"
+    file:       "{{ inventory_dir }}/{{ bom_name }}.yaml"
     name:       _bom
 
 #------------------<DEBUGGING>-------------------
@@ -105,12 +105,12 @@
 
 
 #   05) Extract files - SAPCAR
-- name:       "BOM: Extract File, SAPCAR"
-  command:    "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+- name:         "BOM: Extract File, SAPCAR"
+  command:      "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
   args:
-    chdir:    "{{ target_media_location }}/{{ item.extractDir }}"
-    creates:    "{{ target_media_location }}/{{ item.extractDir }}/{% if item.creates is defined %}{{ item.creates }}{% else %}XXX{% endif %}"
-  loop:       "{{ _bom.materials.media|flatten(levels=1) }}"
+    chdir:      "{{ target_media_location }}/{{ item.extractDir }}"
+    creates:    "{{ target_media_location }}/{{ item.extractDir }}/{% if item.creates is defined %}{{ item.creates }}{% else %}NOT_DEFINED{% endif %}"
+  loop:         "{{ _bom.materials.media|flatten(levels=1) }}"
   when:       
     - item.extract is not undefined
     - item.extract
@@ -120,12 +120,12 @@
 
 
 #   06) Extract files - UNRAR
-- name:      "BOM: Extract File, UNRAR"
-  command:   unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+- name:         "BOM: Extract File, UNRAR"
+  command:      unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
   args:
-    chdir:   "{{ target_media_location }}/{{ item.extractDir }}"
-    creates:    "{{ target_media_location }}/{{ item.extractDir }}/{% if item.creates is defined %}{{ item.creates }}{% else %}XXX{% endif %}"
-  loop:      "{{ _bom.materials.media|flatten(levels=1) }}"
+    chdir:      "{{ target_media_location }}/{{ item.extractDir }}"
+    creates:    "{{ target_media_location }}/{{ item.extractDir }}/{% if item.creates is defined %}{{ item.creates }}{% else %}NOT_DEFINED{% endif %}"
+  loop:         "{{ _bom.materials.media|flatten(levels=1) }}"
   when:       
     - item.extract is not undefined
     - item.extract
@@ -140,7 +140,7 @@
     src:        "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
     dest:       "{{ target_media_location }}/{{ item.extractDir }}"
     remote_src: yes
-    creates:    "{{ target_media_location }}/{{ item.extractDir }}/{% if item.creates is defined %}{{ item.creates }}{% else %}XXX{% endif %}"
+    creates:    "{{ target_media_location }}/{{ item.extractDir }}/{% if item.creates is defined %}{{ item.creates }}{% else %}NOT_DEFINED{% endif %}"
   loop:         "{{ _bom.materials.media|flatten(levels=1) }}"
   when:       
     - item.extract is not undefined
@@ -151,9 +151,9 @@
 
 
 #   08) Purge BOM file from Ansible Controller
-- name:         "Ensure {{ bom_iterator }} is absent"
+- name:         "Ensure {{ bom_name }} is absent"
   file:
-    path:       "{{ inventory_dir }}/{{ bom_iterator }}.yaml"
+    path:       "{{ inventory_dir }}/{{ bom_name }}.yaml"
     state:      absent
   delegate_to:  localhost
 
