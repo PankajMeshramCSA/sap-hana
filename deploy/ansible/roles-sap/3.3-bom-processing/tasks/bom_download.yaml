@@ -23,8 +23,19 @@
 
 
 
+# Steps:
+#   01) Register BOM
+#   02) Create static download directories
+#   03) Create dynamic extract directories
+#   04) Download media from bom
+#   05) Extract files - SAPCAR
+#   06) Extract files - UNRAR
+#   07) Extract files - UNZIP
+#   08) Purge BOM file from Ansible Controller
 
-# Register BOM
+
+
+#   01) Register BOM
 - name:         "Register BOM: {{ bom_iterator }}"
   include_vars:
     file:       "{{ inventory_dir }}/{{ bom_iterator }}.yaml"
@@ -38,7 +49,7 @@
 
 
 
-# Create download Directories
+#   02) Create static download directories
 - name:     "BOM: Create SAP download directories"
   file:
     path:   "{{ item.path }}"
@@ -50,7 +61,7 @@
 
 
 
-# Create BOM Directories
+#   03) Create dynamic extract directories
 - name: "BOM: Create BOM directories"
   file:
     path:   "{{ target_media_location }}/{{ item.extractDir }}"
@@ -75,6 +86,7 @@
 
 
 
+#   04) Download media from bom
 # Loop throough BOM media files and download to correct location
 - name: "BOM: Download Files"
   get_url:
@@ -92,7 +104,7 @@
 
 
 
-# extract files SAPCAR
+#   05) Extract files - SAPCAR
 - name:       "BOM: Extract File, SAPCAR"
   command:    "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
   args:
@@ -107,7 +119,7 @@
 
 
 
-# extract files UNRAR
+#   06) Extract files - UNRAR
 - name:      "BOM: Extract File, UNRAR"
   command:   unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
   args:
@@ -122,13 +134,14 @@
 
 
 
-# extract files unzip
+#   07) Extract files - UNZIP
 - name:         "BOM: Extract File, UNZIP"
   unarchive:
     src:        "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
     dest:       "{{ target_media_location }}/{{ item.extractDir }}"
     remote_src: yes
-    creates:    "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
+    creates:    "{% if item.path %}{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}{% endif %}"
+    # creates:    "{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}"
   loop:         "{{ _bom.materials.media|flatten(levels=1) }}"
   when:       
     - item.extract is not undefined
@@ -138,7 +151,7 @@
 
 
 
-# Remove BOM from Ansible Controller
+#   08) Purge BOM file from Ansible Controller
 - name:         "Ensure {{ bom_iterator }} is absent"
   file:
     path:       "{{ inventory_dir }}/{{ bom_iterator }}.yaml"
