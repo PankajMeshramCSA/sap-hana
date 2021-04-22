@@ -140,7 +140,7 @@
     src:        "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
     dest:       "{{ target_media_location }}/{{ item.extractDir }}"
     remote_src: yes
-    creates:    "{% if item.creates %}{{ target_media_location }}/{{ item.extractDir }}/{{ item.creates }}{% endif %}"
+    creates:    "{{ target_media_location }}/{{ item.extractDir }}/{% if item.creates %}{{ item.creates }}{% else %}XXX{% endif %}"
   loop:         "{{ _bom.materials.media|flatten(levels=1) }}"
   when:       
     - item.extract is not undefined
