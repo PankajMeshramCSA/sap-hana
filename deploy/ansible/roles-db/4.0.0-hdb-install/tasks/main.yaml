@@ -34,9 +34,14 @@
     force:            yes
   # Template parameter mapping
   vars:
-    pwd_os_sapadm:                "{{ password_master }}"
-    pwd_os_sidadm:                "{{ password_master }}"
-    pwd_hdb_system:               "{{ password_master }}"
+    pwd_os_root:                      "***"                                      # Not used at this time
+    pwd_os_sapadm:                    "{{ password_master }}"
+    pwd_os_sidadm:                    "{{ password_master }}"
+    pwd_hdb_system:                   "{{ password_master }}"
+    pwd_streaming_cluster_manager:    "***"                                      # Not used at this time
+    pwd_ase_user:                     "***"                                      # Not used at this time
+    pwd_org_manager:                  "***"                                      # Not used at this time
+
 
 # *====================================4=======================================8
 
