@@ -34,9 +34,9 @@
     force:            yes
   # Template parameter mapping
   vars:
-    pwd_os_sapadm:                {{ password_master }}
-    pwd_os_sidadm:                {{ password_master }}
-    pwd_hdb_system:               {{ password_master }}
+    pwd_os_sapadm:                "{{ password_master }}"
+    pwd_os_sidadm:                "{{ password_master }}"
+    pwd_hdb_system:               "{{ password_master }}"
 
 # *====================================4=======================================8
 
