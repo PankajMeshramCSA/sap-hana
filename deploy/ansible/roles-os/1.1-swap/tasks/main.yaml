@@ -19,11 +19,32 @@
   include_vars:
     file:                         "../../../vars/sap-disks.yaml"
 
-- include_tasks:                  configure.yaml
+# -------------------------------------+---------------------------------------
+# The tier from sap-disks should match the node_tier from SID_hosts.yaml
+# -------------------------------------+---------------------------------------
+- name:                           Check if loop is being effected by tier at playbook level
+  ansible.builtin.debug:
+    msg:                          "Selected node_tier for hostname {{ansible_hostname }} -> {{ sapswap.tier }}"
+    verbosity:                    2
   loop:                           "{{ sap_swap }}"
+  loop_control:
+    loop_var:                     sapswap
   when:
                                   - ansible_os_family != "Windows"
-                                  - item.tier != "HLI"
-                                  - item.tier in ["all", tier]
+                                  - sapswap.tier != "HLI"
+                                  - sapswap.tier in ["all", node_tier] 
+
+
+# -------------------------------------+---------------------------------------
+# call the swap space configuration tasks
+# -------------------------------------+---------------------------------------
+- include_tasks:                  configure.yaml
+  loop:                           "{{ sap_swap }}"
+  loop_control:
+    loop_var:                     sapswap
+  when:
+                                  - ansible_os_family != "Windows"
+                                  - sapswap.tier != "HLI"
+                                  - sapswap.tier in ["all", node_tier]
 
 ...

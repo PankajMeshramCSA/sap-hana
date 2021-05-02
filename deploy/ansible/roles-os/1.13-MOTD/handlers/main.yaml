@@ -1,7 +1,8 @@
 - name:                 restart sshd service
-  service:
+  systemd:
     name:               sshd
     state:              restarted
-    become:             true
+    daemon_reload:      yes
+  become:             true
 
 ...
