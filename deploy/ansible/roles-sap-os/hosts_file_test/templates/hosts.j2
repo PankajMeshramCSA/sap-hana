@@ -57,7 +57,7 @@ interface:
     x01web00l2e7
         eth0
 #}
-DEBUG:    {{ interface }} - {{ format(hostvars['host']['ansible_eth0']['ipv4']['address']) }}
+DEBUG:    {{ interface }} - {{ hostvars[host]['ansible_eth0']['ipv4']['address'] }}
 {%    endfor %}
 {%  endfor %}
 
