@@ -15,14 +15,21 @@ If we do not sort it, then the order can change randomly.
 
 #}
 {%  for host in play_hosts|sort %}
-DEBUG: {{ host }}
+DEBUG:  {{ host }}
+{%    for interface in hostvars[host]['ansible_interfaces'] %}
+DEGUG:    {{ interface }}
+{%    endfor %}
+{%  endfor %}
+
 {#
 
 Ensure the specified host has gathered facts about eth0.
 
 #}
+{#
 {%    if 'ansible_eth0' in hostvars[host] %}
 {{ '%-15s' | format(hostvars[host]['ansible_eth0']['ipv4']['address']) }}    {{ '%15s' | format(host) }}.{{ sap_fqdn }}     {{ '%15s' | format(host) }}
+#}
 {#
 
 Check for Secondary IP Addresses.
@@ -30,6 +37,7 @@ Currently only structured to support 4 Secondaries.
 Currently only first Secondary is defined.
 
 #}
+{#
 {%      if 'ipv4_secondaries' in hostvars[host]['ansible_eth0'] %}
 {%        for ipv4Secondary in hostvars[host]['ansible_eth0']['ipv4_secondaries'] %}
 {%          if loop.index == 1 %}
@@ -47,3 +55,46 @@ Currently only first Secondary is defined.
 {%      endif %}
 {%    endif %}
 {%  endfor %}
+#}
+{#
+
+
+
+{%  for host in play_hosts|sort %}
+DEBUG: {{ host }}
+#}
+{#
+
+Ensure the specified host has gathered facts about eth0.
+
+#}
+{#
+{%    if 'ansible_eth0' in hostvars[host] %}
+{{ '%-15s' | format(hostvars[host]['ansible_eth0']['ipv4']['address']) }}    {{ '%15s' | format(host) }}.{{ sap_fqdn }}     {{ '%15s' | format(host) }}
+#}
+{#
+
+Check for Secondary IP Addresses.
+Currently only structured to support 4 Secondaries.
+Currently only first Secondary is defined.
+
+#}
+{#
+{%      if 'ipv4_secondaries' in hostvars[host]['ansible_eth0'] %}
+{%        for ipv4Secondary in hostvars[host]['ansible_eth0']['ipv4_secondaries'] %}
+{%          if loop.index == 1 %}
+{{ '%-15s' | format(ipv4Secondary['address']) }}    {{ '%15s' | format('sap-' + host) }}.{{ sap_fqdn }}     {{ '%15s' | format('sap-' + host) }}
+{%          elif loop.index == 2 %}
+{{ '%-15s' | format(ipv4Secondary['address']) }}    Third IP
+{%          elif loop.index == 3 %}
+{{ '%-15s' | format(ipv4Secondary['address']) }}    Fourth IP
+{%          elif loop.index == 4 %}
+{{ '%-15s' | format(ipv4Secondary['address']) }}    Fifth IP
+{%          else %}
+{{ '%-15s' | format(ipv4Secondary['address']) }}    Unknown {{ loop.index }}
+{%          endif %}
+{%        endfor %}
+{%      endif %}
+{%    endif %}
+{%  endfor %}
+#}
