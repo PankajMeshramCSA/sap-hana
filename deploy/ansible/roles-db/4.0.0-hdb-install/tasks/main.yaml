@@ -14,6 +14,11 @@
 
 ---
 
+- name:  
+  set_fact:
+    dir_params:                   "{{ target_media_location }}/.params"
+
+
 # #   SAP: Register BOM
 - name:             "Register BOM: {{ bom_base_name }}"
   include_vars:
@@ -31,7 +36,7 @@
     state:  directory
     mode:   0755
   loop:
-    - { state: 'directory', mode: '0755', path: '/usr/sap/install/.params' }
+    - { state: 'directory', mode: '0755', path: '{{ dir_params }}' }
 
 
 # TODO: Move the template to the BOM Directory
@@ -39,7 +44,7 @@
 - name:               "SAP HANA: deploy hdblcm password file"
   template:
     src:              HANA_2_00_055_v1_install.rsp.xml.j2
-    dest:             /usr/sap/install/.params/hdbserver_{{ sap_sid }}_passwords.xml
+    dest:             "{{ dir_params }}/hdbserver_{{ sap_sid }}_passwords.xml"
     mode:             0644
     force:            yes
   # Template parameter mapping
@@ -63,7 +68,7 @@
 - name:               "SAP HANA: deploy hdblcm install response file"
   template:
     src:              HANA_2_00_055_v1_install.rsp.j2
-    dest:             /usr/sap/install/.params/hdbserver_{{ sap_sid }}_install.rsp
+    dest:             "{{ dir_params }}/hdbserver_{{ sap_sid }}_install.rsp"
     mode:             0644
     force:            yes
   # Template parameter mapping
@@ -72,8 +77,8 @@
     _rsp_components:                  "all"
     _rsp_sapmnt:                      "/hana/shared"                              # Default Value
     _rsp_hostname:                    "x00dhdb00l0b3a"
-    _rsp_sid:                         "HDB"
-    _rsp_number:                      "00"
+    _rsp_sid:                         "{{ hdb_sid|upper }}"
+    _rsp_number:                      "{{ hdb_instance_number }}"
     _rsp_system_usage:                "custom"
 
 
@@ -82,10 +87,10 @@
 - name:               "Execute hdblcm"
   # shell:              "pwd=$(<../hdbserver_{{ sap_sid }}_passwords.xml); rm ../hdbserver_{{ sap_sid }}_passwords.xml; echo $pwd | ./hdblcm --batch --action=install --configfile='../hdbserver_{{ sap_sid }}_install.cfg' --read_password_from_stdin=xml"
   shell: |
-                      pwd=$(</usr/sap/install/.params/hdbserver_{{ sap_sid }}_passwords.xml)
-                      rm /usr/sap/install/.params/hdbserver_{{ sap_sid }}_passwords.xml
+                      pwd=$(<{{ dir_params }}/hdbserver_{{ sap_sid }}_passwords.xml)
+                      rm {{ dir_params }}/hdbserver_{{ sap_sid }}_passwords.xml
                       echo $pwd | \
-                      ./hdblcm --batch --action=install --configfile='/usr/sap/install/.params/hdbserver_{{ sap_sid }}_install.rsp' --read_password_from_stdin=xml
+                      ./hdblcm --batch --action=install --configfile='{{ dir_params }}/hdbserver_{{ sap_sid }}_install.rsp' --read_password_from_stdin=xml
   args:
     chdir:            "/usr/sap/install/CD_HDBSERVER/SAP_HANA_DATABASE"
 
@@ -101,7 +106,7 @@
 #     state:  "{{ item.state }}"
 #     mode:   "{{ item.mode }}"
 #   loop:
-#     - { state: 'absent',    mode: '0755', path: '/usr/sap/install/.params' }
+#     - { state: 'absent',    mode: '0755', path: '{{ dir_params }}' }
 
 
 

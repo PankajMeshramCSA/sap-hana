@@ -27,8 +27,8 @@ aas_instance_number:          ""
 sap_sid:                      ""                                                        # REQUIRED - SAP Install
 download_basket_dir:          "{{ target_media_location }}/download_basket"
 hdb_hostname:                 ""
-hdb_instance_number:          "00"
-hdb_sid:                      "HDB"
+hdb_sid:                      "HDB"                                                     # Default
+hdb_instance_number:          "00"                                                      # Default
 pas_hostname:                 ""
 pas_instance_number:          "00"
 password_hana_system:         ""
