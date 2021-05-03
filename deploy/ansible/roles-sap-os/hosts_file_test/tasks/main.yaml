@@ -24,8 +24,3 @@
     state:        present
     block:        "{{ lookup('template', 'hosts.j2') }}"
     marker:       "# {mark} ANSIBLE MANAGED BLOCK - {{ sap_sid|upper }}"
-
-
-
-- debug:
-    msg:    "{{ hostvars['x01dhdb00l02e7'] }}"
