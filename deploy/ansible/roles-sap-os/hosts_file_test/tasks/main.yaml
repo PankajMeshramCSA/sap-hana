@@ -18,7 +18,7 @@
 - name:           "OS: Insert empty line before the marker"
   lineinfile:
     dest:         /etc/hosts
-    insertbefore: '^# BEGIN ANSIBLE MANAGED BLOCK'
+    insertbefore: '^# BEGIN ANSIBLE MANAGED BLOCK.*$'
     line:         ''
 
 - name:           "OS: SID, Entries - /etc/hosts"
