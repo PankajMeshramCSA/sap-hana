@@ -15,6 +15,12 @@
     block:        "{{ lookup('file', 'hosts.block') }}"
     marker:       "# {mark} ANSIBLE MANAGED BLOCK - COMMON"
 
+- name:           "OS: Insert empty line before the marker"
+  lineinfile:
+    dest:         /etc/hosts
+    insertbefore: '^# BEGIN ANSIBLE MANAGED BLOCK$'
+    line:         ''
+
 - name:           "OS: SID, Entries - /etc/hosts"
   blockinfile:
     path:         /etc/hosts
