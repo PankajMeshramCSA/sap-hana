@@ -1,6 +1,8 @@
 #   SAP: Register BOM
-#   SAP PAS: deploy PAS Parameter file install template
-#   SAP PAS: Install
+#   create .params directory
+#   deploy db install template
+#   deploy hdblcm password file
+#
 
 # TODO: Considerations
 #         20G+ swap space
@@ -11,6 +13,16 @@
 #
 
 ---
+
+# #   SAP: Register BOM
+- name:             "Register BOM: {{ bom_base_name }}"
+  include_vars:
+    file:           "{{ inventory_dir }}/{{ bom_base_name }}.yaml"
+    name:           bom
+
+
+
+
 
 #   0x) Create hidden directory for parameter files
 - name:     "Create hidden directory"
@@ -23,29 +35,45 @@
 
 
 
-
-# *====================================4=======================================8
 #   SAP HANA: deploy hdblcm password file
 - name:               "SAP HANA: deploy hdblcm password file"
   template:
-    src:              hdbserver_passwords.j2
+    src:              HANA_2_00_055_v1_install.rsp.xml.j2
     dest:             /usr/sap/install/.params/hdbserver_{{ sap_sid }}_passwords.xml
     mode:             0644
     force:            yes
   # Template parameter mapping
   vars:
-    pwd_os_root:                      "***"                                      # Not used at this time
+    pwd_os_root:                      "***"                                       # Not used at this time
     pwd_os_sapadm:                    "{{ password_master }}"
+    pwd_master:                       "{{ password_master }}"
     pwd_os_sidadm:                    "{{ password_master }}"
     pwd_hdb_system:                   "{{ password_master }}"
-    pwd_streaming_cluster_manager:    "***"                                      # Not used at this time
-    pwd_ase_user:                     "***"                                      # Not used at this time
-    pwd_org_manager:                  "***"                                      # Not used at this time
+    pwd_lss_user:                     "***"                                       # Not used at this time
+    pwd_lss_backup:                   "***"                                       # Not used at this time
+    pwd_streaming_cluster_manager:    "***"                                       # Not used at this time
+    pwd_ase_user:                     "***"                                       # Not used at this time
+    pwd_org_manager:                  "***"                                       # Not used at this time
 
 
-# *====================================4=======================================8
 
 
+#   SAP HANA: deploy unattended instal response file
+- name:               "SAP HANA: deploy unattended instal response file"
+  template:
+    src:              HANA_2_00_055_v1_install.rsp.j2
+    dest:             /usr/sap/install/.params/hdbserver_{{ sap_sid }}_install.rsp
+    mode:             0644
+    force:            yes
+  # Template parameter mapping
+  vars:
+    _rsp_component_root:              "../COMPONENTS"
+    _rsp_components:                  "all"
+    _rsp_sapmnt:                      "/hana/shared"                              # Default Value
+    _rsp_hostname:                    "x00dhdb00l0b3a"
+    _rsp_sid:                         "HDB"
+    _rsp_number:                      "00"
+    _rsp_system_usage:                "custom"
 
 
 
@@ -63,6 +91,10 @@
 
 
 
+...
+# /*---------------------------------------------------------------------------8
+# |                                   END                                      |
+# +------------------------------------4--------------------------------------*/
 
 
 
@@ -72,19 +104,6 @@
 
 
 
-# # *====================================4=======================================8
-# #   SAP: Register BOM
-# - name:           "Register BOM"
-#   include_vars:
-#     file:         "../../BOM_FILES/BOMs/BOM_{{ SAP_BOM }}.yaml"
-#     name:         sapbom
-
-# #------------------<DEBUGGING>-------------------
-# # - debug:  
-# #     msg:      "URL: {{ item.url }}"
-# #   loop:       "{{ sapbom.BillOfMaterials|flatten(levels=1) }}"
-# #------------------</DEBUGGING>------------------
-# # *====================================4=======================================8
 
 
 # # *====================================4=======================================8
