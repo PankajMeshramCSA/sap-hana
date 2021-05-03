@@ -34,7 +34,7 @@
     - { state: 'directory', mode: '0755', path: '/usr/sap/install/.params' }
 
 
-
+# TODO: Move the template to the BOM Directory
 #   SAP HANA: deploy hdblcm password file
 - name:               "SAP HANA: deploy hdblcm password file"
   template:
@@ -57,9 +57,10 @@
 
 
 
-
-#   SAP HANA: deploy unattended instal response file
-- name:               "SAP HANA: deploy unattended instal response file"
+# TODO: Move the template to the BOM Directory
+# TODO: Analyze file in more detail
+#   SAP HANA: deploy hdblcm install response file
+- name:               "SAP HANA: deploy hdblcm install response file"
   template:
     src:              HANA_2_00_055_v1_install.rsp.j2
     dest:             /usr/sap/install/.params/hdbserver_{{ sap_sid }}_install.rsp
@@ -74,6 +75,22 @@
     _rsp_sid:                         "HDB"
     _rsp_number:                      "00"
     _rsp_system_usage:                "custom"
+
+
+
+#   SAP HANA: Install
+- name:               "Execute hdblcm"
+  # shell:              "pwd=$(<../hdbserver_{{ sap_sid }}_passwords.xml); rm ../hdbserver_{{ sap_sid }}_passwords.xml; echo $pwd | ./hdblcm --batch --action=install --configfile='../hdbserver_{{ sap_sid }}_install.cfg' --read_password_from_stdin=xml"
+  shell: |
+                      pwd=$(</usr/sap/install/.params/hdbserver_{{ sap_sid }}_passwords.xml)
+                      rm /usr/sap/install/.params/hdbserver_{{ sap_sid }}_passwords.xml
+                      echo $pwd | \
+                      ./hdblcm --batch --action=install --configfile='/usr/sap/install/.params/hdbserver_{{ sap_sid }}_install.rsp' --read_password_from_stdin=xml
+  args:
+    chdir:            "/usr/sap/install/CD_HDBSERVER/SAP_HANA_DATABASE"
+
+
+
 
 
 
@@ -106,31 +123,10 @@
 
 
 
-# # *====================================4=======================================8
-# #   SAP HANA: deploy hdblcm install template
-# - name:               "SAP HANA: deploy hdblcm install template"
-#   template:
-#     src:              ../../BOM_FILES/parameter_files/HDB_{{ SAP_BOM }}.j2
-#     dest:             "{{ sap_cdpackage_hdbserver }}/hdbserver_{{ sap_sid }}_install.cfg"
-#     mode:             0644
-#     force:            yes
-# # *====================================4=======================================8
 
 
 
 
-# # *====================================4=======================================8
-# #   SAP HANA: Install
-# - name:               "Execute hdblcm"
-#   # shell:              "pwd=$(<../hdbserver_{{ sap_sid }}_passwords.xml); rm ../hdbserver_{{ sap_sid }}_passwords.xml; echo $pwd | ./hdblcm --batch --action=install --configfile='../hdbserver_{{ sap_sid }}_install.cfg' --read_password_from_stdin=xml"
-#   shell: |
-#                       pwd=$(<../hdbserver_{{ sap_sid }}_passwords.xml)
-#                       rm ../hdbserver_{{ sap_sid }}_passwords.xml
-#                       echo $pwd | \
-#                       ./hdblcm --batch --action=install --configfile='../hdbserver_{{ sap_sid }}_install.cfg' --read_password_from_stdin=xml
-#   args:
-#     chdir:            "{{ sap_cdpackage_hdbserver }}/SAP_HANA_DATABASE"
-# # *====================================4=======================================8
 
 
 
