@@ -24,31 +24,41 @@ host:
     x01web00l2e7
 #}
 DEBUG:  {{ host }}
+{#
+
+Loop through all the network intefaces that are defined on the host.
+Skip over the 'lo' interface.
+Sort the order so eth0 is first.
+
+ansible_interfaces:
+    lo                       <-- Omit
+    eth3
+    eth2
+    eth1
+    eth0
+
+#}
 {%    for interface in hostvars[host]['ansible_interfaces']|sort if interface != 'lo' %}
 {#
 interface:
     x01app00l2e7
-        lo                       <-- Omit
-        eth1
         eth0
+        eth1
     x01app01l2e7
-        lo                       <-- Omit
-        eth1
         eth0
+        eth1
     x01dhdb00l02e7
-        lo                       <-- Omit
-        eth3
-        eth2
-        eth1
         eth0
+        eth1
+        eth2
+        eth3
     x01scs00l2e7
-        lo                       <-- Omit
         eth0
     x01web00l2e7
-        lo                       <-- Omit
         eth0
 #}
-DEBUG:    {{ interface }}
+DEBUG:    {{ interface }} - {{ hostvars['host']['ansible_' + interface]['ipv4']['address'] }}
+{%      if %}
 {%    endfor %}
 {%  endfor %}
 
