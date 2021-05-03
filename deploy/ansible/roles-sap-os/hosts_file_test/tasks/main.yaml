@@ -1,0 +1,26 @@
+# Tasks:
+#   OS: hosts file, Entries - /etc/hosts
+#
+# TODO:
+
+---
+#   OS: hosts file, Entries - /etc/hosts
+- name:           "OS: Common, Entries - /etc/hosts"
+  blockinfile:
+    path:         /etc/hosts
+    mode:         0644
+    create:       yes
+    backup:       yes
+    state:        present
+    block:        "{{ lookup('file', 'hosts.block') }}"
+    marker:       "# {mark} ANSIBLE MANAGED BLOCK - COMMON"
+
+- name:           "OS: SID, Entries - /etc/hosts"
+  blockinfile:
+    path:         /etc/hosts
+    mode:         0644
+    create:       yes
+    backup:       yes
+    state:        present
+    block:        "{{ lookup('template', 'hosts.j2') }}"
+    marker:       "# {mark} ANSIBLE MANAGED BLOCK - {{ sap_sid|upper }}"
