@@ -15,9 +15,40 @@ If we do not sort it, then the order can change randomly.
 
 #}
 {%  for host in play_hosts|sort %}
+{#
+host:
+    x01app00l2e7
+    x01app01l2e7
+    x01dhdb00l02e7
+    x01scs00l2e7
+    x01web00l2e7
+#}
 DEBUG:  {{ host }}
-{%    for interface in hostvars[host]['ansible_interfaces'] if interface != 'lo' %}
-DEGUG:    {{ interface }}
+{%    for interface in hostvars[host]['ansible_interfaces']|sort if interface != 'lo' %}
+{#
+interface:
+    x01app00l2e7
+        lo                       <-- Omit
+        eth1
+        eth0
+    x01app01l2e7
+        lo                       <-- Omit
+        eth1
+        eth0
+    x01dhdb00l02e7
+        lo                       <-- Omit
+        eth3
+        eth2
+        eth1
+        eth0
+    x01scs00l2e7
+        lo                       <-- Omit
+        eth0
+    x01web00l2e7
+        lo                       <-- Omit
+        eth0
+#}
+DEBUG:    {{ interface }}
 {%    endfor %}
 {%  endfor %}
 
