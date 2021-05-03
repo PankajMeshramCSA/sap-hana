@@ -16,7 +16,7 @@ If we do not sort it, then the order can change randomly.
 #}
 {%  for host in play_hosts|sort %}
 DEBUG:  {{ host }}
-{%    for interface in hostvars[host]['ansible_interfaces'] %}
+{%    for interface in hostvars[host]['ansible_interfaces'] if interface != 'lo' %}
 DEGUG:    {{ interface }}
 {%    endfor %}
 {%  endfor %}
