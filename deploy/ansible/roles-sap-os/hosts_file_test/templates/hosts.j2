@@ -59,6 +59,7 @@ interface:
 #}
 DEBUG:    {{ interface }}
 DEBUG:        hostvars[{{ host }}]['{{ 'ansible_' + interface }}']['ipv4']['address']
+DEBUG:            {{ hostvars[host]['format('ansible_' + interface)']['ipv4']['address'] }}
 {%    endfor %}
 {%  endfor %}
 
