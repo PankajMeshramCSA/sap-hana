@@ -76,7 +76,7 @@
     _rsp_component_root:              "../COMPONENTS"
     _rsp_components:                  "all"
     _rsp_sapmnt:                      "/hana/shared"                              # Default Value
-    _rsp_hostname:                    "{{ inventory_hostname_short }}"
+    _rsp_hostname:                    "{{ inventory_hostname_short }}"            # TODO: needs to be tested with HA and scale out
     _rsp_sid:                         "{{ hdb_sid|upper }}"
     _rsp_number:                      "{{ hdb_instance_number }}"
     _rsp_system_usage:                "custom"
