@@ -64,10 +64,15 @@ if ipv4 not found, then that NIC is not configured
 {%      if 'ipv4' in hostvars[host]['ansible_' + interface] %}
 DEBUG:        {{ hostvars[host]['ansible_' + interface]['ipv4']['address'] }}
 {%        if interface == 'eth0' %}
-                  PRIMARY NIC
+                  PRIMARY NIC - First IP
 {%        else %}
-                  SECONDARY NIC
+                  SECONDARY NIC - First IP
 {%        endif %}
+{%      endif %}
+{%      if 'ipv4_secondaries' in hostvars[host]['ansible_' + interface] %}
+{%        for ipv4Secondary in hostvars[host]['ansible_' + interface]['ipv4_secondaries'] %}
+# Unhandled condition; Found a secondary IP: {{ interface }}:{{ loop.index }} - {{ ipv4Secondary['address'] }}
+{%        endfor %}
 {%      endif %}
 {%    endfor %}
 {%  endfor %}
