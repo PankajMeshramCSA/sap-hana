@@ -63,6 +63,11 @@ if ipv4 not found, then that NIC is not configured
 #}
 {%      if 'ipv4' in hostvars[host]['ansible_' + interface] %}
 DEBUG:        {{ hostvars[host]['ansible_' + interface]['ipv4']['address'] }}
+{%        if interface == 'eth0' %}
+                  PRIMARY NIC
+{%        else %}
+                  SECONDARY NIC
+{%        endif %}
 {%      endif %}
 {%    endfor %}
 {%  endfor %}
