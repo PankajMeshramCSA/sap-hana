@@ -78,7 +78,7 @@ do
 #       1) Make SID in inventory file name a parameter.
 #       2) Convert file extension to yaml.
 #       3) Find more secure way to handle the ssh private key so it is not exposed.
-        if [[ playbook = "INSTALL" ]]
+        if [[ $playbook = "INSTALL" ]]
         then
           echo "INSTALL"
         else
