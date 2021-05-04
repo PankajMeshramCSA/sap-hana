@@ -49,6 +49,7 @@ options=(                           \
         "Pacemaker Setup"           \
         "Pacemaker SCS Setup"       \
         "Pacemaker HANA Setup"      \
+        "Install SAP (1-7)"         \
         "Quit"                      \
 )
 
@@ -69,6 +70,7 @@ do
                 "Pacemaker Setup")          playbook=playbook_06_00_00_pacemaker.yaml;;
                 "Pacemaker SCS Setup")      playbook=playbook_06_00_01_pacemaker_scs.yaml;;
                 "Pacemaker HANA Setup")     playbook=playbook_06_00_03_pacemaker_hana.yaml;;
+                "Install SAP *")            playbook="playbook_01_os_base_config.yaml playbook_02_os_sap_specific_config.yaml"
                 "Quit")                     break;;
         esac
 
@@ -81,7 +83,7 @@ do
           --user        azureadm                                                          \
           --private-key sshkey                                                            \
           --extra-vars="@sap-parameters.yaml"                                             \
-	  "${@}"                                                                          \
+	        "${@}"                                                                          \
           ~/Azure_SAP_Automated_Deployment/sap-hana/deploy/ansible/${playbook}
           break
 done
