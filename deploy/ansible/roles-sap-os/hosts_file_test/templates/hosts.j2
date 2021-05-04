@@ -7,6 +7,7 @@ TODO:
   Be able to handle multiple interfaces. (eth0, eth1, etc...)
   
 #}
+
 # {{ sap_sid|upper }}
 {#
 
@@ -70,12 +71,12 @@ if ipv4 not found, then that NIC is not configured
 {#
 Primary NIC with Primary IP
 #}
-{{ '%-22s' | format(hostvars[host]['ansible_' + interface]['ipv4']['address']) }}{{ '%-50s' | format(host + '.' + sap_fqdn) }}{{ '%-21s' | format(host) }}
+{{ '%-19s' | format(hostvars[host]['ansible_' + interface]['ipv4']['address']) }}{{ '%-50s' | format(host + '.' + sap_fqdn) }}{{ '%-21s' | format(host) }}
 {%        else %}
 {#
 Secondary NIC with Primary IP
 #}
-{{ '%-22s' | format(hostvars[host]['ansible_' + interface]['ipv4']['address']) }}{{ '%-50s' | format(host + interface + '_0.' + sap_fqdn) }}{{ '%-21s' | format(host + interface + '_0') }}
+{{ '%-19s' | format(hostvars[host]['ansible_' + interface]['ipv4']['address']) }}{{ '%-50s' | format(host + interface + '_0.' + sap_fqdn) }}{{ '%-21s' | format(host + interface + '_0') }}
 {%        endif %}
 {%      endif %}
 {%      if 'ipv4_secondaries' in hostvars[host]['ansible_' + interface] %}
@@ -85,7 +86,6 @@ Secondary NIC with Primary IP
 {%      endif %}
 {%    endfor %}
 {%  endfor %}
-
 {#
 
 Ensure the specified host has gathered facts about eth0.
