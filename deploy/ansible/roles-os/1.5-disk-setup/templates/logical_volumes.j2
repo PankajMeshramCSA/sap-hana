@@ -26,7 +26,7 @@
                 {% set opts = '' %}
               {% endif %} 
               {% set tier = 'hdb' %}
-            {% if disk.type == 'sap' %}
+            {% elif disk.type == 'sap' %}
               {% set size = '64g' %}
               {% set opts = '' %}
             {% elif disk.type == 'web' %}
