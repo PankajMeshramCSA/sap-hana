@@ -70,7 +70,7 @@ do
                 "Pacemaker Setup")          playbook=playbook_06_00_00_pacemaker.yaml;;
                 "Pacemaker SCS Setup")      playbook=playbook_06_00_01_pacemaker_scs.yaml;;
                 "Pacemaker HANA Setup")     playbook=playbook_06_00_03_pacemaker_hana.yaml;;
-                "Install SAP *")            playbook=INSTALL;;
+                "Install SAP (1-7)")        playbook=INSTALL;;
                 "Quit")                     break;;
         esac
 
