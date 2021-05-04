@@ -70,7 +70,7 @@ do
                 "Pacemaker Setup")          playbook=playbook_06_00_00_pacemaker.yaml;;
                 "Pacemaker SCS Setup")      playbook=playbook_06_00_01_pacemaker_scs.yaml;;
                 "Pacemaker HANA Setup")     playbook=playbook_06_00_03_pacemaker_hana.yaml;;
-                "Install SAP *")            playbook="playbook_01_os_base_config.yaml playbook_02_os_sap_specific_config.yaml";;
+                "Install SAP *")            playbook=INSTALL;;
                 "Quit")                     break;;
         esac
 
@@ -78,12 +78,17 @@ do
 #       1) Make SID in inventory file name a parameter.
 #       2) Convert file extension to yaml.
 #       3) Find more secure way to handle the ssh private key so it is not exposed.
-        ansible-playbook                                                                  \
-          --inventory   X00_hosts.yaml                                                    \
-          --user        azureadm                                                          \
-          --private-key sshkey                                                            \
-          --extra-vars="@sap-parameters.yaml"                                             \
-	        "${@}"                                                                          \
-          ~/Azure_SAP_Automated_Deployment/sap-hana/deploy/ansible/${playbook}
-          break
+        if [[ playbook = "INSTALL" ]]
+        then
+          echo "INSTALL"
+        else
+          ansible-playbook                                                                  \
+            --inventory   X00_hosts.yaml                                                    \
+            --user        azureadm                                                          \
+            --private-key sshkey                                                            \
+            --extra-vars="@sap-parameters.yaml"                                             \
+            "${@}"                                                                          \
+            ~/Azure_SAP_Automated_Deployment/sap-hana/deploy/ansible/${playbook}
+            break
+        fi
 done
