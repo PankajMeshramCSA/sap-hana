@@ -57,7 +57,7 @@
     sap_scs_hostname:             "{{ query('inventory_hostnames', '{{ sap_sid|upper }}_SCS') | first }}"
     sap_db_hostname:              "{{ query('inventory_hostnames', '{{ sap_sid|upper }}_DB')  | first }}"
     sap_profile_dir:              /usr/sap/{{ sap_sid|upper }}/SYS/profile
-    sap_ciVirtualHostname:        x01app00lab3
+    sap_ciVirtualHostname:        "{{ inventory_hostname }}"
     sap_cd_package_hdbclient:     
     sap_cd_package_cd1:           
     sap_cd_package_cd2:           
