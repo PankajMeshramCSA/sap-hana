@@ -6,38 +6,44 @@
 
             {% if disk.type == 'data' %}
               {% set opts = '-i ' ~ loop.index ~' -I 256' %}
+              {% set size = '100%FREE' %}
               {% set tier = 'hdb' %}
             {% elif disk.type == 'log' %}
               {% set opts = '-i ' ~ loop.index ~' -I 64' %}
+              {% set size = '100%FREE' %}
               {% set tier = 'hdb' %}
             {% elif disk.type == 'shared' %}
               {% set opts = '' %}
+              {% set size = '100%FREE' %}
               {% set tier = 'hdb' %}
             {% elif disk.type == 'backup' %}
               {% if loop.index > 1 %}
                 {% set opts = '-i ' ~ loop.index ~' -I 256' %}
+              {% set size = '100%FREE' %}
                 {% set tier = 'hdb' %}
               {% else %} 
+                {% set size = '100%FREE' %}
                 {% set opts = '' %}
               {% endif %} 
               {% set tier = 'hdb' %}
+            {% if disk.type == 'sap' %}
+              {% set size = '64g' %}
+              {% set opts = '' %}
+            {% elif disk.type == 'web' %}
+              {% set size = '4g' %}
+              {% set opts = '' %}
             {% else %}
               {% if loop.index > 1 %}
                 {% set opts = '-i ' ~ loop.index ~' -I 256' %}
+                {% set size = '100%FREE' %}
                 {% set tier = 'hdb' %}
               {% else %} 
                 {% set opts = '' %}
+                {% set size = '100%FREE' %}
                 {% set tier = 'all' %}
-            {% endif %}
+              {% endif %}
             {% endif %}
 
-            {% if disk.type == 'sap' %}
-              {% set size = '64g' %}
-            {% elif disk.type == 'web' %}
-              {% set size = '4g' %}
-            {% else %}
-              {% set size = '100%FREE' %}
-            {% endif %}
 
             {% set dummy =  disktype.update({'host': disk.host }) %}
             {% set dummy =  disktype.update({'tier': tier }) %}
