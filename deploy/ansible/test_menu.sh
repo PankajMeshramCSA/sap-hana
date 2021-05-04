@@ -49,7 +49,7 @@ options=(                           \
         "Pacemaker Setup"           \
         "Pacemaker SCS Setup"       \
         "Pacemaker HANA Setup"      \
-        "Install SAP (1-7)"         \
+        "Install SAP [1-7]"         \
         "Quit"                      \
 )
 
