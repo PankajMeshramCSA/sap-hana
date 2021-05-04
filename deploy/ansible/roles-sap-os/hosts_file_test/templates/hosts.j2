@@ -70,7 +70,7 @@ if ipv4 not found, then that NIC is not configured
 {#
 Primary NIC with Primary IP
 #}
-{{ '%-22s' | format(hostvars[host]['ansible_' + interface]['ipv4']['address']) }}{{ '%-50s' | format(host) }}.{{ sap_fqdn }}{{ '%-21s' | format(host) }}
+{{ '%-22s' | format(hostvars[host]['ansible_' + interface]['ipv4']['address']) }}{{ '%-50s' | format(host + '.' + sap_fqdn) }}{{ '%-21s' | format(host) }}
 {%        else %}
 {#
 Secondary NIC with Primary IP
