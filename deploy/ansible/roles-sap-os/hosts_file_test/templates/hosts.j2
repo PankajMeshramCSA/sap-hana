@@ -16,14 +16,15 @@ If we do not sort it, then the order can change randomly.
 #}
 {%  for host in play_hosts|sort %}
 {#
+
 host:
     x01app00l2e7
     x01app01l2e7
     x01dhdb00l02e7
     x01scs00l2e7
     x01web00l2e7
+
 #}
-DEBUG:  {{ host }}
 {#
 
 Loop through all the network intefaces that are defined on the host.
@@ -40,6 +41,7 @@ ansible_interfaces:
 #}
 {%    for interface in hostvars[host]['ansible_interfaces']|sort if interface != 'lo' %}
 {#
+
 interface:
     x01app00l2e7
         eth0
@@ -56,17 +58,24 @@ interface:
         eth0
     x01web00l2e7
         eth0
+
 #}
-DEBUG:    {{ interface }}
 {#
+
 if ipv4 not found, then that NIC is not configured
+
 #}
 {%      if 'ipv4' in hostvars[host]['ansible_' + interface] %}
-DEBUG:        {{ hostvars[host]['ansible_' + interface]['ipv4']['address'] }}
 {%        if interface == 'eth0' %}
-                  PRIMARY NIC - First IP
+{#
+Primary NIC with Primary IP
+#}
+{{ '%-15s' | format(hostvars[host]['ansible_' + interface]['ipv4']['address']) }}    {{ '%15s' | format(host) }}.{{ sap_fqdn }}     {{ '%15s' | format(host) }}
 {%        else %}
-                  SECONDARY NIC - First IP
+{#
+Secondary NIC with Primary IP
+#}
+{{ '%-15s' | format(hostvars[host]['ansible_' + interface]['ipv4']['address']) }}    {{ '%15s' | format(host + interface + '_0') }}.{{ sap_fqdn }}     {{ '%15s' | format(host + interface + '_0') }}
 {%        endif %}
 {%      endif %}
 {%      if 'ipv4_secondaries' in hostvars[host]['ansible_' + interface] %}
