@@ -80,7 +80,15 @@ do
 #       3) Find more secure way to handle the ssh private key so it is not exposed.
         if [[ "$playbook" == "INSTALL" ]]
         then
-          echo "INSTALL"
+          ansible-playbook                                                                                   \
+            --inventory   X00_hosts.yaml                                                                     \
+            --user        azureadm                                                                           \
+            --private-key sshkey                                                                             \
+            --extra-vars="@sap-parameters.yaml"                                                              \
+            "${@}"                                                                                           \
+            ~/Azure_SAP_Automated_Deployment/sap-hana/deploy/ansible/playbook_01_os_base_config.yaml         \
+            ~/Azure_SAP_Automated_Deployment/sap-hana/deploy/ansible/playbook_02_os_sap_specific_config.yaml
+            break
         else
           ansible-playbook                                                                  \
             --inventory   X00_hosts.yaml                                                    \
