@@ -1,10 +1,10 @@
 function New-SAPAutomationRegion {
     <#
     .SYNOPSIS
-        Deploys a new SAP Environment (Deployer, Library and Workload VNet)
+        Deploys a new SAP Environment (Deployer, Library)
 
     .DESCRIPTION
-        Deploys a new SAP Environment (Deployer, Library and Workload VNet)
+        Deploys a new SAP Environment (Deployer, Library)
 
     .PARAMETER DeployerParameterfile
         This is the parameter file for the Deployer
@@ -15,10 +15,10 @@ function New-SAPAutomationRegion {
     .PARAMETER Subscription
         This is the subscription into which the deployment is performed
 
-    .PARAMETER Client_id
+    .PARAMETER SPN_id
         This is the Service Principal App ID
 
-    .PARAMETER Client_secret
+    .PARAMETER SPN_password
         This is the Service Principal password
 
     .PARAMETER Tenant
@@ -52,9 +52,10 @@ function New-SAPAutomationRegion {
      New-SAPAutomationRegion -DeployerParameterfile .\DEPLOYER\PROD-WEEU-DEP00-INFRASTRUCTURE\PROD-WEEU-DEP00-INFRASTRUCTURE.json 
      -LibraryParameterfile .\LIBRARY\PROD-WEEU-SAP_LIBRARY\PROD-WEEU-SAP_LIBRARY.json 
      -Subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
-     -Client_id yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
-     -Client_secret ************************
+     -SPN_id yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+     -SPN_password ************************
      -Tenant_id zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz  
+     -Silent
                    
 
 
@@ -77,13 +78,13 @@ Licensed under the MIT license.
         #Parameter file
         [Parameter(Mandatory = $true)][string]$DeployerParameterfile,
         [Parameter(Mandatory = $true)][string]$LibraryParameterfile,
-        [Parameter(Mandatory = $true)][string]$Subscription,
+        [Parameter(Mandatory = $false)][string]$Subscription,
         #SPN App ID
-        [Parameter(Mandatory = $true)][string]$Client_id,
+        [Parameter(Mandatory = $false)][string]$SPN_id,
         #SPN App secret
-        [Parameter(Mandatory = $true)][string]$Client_secret,
+        [Parameter(Mandatory = $false)][string]$SPN_password,
         #Tenant
-        [Parameter(Mandatory = $true)][string]$Tenant_id,
+        [Parameter(Mandatory = $false)][string]$Tenant_id,
         [Parameter(Mandatory = $false)][Switch]$Force,
         [Parameter(Mandatory = $false)][Switch]$Silent
     )
@@ -175,8 +176,11 @@ Licensed under the MIT license.
     }
 
     if ($null -ne $Subscription) {
-        $iniContent[$combined]["kvsubscription"] = $Subscription
+        $iniContent[$combined]["STATE_SUBSCRIPTION"] = $Subscription
         Out-IniFile -InputObject $iniContent -Path $fileINIPath
+
+        $Env:ARM_SUBSCRIPTION_ID=$Subscription
+
     }
 
     if ($null -ne $iniContent[$combined]["step"]) {
@@ -243,8 +247,8 @@ Licensed under the MIT license.
         if ($null -ne $vault -and "" -ne $vault) {
             if ($null -eq (Get-AzKeyVaultSecret -VaultName $vault -Name ($Environment + "-client-id") )) {
                 $bAsk = $true
-                if (($null -ne $Client_id) -and ($null -ne $Client_secret) -and ($null -ne $Tenant_id)) {
-                    Set-SAPSPNSecrets -Region $region -Environment $Environment -VaultName $vault -Client_id $Client_id -Client_secret $Client_secret -Tenant_id $Tenant_id
+                if (($null -ne $SPN_id) -and ($null -ne $SPN_password) -and ($null -ne $Tenant_id)) {
+                    Set-SAPSPNSecrets -Region $region -Environment $Environment -VaultName $vault -SPN_id $SPN_id -SPN_password $SPN_password -Tenant_id $Tenant_id
                     $iniContent = Get-IniContent -Path $fileINIPath
                     $iniContent = Get-IniContent -Path $fileINIPath
             

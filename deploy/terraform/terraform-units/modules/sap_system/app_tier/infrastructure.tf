@@ -157,7 +157,7 @@ resource "azurerm_lb_rule" "ers" {
 
 resource "azurerm_lb_rule" "clst" {
   provider                       = azurerm.main
-  count                          = local.enable_deployment && (local.scs_high_availability && upper(local.scs_ostype) == "WINDOWS") ? 1 : 0
+  count                          = local.enable_deployment && local.win_ha_scs  ? 1 : 0
   resource_group_name            = var.resource_group[0].name
   loadbalancer_id                = azurerm_lb.scs[0].id
   name                           = format("%s%s%s", local.prefix, var.naming.separator, local.resource_suffixes.scs_clst_rule)
@@ -172,7 +172,7 @@ resource "azurerm_lb_rule" "clst" {
 
 resource "azurerm_lb_rule" "fs" {
   provider                       = azurerm.main
-  count                          = local.enable_deployment && (local.scs_high_availability && upper(local.scs_ostype) == "WINDOWS") ? 1 : 0
+  count                          = local.enable_deployment && local.win_ha_scs  ? 1 : 0
   resource_group_name            = var.resource_group[0].name
   loadbalancer_id                = azurerm_lb.scs[0].id
   name                           = format("%s%s%s", local.prefix, var.naming.separator, local.resource_suffixes.scs_fs_rule)

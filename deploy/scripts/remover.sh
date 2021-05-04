@@ -35,20 +35,20 @@ function showhelp {
     echo "#                                                                                       #"
     echo "#                                                                                       #"
     echo "#   Usage: remover.sh                                                                   #"
-    echo "#    -p parameter file                                                                  #"
-    echo "#    -t type of system to remove                                                        #"
-    echo "#       valid options:                                                                  #"
-    echo "#         sap_deployer                                                                  #"
-    echo "#         sap_library                                                                   #"
-    echo "#         sap_landscape                                                                 #"
-    echo "#         sap_system                                                                    #"
-    echo "#    -h Show help                                                                       #"
+    echo "#    -p or --parameterfile                parameter file                                #"
+    echo "#    -t or --type                         type of system to remove                      #"
+    echo "#                                         valid options:                                #"
+    echo "#                                           sap_deployer                                #"
+    echo "#                                           sap_library                                 #"
+    echo "#                                           sap_landscape                               #"
+    echo "#                                           sap_system                                  #"
+    echo "#    -h or --help                    Show help                                          #"
     echo "#                                                                                       #"
     echo "#   Example:                                                                            #"
     echo "#                                                                                       #"
     echo "#   [REPO-ROOT]deploy/scripts/remover.sh \                                              #"
-    echo "#      -p PROD-WEEU-DEP00-INFRASTRUCTURE.json \                                         #"
-    echo "#      -t sap_deployer                                                                  #"
+    echo "#      --parameterfile DEV-WEEU-SAP01-X00.json \                                        #"
+    echo "#      --type sap_system                                                                #"
     echo "#                                                                                       #"
     echo "#########################################################################################"
 }
@@ -64,27 +64,29 @@ function missing {
     echo "#   Please export the folloing variables:                                               #"
     echo "#      DEPLOYMENT_REPO_PATH (path to the repo folder (sap-hana))                        #"
     echo "#      ARM_SUBSCRIPTION_ID (subscription containing the state file storage account)     #"
-    echo "#      REMOTE_STATE_RG (resource group name for storage account containing state files) #"
-    echo "#      REMOTE_STATE_SA (storage account for state file)                                 #"
     echo "#                                                                                       #"
     echo "#########################################################################################"
 }
 
 #process inputs - may need to check the option i for auto approve as it is not used
-while getopts "p:t:ih" option; do
-    case "${option}" in
-    p) parameterfile=${OPTARG} ;;
-    t) deployment_system=${OPTARG} ;;
-    i) approve="--auto-approve" ;;
-    h)
-        showhelp
-        exit 3
-        ;;
-    ?)
-        echo "Invalid option: -${OPTARG}."
-        exit 2
-        ;;
-    esac
+INPUT_ARGUMENTS=$(getopt -n validate -o p:t:hi --longoptions type:,parameterfile:,auto-approve,help -- "$@")
+VALID_ARGUMENTS=$?
+
+if [ "$VALID_ARGUMENTS" != "0" ]; then
+  showhelp
+fi
+
+eval set -- "$INPUT_ARGUMENTS"
+while :
+do
+  case "$1" in
+    -p | --parameterfile)                      parameterfile="$2"               ; shift 2 ;;
+    -t | --type)                               deployment_system="$2"           ; shift 2 ;;
+    -i | --auto-approve)                       approve="--auto-approve"         ; shift ;;
+    -h | --help)                               showhelp 
+                                               exit 3                           ; shift ;;
+    --) shift; break ;;
+  esac
 done
 
 #variables
@@ -169,7 +171,7 @@ if [ ! -f "${parameterfile}" ]; then
     echo "#               Parameter file does not exist: ${val} #"
     echo "#                                                                                       #"
     echo "#########################################################################################"
-    exit 66 #cannot open input
+    exit 2 #No such file or directory
 fi
 
 #Persisting the parameters across executions

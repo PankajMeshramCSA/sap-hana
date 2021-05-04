@@ -102,8 +102,20 @@ resource "azurerm_linux_virtual_machine" "vm_dbnode" {
   count               = local.enable_deployment ? length(local.hdb_vms) : 0
   name                = local.hdb_vms[count.index].name
   computer_name       = local.hdb_vms[count.index].computername
-  location            = var.resource_group[0].location
   resource_group_name = var.resource_group[0].name
+  location            = var.resource_group[0].location
+
+  admin_username                  = var.sid_username
+  admin_password                  = local.enable_auth_key ? null : var.sid_password
+  disable_password_authentication = !local.enable_auth_password
+
+  dynamic "admin_ssh_key" {
+    for_each = range(var.deployment == "new" ? 1 : (local.enable_auth_password ? 0 : 1))
+    content {
+      username   = var.sid_username
+      public_key = var.sdu_public_key
+    }
+  }
 
   proximity_placement_group_id = local.zonal_deployment ? var.ppg[count.index % max(local.db_zone_count, 1)].id : var.ppg[0].id
 
@@ -123,20 +135,19 @@ resource "azurerm_linux_virtual_machine" "vm_dbnode" {
     azurerm_network_interface.nics_dbnodes_db[count.index].id,
     azurerm_network_interface.nics_dbnodes_admin[count.index].id]
   )
-  size                            = lookup(try(local.sizes.db, local.sizes), local.hdb_vms[count.index].size).compute.vm_size
-  admin_username                  = var.sid_username
-  admin_password                  = local.enable_auth_key ? null : var.sid_password
-  disable_password_authentication = !local.enable_auth_password
+
+  size = local.hdb_vms[count.index].size
 
   dynamic "os_disk" {
     iterator = disk
-    for_each = flatten([for storage_type in lookup(try(local.sizes.db, local.sizes), local.hdb_vms[count.index].size).storage : [for disk_count in range(storage_type.count) : { name = storage_type.name, id = disk_count, disk_type = storage_type.disk_type, size_gb = storage_type.size_gb, caching = storage_type.caching }] if storage_type.name == "os"])
+    for_each = range(length(local.os_disk))
     content {
       name                   = format("%s%s", local.hdb_vms[count.index].name, local.resource_suffixes.osdisk)
-      caching                = disk.value.caching
-      storage_account_type   = disk.value.disk_type
-      disk_size_gb           = disk.value.size_gb
+      caching                = local.os_disk[0].caching
+      storage_account_type   = local.os_disk[0].storage_account_type
+      disk_size_gb           = local.os_disk[0].disk_size_gb
       disk_encryption_set_id = try(var.options.disk_encryption_set_id, null)
+
     }
   }
 
@@ -149,15 +160,7 @@ resource "azurerm_linux_virtual_machine" "vm_dbnode" {
       publisher = local.hdb_vms[count.index].os.publisher
       offer     = local.hdb_vms[count.index].os.offer
       sku       = local.hdb_vms[count.index].os.sku
-      version   = try(local.hdb_vms[count.index].os.version,"latest")
-    }
-  }
-
-  dynamic "admin_ssh_key" {
-    for_each = range(local.enable_auth_password ? 0 : 1)
-    content {
-      username   = var.sid_username
-      public_key = var.sdu_public_key
+      version   = try(local.hdb_vms[count.index].os.version, "latest")
     }
   }
 
@@ -174,14 +177,17 @@ resource "azurerm_linux_virtual_machine" "vm_dbnode" {
 
 # Creates managed data disk
 resource "azurerm_managed_disk" "data_disk" {
-  provider               = azurerm.main
-  count                  = local.enable_deployment ? length(local.data_disk_list) : 0
-  name                   = local.data_disk_list[count.index].name
-  location               = var.resource_group[0].location
-  resource_group_name    = var.resource_group[0].name
-  create_option          = "Empty"
-  storage_account_type   = local.data_disk_list[count.index].storage_account_type
-  disk_size_gb           = local.data_disk_list[count.index].disk_size_gb
+  provider             = azurerm.main
+  count                = local.enable_deployment ? length(local.data_disk_list) : 0
+  name                 = local.data_disk_list[count.index].name
+  location             = var.resource_group[0].location
+  resource_group_name  = var.resource_group[0].name
+  create_option        = "Empty"
+  storage_account_type = local.data_disk_list[count.index].storage_account_type
+  disk_size_gb         = local.data_disk_list[count.index].disk_size_gb
+  disk_iops_read_write = "UltraSSD_LRS" == local.data_disk_list[count.index].storage_account_type ? local.data_disk_list[count.index].disk_iops_read_write : null
+  disk_mbps_read_write = "UltraSSD_LRS" == local.data_disk_list[count.index].storage_account_type ? local.data_disk_list[count.index].disk_mbps_read_write : null
+
   disk_encryption_set_id = try(var.options.disk_encryption_set_id, null)
 
   zones = local.enable_ultradisk || local.db_server_count == local.db_zone_count ? (

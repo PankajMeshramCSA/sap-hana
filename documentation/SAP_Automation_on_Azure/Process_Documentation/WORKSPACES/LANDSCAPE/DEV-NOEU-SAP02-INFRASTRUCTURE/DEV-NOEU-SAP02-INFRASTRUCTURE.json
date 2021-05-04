@@ -23,5 +23,8 @@
                 }
             }
         }
+    },
+    "key_vault": {
+      "kv_spn_id"                       : "<azureresourceid>"
     }
 }

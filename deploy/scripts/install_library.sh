@@ -46,18 +46,26 @@ function showhelp {
     echo "#########################################################################################"
 }
 
-while getopts "p:d:ih" option; do
-    case "${option}" in
-        p) parameterfile=${OPTARG};;
-        i) approve="--auto-approve" ;;
-        d) deployer_statefile_foldername=${OPTARG};;
-        h) showhelp
-            exit 3
-        ;;
-        ?) echo "Invalid option: -${OPTARG}."
-            exit 2
-        ;;
-    esac
+#process inputs - may need to check the option i for auto approve as it is not used
+INPUT_ARGUMENTS=$(getopt -n install_library -o p:d:ih --longoptions parameterfile:,deployer_statefile_foldername:,auto-approve,help -- "$@")
+VALID_ARGUMENTS=$?
+
+if [ "$VALID_ARGUMENTS" != "0" ]; then
+  showhelp
+  
+fi
+
+eval set -- "$INPUT_ARGUMENTS"
+while :
+do
+  case "$1" in
+    -p | --parameterfile)                      parameterfile="$2"                   ; shift 2 ;;
+    -d | --deployer_statefile_foldername)      deployer_statefile_foldername="$2"   ; shift 2 ;;
+    -i | --auto-approve)                       approve="--auto-approve"             ; shift ;;
+    -h | --help)                               showhelp 
+                                               exit 3                               ; shift ;;
+    --) shift; break ;;
+  esac
 done
 
 deployment_system=sap_library
@@ -74,19 +82,6 @@ then
     exit
 fi
 
-if [ ! -d "${deployer_statefile_foldername}" ]
-then
-    printf -v val %-40.40s "$deployer_statefile_foldername"
-    echo ""
-    echo "#########################################################################################"
-    echo "#                                                                                       #"
-    echo "#                    Directory does not exist:  "${deployer_statefile_foldername}" #"
-    echo "#                                                                                       #"
-    echo "#########################################################################################"
-    exit
-fi
-
-
 param_dirname=$(dirname "${parameterfile}")
 
 if [ $param_dirname != '.' ]; then
@@ -100,9 +95,11 @@ if [ $param_dirname != '.' ]; then
 fi
 
 # Read environment
-environment=$(cat "${parameterfile}" | jq .infrastructure.environment | tr -d \")
-region=$(cat "${parameterfile}" | jq .infrastructure.region | tr -d \")
+environment=$(jq .infrastructure.environment "${parameterfile}" | tr -d \")
+region=$(jq .infrastructure.region "${parameterfile}" | tr -d \")
 key=$(echo "${parameterfile}" | cut -d. -f1)
+
+use_deployer=$(jq .deployer.use "${parameterfile}" | tr -d \")
 
 if [ ! -n "${environment}" ]
 then
@@ -130,13 +127,40 @@ then
     exit -1
 fi
 
+
+echo $use_deployer
+
+if [ false != $use_deployer ]
+then
+    if [ ! -d "${deployer_statefile_foldername}" ]
+    then
+        printf -v val %-40.40s "$deployer_statefile_foldername"
+        echo ""
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo "#                    Directory does not exist:  "${deployer_statefile_foldername}" #"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        exit
+    fi
+fi
+
 #Persisting the parameters across executions
 automation_config_directory=~/.sap_deployment_automation/
 generic_config_information="${automation_config_directory}"config
 library_config_information="${automation_config_directory}""${environment}""${region}"
 
+#Plugins
+if [ ! -d "$HOME/.terraform.d/plugin-cache" ]
+then
+    mkdir "$HOME/.terraform.d/plugin-cache"
+fi
+export TF_PLUGIN_CACHE_DIR="$HOME/.terraform.d/plugin-cache"
+
+param_dirname=$(pwd)
+
+
 arm_config_stored=false
-config_stored=false
 
 param_dirname=$(pwd)
 
@@ -194,14 +218,6 @@ then
     echo "#########################################################################################"
     echo ""
     exit -1
-fi
-
-ok_to_proceed=false
-new_deployment=false
-
-if [ -f backend.tf ]
-then
-    rm backend.tf
 fi
 
 reinitialized=0
@@ -273,7 +289,6 @@ if [ -n "${deployer_statefile_foldername}" ]; then
 else
     terraform -chdir="${terraform_module_directory}" plan -no-color -var-file="${var_file}"  > plan_output.log 2>&1
 fi
-
 str1=$(grep "Error: KeyVault " plan_output.log)
 
 if [ -n "${str1}" ]; then

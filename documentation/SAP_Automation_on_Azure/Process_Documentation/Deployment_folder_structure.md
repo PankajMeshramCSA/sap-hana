@@ -1,4 +1,6 @@
-# Customer's repo design
+# ![SAP Deployment Automation Framework](../assets/images/UnicornSAPBlack64x64.png)**SAP Deployment Automation Framework** #
+
+# DevOps structure #
 
 To facilitate a DevOps approach for the automation process it is recommended that the configuration and parameter files are kept in a source control repository that the customer manages.
 

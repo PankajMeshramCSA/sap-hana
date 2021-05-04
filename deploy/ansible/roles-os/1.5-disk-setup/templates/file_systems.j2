@@ -1,0 +1,5 @@
+      [
+        {% for lv in logical_volumes %}
+          {{ {'tier' : lv.tier, 'host' : lv.host, 'fstype' : 'xfs', 'dev' : '/dev/' ~ lv.vg ~'/' ~lv.lv } }},
+        {% endfor %}
+      ]

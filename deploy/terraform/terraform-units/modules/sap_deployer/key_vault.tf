@@ -1,6 +1,10 @@
 // Create private KV with access policy
 data "azurerm_client_config" "deployer" {}
 
+data "azuread_service_principal" "deployer" {
+  application_id = data.azurerm_client_config.deployer.client_id
+}
+
 resource "azurerm_key_vault" "kv_prvt" {
   count                      = (local.enable_deployers && !local.prvt_kv_exist) ? 1 : 0
   name                       = local.prvt_kv_name
@@ -89,7 +93,8 @@ resource "azurerm_key_vault_access_policy" "kv_user_pre_deployer" {
   key_vault_id = azurerm_key_vault.kv_user[0].id
 
   tenant_id = data.azurerm_client_config.deployer.tenant_id
-  object_id = data.azurerm_client_config.deployer.object_id != "" ? data.azurerm_client_config.deployer.object_id : "00000000-0000-0000-0000-000000000000"
+  # If running as a normal user use the object ID of the user otherwise use the object_id from AAD
+  object_id = data.azuread_service_principal.deployer.display_name == "Microsoft Azure CLI" ? data.azurerm_client_config.deployer.object_id : data.azuread_service_principal.deployer.id
 
   secret_permissions = [
     "Get",
@@ -101,12 +106,6 @@ resource "azurerm_key_vault_access_policy" "kv_user_pre_deployer" {
     "Restore",
     "Purge"
   ]
-  lifecycle {
-    ignore_changes = [
-      // Ignore changes to object_id
-      object_id,
-    ]
-  }
 }
 
 // Comment out code with users.object_id for the time being.

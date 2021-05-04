@@ -33,10 +33,20 @@ resource "azurerm_linux_virtual_machine" "anchor" {
   network_interface_ids = [
     azurerm_network_interface.anchor[count.index].id
   ]
-  size                            = local.anchor_size
+  size = local.anchor_size
+
   admin_username                  = local.sid_auth_username
-  disable_password_authentication = !local.enable_anchor_auth_password
   admin_password                  = local.enable_anchor_auth_key ? null : local.sid_auth_password
+  disable_password_authentication = !local.enable_anchor_auth_password
+
+  dynamic "admin_ssh_key" {
+    for_each = range(var.deployment == "new" ? 1 : (local.enable_anchor_auth_password ? 0 : 1))
+    content {
+      username   = local.sid_auth_username
+      public_key = local.sid_public_key
+    }
+  }
+
 
   os_disk {
     name                   = format("%s%s%s%s", local.prefix, var.naming.separator, local.anchor_virtualmachine_names[count.index], local.resource_suffixes.osdisk)
@@ -56,12 +66,6 @@ resource "azurerm_linux_virtual_machine" "anchor" {
       version   = local.anchor_os.version
     }
   }
-
-  admin_ssh_key {
-    username   = local.sid_auth_username
-    public_key = data.azurerm_key_vault_secret.sid_pk[0].value
-  }
-
   boot_diagnostics {
     storage_account_uri = data.azurerm_storage_account.storage_bootdiag.primary_blob_endpoint
   }

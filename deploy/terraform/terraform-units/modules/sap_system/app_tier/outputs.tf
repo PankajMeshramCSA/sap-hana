@@ -115,15 +115,15 @@ output "dns_info_loadbalancers" {
       compact([
         local.scs_server_count > 0 ? format("%s%s%s", local.prefix, var.naming.separator, "scs") : "",
         local.scs_server_count > 0 ? format("%s%s%s", local.prefix, var.naming.separator, "ers") : "",
-        local.scs_server_count > 0 && (local.scs_high_availability && upper(local.scs_ostype) == "WINDOWS") ? format("%s%s%s", local.prefix, var.naming.separator, "clst") : "",
-        local.scs_server_count > 0 && (local.scs_high_availability && upper(local.scs_ostype) == "WINDOWS") ? format("%s%s%s", local.prefix, var.naming.separator, "fs") : "",
+        local.win_ha_scs && length(azurerm_lb.scs[0].private_ip_addresses) == 4 ? format("%s%s%s", local.prefix, var.naming.separator, "clst") : "",
+        local.win_ha_scs && length(azurerm_lb.scs[0].private_ip_addresses) == 4 ? format("%s%s%s", local.prefix, var.naming.separator, "fs") : "",
         local.webdispatcher_count > 0 ? format("%s%s%s", local.prefix, var.naming.separator, local.resource_suffixes.web_alb) : ""
       ]),
       compact([
         local.scs_server_count > 0 ? azurerm_lb.scs[0].private_ip_addresses[0] : "",
         local.scs_server_count > 0 ? azurerm_lb.scs[0].private_ip_addresses[1] : "",
-        local.scs_server_count > 0 && length(azurerm_lb.scs[0].private_ip_addresses) == 4 && (local.scs_high_availability && upper(local.scs_ostype) == "WINDOWS") ? azurerm_lb.scs[0].private_ip_addresses[2] : "",
-        local.scs_server_count > 0 && length(azurerm_lb.scs[0].private_ip_addresses) == 4 && (local.scs_high_availability && upper(local.scs_ostype) == "WINDOWS") ? azurerm_lb.scs[0].private_ip_addresses[3] : "",
+        local.win_ha_scs && length(azurerm_lb.scs[0].private_ip_addresses) == 4 ? azurerm_lb.scs[0].private_ip_addresses[2] : "",
+        local.win_ha_scs && length(azurerm_lb.scs[0].private_ip_addresses) == 4 ? azurerm_lb.scs[0].private_ip_addresses[3] : "",
         local.webdispatcher_count > 0 ? azurerm_lb.web[0].private_ip_address : ""
       ])
     )

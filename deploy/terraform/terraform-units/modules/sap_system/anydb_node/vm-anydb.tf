@@ -69,6 +69,32 @@ resource "azurerm_linux_virtual_machine" "dbserver" {
   resource_group_name = var.resource_group[0].name
   location            = var.resource_group[0].location
 
+  admin_username                  = var.sid_username
+  admin_password                  = local.enable_auth_key ? null : var.sid_password
+  disable_password_authentication = !local.enable_auth_password
+
+  dynamic "admin_ssh_key" {
+    for_each = range(var.deployment == "new" ? 1 : (local.enable_auth_password ? 0 : 1))
+    content {
+      username   = var.sid_username
+      public_key = var.sdu_public_key
+    }
+  }
+
+  dynamic "os_disk" {
+    iterator = disk
+    for_each = range(length(local.os_disk))
+    content {
+      name                   = format("%s%s", local.anydb_vms[count.index].name, local.resource_suffixes.osdisk)
+      caching                = local.os_disk[0].caching
+      storage_account_type   = local.os_disk[0].storage_account_type
+      disk_size_gb           = local.os_disk[0].disk_size_gb
+      disk_encryption_set_id = try(var.options.disk_encryption_set_id, null)
+
+    }
+  }
+
+
   proximity_placement_group_id = local.zonal_deployment ? var.ppg[count.index % max(local.db_zone_count, 1)].id : var.ppg[0].id
 
   //If more than one servers are deployed into a single zone put them in an availability set and not a zone
@@ -101,31 +127,6 @@ resource "azurerm_linux_virtual_machine" "dbserver" {
       version   = local.anydb_os.version
     }
   }
-
-  dynamic "os_disk" {
-    iterator = disk
-    for_each = flatten([for storage_type in lookup(try(local.sizes.db, local.sizes), local.anydb_size).storage : [for disk_count in range(storage_type.count) : { name = storage_type.name, id = disk_count, disk_type = storage_type.disk_type, size_gb = storage_type.size_gb, caching = storage_type.caching }] if storage_type.name == "os"])
-    content {
-      name                   = format("%s%s", local.anydb_vms[count.index].name, local.resource_suffixes.osdisk)
-      caching                = disk.value.caching
-      storage_account_type   = disk.value.disk_type
-      disk_size_gb           = disk.value.size_gb
-      disk_encryption_set_id = try(var.options.disk_encryption_set_id, null)
-    }
-  }
-
-  admin_username                  = var.sid_username
-  admin_password                  = local.enable_auth_key ? null : var.sid_password
-  disable_password_authentication = !local.enable_auth_password
-
-  dynamic "admin_ssh_key" {
-    for_each = range(local.enable_auth_password ? 0 : 1)
-    content {
-      username   = var.sid_username
-      public_key = var.sdu_public_key
-    }
-  }
-
   additional_capabilities {
     ultra_ssd_enabled = local.enable_ultradisk
   }
@@ -146,6 +147,21 @@ resource "azurerm_windows_virtual_machine" "dbserver" {
   computer_name       = local.anydb_vms[count.index].computername
   resource_group_name = var.resource_group[0].name
   location            = var.resource_group[0].location
+  admin_username      = var.sid_username
+  admin_password      = var.sid_password
+
+  dynamic "os_disk" {
+    iterator = disk
+    for_each = range(length(local.os_disk))
+    content {
+      name                   = format("%s%s", local.anydb_vms[count.index].name, local.resource_suffixes.osdisk)
+      caching                = local.os_disk[0].caching
+      storage_account_type   = local.os_disk[0].storage_account_type
+      disk_size_gb           = local.os_disk[0].disk_size_gb
+      disk_encryption_set_id = try(var.options.disk_encryption_set_id, null)
+
+    }
+  }
 
   proximity_placement_group_id = local.zonal_deployment ? var.ppg[count.index % max(local.db_zone_count, 1)].id : var.ppg[0].id
 
@@ -180,20 +196,6 @@ resource "azurerm_windows_virtual_machine" "dbserver" {
     }
   }
 
-  dynamic "os_disk" {
-    iterator = disk
-    for_each = flatten([for storage_type in lookup(try(local.sizes.db, local.sizes), local.anydb_size).storage : [for disk_count in range(storage_type.count) : { name = storage_type.name, id = disk_count, disk_type = storage_type.disk_type, size_gb = storage_type.size_gb, caching = storage_type.caching }] if storage_type.name == "os"])
-    content {
-      name                   = format("%s%s", local.anydb_vms[count.index].name, local.resource_suffixes.osdisk)
-      caching                = disk.value.caching
-      storage_account_type   = disk.value.disk_type
-      disk_size_gb           = disk.value.size_gb
-      disk_encryption_set_id = try(var.options.disk_encryption_set_id, null)
-    }
-  }
-
-  admin_username = var.sid_username
-  admin_password = var.sid_password
 
   additional_capabilities {
     ultra_ssd_enabled = local.enable_ultradisk
@@ -217,6 +219,9 @@ resource "azurerm_managed_disk" "disks" {
   storage_account_type   = local.anydb_disks[count.index].storage_account_type
   disk_size_gb           = local.anydb_disks[count.index].disk_size_gb
   disk_encryption_set_id = try(var.options.disk_encryption_set_id, null)
+  disk_iops_read_write   = "UltraSSD_LRS" == local.anydb_disks[count.index].storage_account_type ? local.anydb_disks[count.index].disk_iops_read_write : null
+  disk_mbps_read_write   = "UltraSSD_LRS" == local.anydb_disks[count.index].storage_account_type ? local.anydb_disks[count.index].disk_mbps_read_write : null
+
 
   zones = local.enable_ultradisk || local.db_server_count == local.db_zone_count ? (
     upper(local.anydb_ostype) == "LINUX" ? (

@@ -30,20 +30,26 @@ function showhelp {
     echo "#                                                                                       #"
     echo "#                                                                                       #"
     echo "#   Usage: installer.sh                                                                 #"
-    echo "#    -p parameter file                                                                  #"
-    echo "#    -t type of system to deploy                                                        #"
-    echo "#       valid options:                                                                  #"
-    echo "#         sap_deployer                                                                  #"
-    echo "#         sap_library                                                                   #"
-    echo "#         sap_landscape                                                                 #"
-    echo "#         sap_system                                                                    #"
-    echo "#    -h Show help                                                                       #"
+    echo "#    -p or --parameterfile                parameter file                                #"
+    echo "#    -t or --type                         type of system to remove                      #"
+    echo "#                                         valid options:                                #"
+    echo "#                                           sap_deployer                                #"
+    echo "#                                           sap_library                                 #"
+    echo "#                                           sap_landscape                               #"
+    echo "#                                           sap_system                                  #"
+    echo "#                                                                                       #"
+    echo "#   Optional parameters                                                                 #"
+    echo "#                                                                                       #"
+    echo "#    -o or --storageaccountname           Storage account name for state file           #"
+    echo "#    -i or --auto-approve                 Silent install                                #"
+    echo "#    -h or --help                         Show help                                     #"
     echo "#                                                                                       #"
     echo "#   Example:                                                                            #"
     echo "#                                                                                       #"
     echo "#   [REPO-ROOT]deploy/scripts/installer.sh \                                            #"
-    echo "#      -p PROD-WEEU-DEP00-INFRASTRUCTURE.json \                                         #"
-    echo "#      -t sap_deployer                                                                  #"
+    echo "#      --parameterfile DEV-WEEU-SAP01-X00 \                                             #"
+    echo "#      --type sap_system                                                                #"
+    echo "#      --auto-approve                                                                   #"  
     echo "#                                                                                       #"
     echo "#########################################################################################"
 }
@@ -68,21 +74,28 @@ function missing {
 
 force=0
 
-while getopts "p:t:ihf" option; do
-    case "${option}" in
-        p) parameterfile=${OPTARG};;
-        t) deployment_system=${OPTARG};;
-        i) approve="--auto-approve";;
-        f) force=1
-        ;;
-        h) showhelp
-            exit 3
-        ;;
-        ?) echo "Invalid option: -${OPTARG}."
-            exit 2
-        ;;
-    esac
+INPUT_ARGUMENTS=$(getopt -n installer -o p:t:o:hif --longoptions type:,parameterfile:,storageaccountname:,auto-approve,force,help -- "$@")
+VALID_ARGUMENTS=$?
+
+if [ "$VALID_ARGUMENTS" != "0" ]; then
+  showhelp
+fi
+
+eval set -- "$INPUT_ARGUMENTS"
+while :
+do
+  case "$1" in
+    -t | --type)                               deployment_system="$2"           ; shift 2 ;;
+    -p | --parameterfile)                      parameterfile="$2"               ; shift 2 ;;
+    -o | --storageaccountname)                 REMOTE_STATE_SA="$2"             ; shift 2 ;;
+    -f | --force)                              force=1                          ; shift ;;
+    -i | --silent)                             approve="--auto-approve"         ; shift ;;
+    -h | --help)                               showhelp 
+                                               exit 3                           ; shift ;;
+    --) shift; break ;;
+  esac
 done
+
 
 tfstate_resource_id=""
 tfstate_parameter=""
@@ -116,7 +129,7 @@ then
     echo -e "#                 $boldred  Parameter file does not exist: ${val} $resetformatting #"
     echo "#                                                                                       #"
     echo "#########################################################################################"
-    exit
+    exit 2 #No such file or directory
 fi
 
 if [ ! -n "${deployment_system}" ]
@@ -134,7 +147,7 @@ then
     echo "#                                                                                       #"
     echo "#########################################################################################"
     echo ""
-    exit -1
+    exit 64 #script usage wrong
 fi
 
 
@@ -169,7 +182,7 @@ then
     echo "#                                                                                       #"
     echo "#########################################################################################"
     echo ""
-    exit -1
+    exit 65 #data format error
 fi
 
 if [ ! -n "${region}" ]
@@ -182,7 +195,7 @@ then
     echo "#                                                                                       #"
     echo "#########################################################################################"
     echo ""
-    exit -1
+    exit 65 #data format error
 fi
 
 key=$(echo "${parameterfile_name}" | cut -d. -f1)
@@ -202,7 +215,6 @@ fi
 export TF_PLUGIN_CACHE_DIR="$HOME/.terraform.d/plugin-cache"
 
 param_dirname=$(pwd)
-root_dirname=$(pwd)
 
 init "${automation_config_directory}" "${generic_config_information}" "${system_config_information}"
 
@@ -214,29 +226,31 @@ if [ -f terraform.tfvars ]; then
     extra_vars=" -var-file=${param_dirname}/terraform.tfvars "
 fi
 
-
 if [ "${deployment_system}" == sap_deployer ]
 then
     deployer_tfstate_key=${key}.terraform.tfstate
 fi
 
-load_config_vars "${system_config_information}" "REMOTE_STATE_SA"
+if [ -z "$REMOTE_STATE_SA" ]; 
+then
+    load_config_vars "${system_config_information}" "REMOTE_STATE_SA"
+fi
+
 load_config_vars "${system_config_information}" "REMOTE_STATE_RG"
 load_config_vars "${system_config_information}" "tfstate_resource_id"
 load_config_vars "${system_config_information}" "deployer_tfstate_key"
 load_config_vars "${system_config_information}" "landscape_tfstate_key"
 load_config_vars "${system_config_information}" "STATE_SUBSCRIPTION"
 
-echo "Terraform storage " $REMOTE_STATE_SA
+echo "Terraform storage " "${REMOTE_STATE_SA}"
 
 deployer_tfstate_key_parameter=''
 if [ "${deployment_system}" != sap_deployer ]
 then
-    if [ ! -n "$=${deployer_tfstate_key}" ]; then
+    if [ -z "${deployer_tfstate_key}" ]; then
         deployer_tfstate_key_parameter=" "
     else
         deployer_tfstate_key_parameter=" -var deployer_tfstate_key=${deployer_tfstate_key}"
-        deployer_tfstate_key_exists=true
     fi
 else
     STATE_SUBSCRIPTION=$ARM_SUBSCRIPTION_ID
@@ -326,13 +340,13 @@ if [ ! -n "${REMOTE_STATE_SA}" ]; then
 fi
 
 
-if [ ! -n "${REMOTE_STATE_SA}" ]; then
+if [ -z "${REMOTE_STATE_SA}" ]; then
     option="REMOTE_STATE_SA"
     missing
     exit -1
 fi
 
-if [ ! -n "${REMOTE_STATE_RG}" ]; then
+if [ -z "${REMOTE_STATE_RG}" ]; then
     REMOTE_STATE_RG=$(az resource list --name ${REMOTE_STATE_SA} | jq .[0].resourceGroup  | tr -d \" | xargs)
     tfstate_resource_id=$(az resource list --name ${REMOTE_STATE_SA} | jq .[0].id  | tr -d \" | xargs)
     STATE_SUBSCRIPTION=$(echo $tfstate_resource_id | cut -d/ -f3 | tr -d \" | xargs)
@@ -423,6 +437,10 @@ then
     account_set=1
 fi
 
+# This is used to tell Terraform if this is a new deployment or an update
+deployment_parameter=""
+# This is used to tell Terraform the version information from the state file
+version_parameter=""
 if [ ! -d ./.terraform/ ];
 then
     terraform -chdir="${terraform_module_directory}" init -upgrade=true -force-copy \
@@ -431,6 +449,9 @@ then
     --backend-config "storage_account_name=${REMOTE_STATE_SA}" \
     --backend-config "container_name=tfstate" \
     --backend-config "key=${key}.terraform.tfstate"
+
+    deployment_parameter=" -var deployment=new "
+
 else
     temp=$(grep "\"type\": \"local\"" .terraform/terraform.tfstate)
     if [ ! -z "${temp}" ]
@@ -450,7 +471,7 @@ else
         echo "#                                                                                       #"
         echo "#########################################################################################"
         echo ""
-        if [ ! -n "${approve}" ] 
+        if [ ! -n ${approve} ] 
         then
             read -p "Do you want to redeploy Y/N?"  ans
             answer=${ans^^}
@@ -476,7 +497,7 @@ fi
 
 if [ 1 == $check_output ]
 then
-    terraform -chdir=$terraform_module_directory refresh -no-color -var-file=${var_file} ${tfstate_parameter} ${landscape_tfstate_key_parameter} ${deployer_tfstate_key_parameter} ${extra_vars}
+    terraform -chdir=$terraform_module_directory refresh -var-file=${var_file} ${tfstate_parameter} ${landscape_tfstate_key_parameter} ${deployer_tfstate_key_parameter} ${extra_vars}
 
     outputs=$(terraform -chdir="${terraform_module_directory}" output )
     if echo "${outputs}" | grep "No outputs"; then
@@ -487,6 +508,9 @@ then
         echo "#                                   New deployment                                      #"
         echo "#                                                                                       #"
         echo "#########################################################################################"
+        
+        deployment_parameter=" -var deployment=new "
+
     else
         echo ""
         echo "#########################################################################################"
@@ -496,8 +520,9 @@ then
         echo "#########################################################################################"
         echo ""
 
+        deployment_parameter=" "
 
-        deployed_using_version=$(terraform -chdir="${terraform_module_directory}" output automation_version)
+        deployed_using_version=$(terraform -chdir="${terraform_module_directory}" output automation_version | tr -d \")
 
         if [ ! -n "${deployed_using_version}" ]; then
             echo ""
@@ -520,7 +545,8 @@ then
                 exit 1
             fi
         else
-            
+            version_parameter=" -var terraform_template_version=${deployed_using_version} "
+                    
             echo ""
             echo "#########################################################################################"
             echo "#                                                                                       #"
@@ -546,13 +572,7 @@ then
     rm plan_output.log
 fi
 
-
-echo "${tfstate_parameter}"
-echo "${landscape_tfstate_key_parameter}"
-echo "${deployer_tfstate_key_parameter}"
-echo "${extra_vars}"
-
-allParams=$(printf " -var-file=%s %s %s %s %s" "${var_file}" "${extra_vars}" "${tfstate_parameter}" "${landscape_tfstate_key_parameter}" "${deployer_tfstate_key_parameter}")
+allParams=$(printf " -var-file=%s %s %s %s %s %s %s" "${var_file}" "${extra_vars}" "${tfstate_parameter}" "${landscape_tfstate_key_parameter}" "${deployer_tfstate_key_parameter}" "${deployment_parameter}" "${version_parameter}" )
 echo $allParams
 
 terraform -chdir="$terraform_module_directory" plan -no-color $allParams  
@@ -646,8 +666,7 @@ if [ $ok_to_proceed ]; then
     echo "#########################################################################################"
     echo ""
 
-    allParams=$(printf " -var-file=%s %s %s %s %s" "${var_file}" "${extra_vars}" "${tfstate_parameter}" "${landscape_tfstate_key_parameter}" "${deployer_tfstate_key_parameter}")
-
+    allParams=$(printf " -var-file=%s %s %s %s %s %s %s" "${var_file}" "${extra_vars}" "${tfstate_parameter}" "${landscape_tfstate_key_parameter}" "${deployer_tfstate_key_parameter}" "${deployment_parameter}" "${version_parameter}" )
     
     terraform -chdir="${terraform_module_directory}" apply ${approve} $allParams  2>error.log
  

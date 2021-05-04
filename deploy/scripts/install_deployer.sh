@@ -46,17 +46,26 @@ function showhelp {
     echo "#########################################################################################"
 }
 
-while getopts "p:ih" option; do
-    case "${option}" in
-        p) parameterfile=${OPTARG};;
-        i) approve="--auto-approve" ;;
-        h) showhelp
-            exit 3
-        ;;
-        ?) echo "Invalid option: -${OPTARG}."
-            exit 2
-        ;;
-    esac
+
+#process inputs - may need to check the option i for auto approve as it is not used
+INPUT_ARGUMENTS=$(getopt -n install_deployer -o p:ih --longoptions parameterfile:,auto-approve,help -- "$@")
+VALID_ARGUMENTS=$?
+
+if [ "$VALID_ARGUMENTS" != "0" ]; then
+  showhelp
+
+fi
+
+eval set -- "$INPUT_ARGUMENTS"
+while :
+do
+  case "$1" in
+    -p | --parameterfile)                      parameterfile="$2"               ; shift 2 ;;
+    -i | --auto-approve)                       approve="--auto-approve"         ; shift ;;
+    -h | --help)                               showhelp 
+                                               exit 3                           ; shift ;;
+    --) shift; break ;;
+  esac
 done
 
 deployment_system=sap_deployer
@@ -72,7 +81,7 @@ then
     echo "#               Parameter file does not exist: ${val} #"
     echo "#                                                                                       #"
     echo "#########################################################################################"
-    exit
+    exit 2 #No such file or directory
 fi
 
 if [ $param_dirname != '.' ]; then
@@ -215,13 +224,20 @@ else
             fi
         fi
         
-        terraform -chdir="${terraform_module_directory}" init -upgrade=true  -backend-config "path=${param_dirname}"
+        terraform -chdir="${terraform_module_directory}" init -upgrade=true  -backend-config "path=${param_dirname}/terraform.tfstate"
         terraform -chdir="${terraform_module_directory}" refresh -var-file="${var_file}" 
     else
         unset TF_DATA_DIR
         exit 0
     fi
 fi
+
+extra_vars=""
+
+if [ -f terraform.tfvars ]; then
+    extra_vars=" -var-file=${param_dirname}/terraform.tfvars "
+fi
+
 
 echo ""
 echo "#########################################################################################"
@@ -231,7 +247,7 @@ echo "#                                                                         
 echo "#########################################################################################"
 echo ""
 
-terraform -chdir="${terraform_module_directory}"  plan -var-file="${var_file}" > plan_output.log 2>&1
+terraform -chdir="${terraform_module_directory}"  plan -var-file="${var_file}" $extra_vars > plan_output.log 2>&1
 str1=$(grep "Error: KeyVault " plan_output.log)
 
 if [ -n "${str1}" ]; then
@@ -260,7 +276,7 @@ echo "#                                                                         
 echo "#########################################################################################"
 echo ""
 
-terraform -chdir="${terraform_module_directory}"  apply ${approve} -var-file="${var_file}" 2>error.log
+terraform -chdir="${terraform_module_directory}"  apply ${approve} -var-file="${var_file}" $extra_vars 2>error.log
 str1=$(grep "Error: " error.log)
 if [ -n "${str1}" ]
 then

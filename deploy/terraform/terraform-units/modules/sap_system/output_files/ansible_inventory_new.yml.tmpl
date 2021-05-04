@@ -8,7 +8,7 @@ ${sid}_DB:
       connection_type     : ${dbconnectiontype} 
 %{~ endfor }
   vars:
-    tier                  : ${platform}
+    node_tier             : ${platform}
 
 ${sid}_SCS:
   hosts:
@@ -19,7 +19,7 @@ ${sid}_SCS:
       connection_type     : ${scsconnectiontype} 
 %{~ endfor }
   vars:
-    tier                  : SCS
+    node_tier             : SCS
 
 ${sid}_PAS:
   hosts:
@@ -31,7 +31,7 @@ ${sid}_PAS:
 
 %{~ endfor }
   vars:
-    tier                  : PAS
+    node_tier             : PAS
 
 ${sid}_APP:
   hosts:
@@ -43,7 +43,7 @@ ${sid}_APP:
 
 %{~ endfor }
   vars:
-    tier                  : APP
+    node_tier             : APP
 
 ${sid}_WEB:
   hosts:
@@ -55,4 +55,4 @@ ${sid}_WEB:
 
 %{~ endfor }
   vars:
-    tier                  : WEB
+    node_tier             : WEB

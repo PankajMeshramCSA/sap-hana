@@ -20,7 +20,7 @@ data "azurerm_key_vault_secret" "sid_username" {
 
 data "azurerm_key_vault_secret" "sid_password" {
   provider     = azurerm.main
-  count        = local.password_required ? 1 : 0
+  count        = local.use_local_credentials ? 0 : 1
   name         = try(var.landscape_tfstate.sid_password_secret_name, trimprefix(format("%s-sid-password", var.naming.prefix.VNET), "-"))
   key_vault_id = local.user_key_vault_id
 }

@@ -16,10 +16,10 @@ Function Set-SAPSPNSecrets {
     .PARAMETER VaultName
         This is the name of the keyvault
 
-    .PARAMETER Client_id
+    .PARAMETER SPN_id
         This is the SPN Application ID
 
-    .PARAMETER Client_secret
+    .PARAMETER SPN_password
         This is the SAP Application password
 
     .PARAMETER Tenant_id
@@ -32,7 +32,7 @@ Function Set-SAPSPNSecrets {
     #
     # Import the module
     Import-Module "SAPDeploymentUtilities.psd1"
-    Set-SAPSPNSecrets -Environment PROD -VaultName <vaultname> -Client_id <appId> -Client_secret <clientsecret> -Tenant_id <Tenant_idID> 
+    Set-SAPSPNSecrets -Environment PROD -VaultName <vaultname> -SPN_id <appId> -SPN_password <clientsecret> -Tenant_id <Tenant_idID> 
 
     
 .LINK
@@ -57,9 +57,9 @@ Licensed under the MIT license.
         #Keyvault name
         [Parameter(Mandatory = $true)][string]$VaultName,
         # #SPN App ID
-        [Parameter(Mandatory = $true)][string]$Client_id,
+        [Parameter(Mandatory = $true)][string]$SPN_id,
         #SPN App secret
-        [Parameter(Mandatory = $true)][string]$Client_secret,
+        [Parameter(Mandatory = $true)][string]$SPN_password,
         #Tenant_id
         [Parameter(Mandatory = $true)][string]$Tenant_id,
         #Workload
@@ -87,7 +87,7 @@ Licensed under the MIT license.
         $sub = $iniContent[$combined]["subscription"]
     }
     else {
-        $sub = $iniContent[$combined]["kvsubscription"]
+        $sub = $iniContent[$combined]["STATE_SUBSCRIPTION"]
         Write-Host ("Setting SPN for deployer" + "("+ $combined +")")
     }
 
@@ -98,7 +98,7 @@ Licensed under the MIT license.
             $iniContent[$combined]["subscription"] = $sub
         }
         else {
-            $iniContent[$combined]["kvsubscription"] = $sub
+            $iniContent[$combined]["STATE_SUBSCRIPTION"] = $sub
         }
     }
 
@@ -128,17 +128,17 @@ Licensed under the MIT license.
     }
 
     # Read SPN ID
-    $spnid = $iniContent[$combined]["Client_id"]
+    $spnid = $iniContent[$combined]["SPN_id"]
 
-    if ("" -eq $Client_id ) {
+    if ("" -eq $SPN_id ) {
         if ($spnid -eq "" -or $null -eq $spnid) {
             $spnid = Read-Host -Prompt 'SPN App ID:'
-            $iniContent[$combined]["Client_id"] = $spnid 
+            $iniContent[$combined]["SPN_id"] = $spnid 
         }
     }
     else {
-        $spnid = $Client_id
-        $iniContent[$combined]["Client_id"] = $Client_id
+        $spnid = $SPN_id
+        $iniContent[$combined]["SPN_id"] = $SPN_id
     }
 
     # Read Tenant_id
@@ -155,11 +155,11 @@ Licensed under the MIT license.
         $iniContent[$combined]["Tenant_id"] = $Tenant_id
     }
 
-    if ("" -eq $Client_secret) {
+    if ("" -eq $SPN_password) {
         $spnpwd = Read-Host -Prompt 'SPN Password:'
     }
     else {
-        $spnpwd = $Client_secret
+        $spnpwd = $SPN_password
     }
 
     Out-IniFile -InputObject $iniContent -Path $fileINIPath

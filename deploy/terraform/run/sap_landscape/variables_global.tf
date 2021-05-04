@@ -107,3 +107,13 @@ variable "witness_storage_account" {
     arm_id = ""
   }
 }
+
+variable "deployment" {
+  description = "The type of deployment"
+  default = "update"
+}
+
+variable "terraform_template_version" {
+  description = "The version of Terraform templates that were identified in the state file"
+  default = ""
+}

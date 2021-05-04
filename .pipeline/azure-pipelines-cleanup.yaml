@@ -11,21 +11,6 @@ variables:
   - group: azure-config-variables
   - group: azure-sap-hana-pipeline-secrets
 jobs:
-- job: scheduled_RG_Cleanup
-  pool:
-    vmImage: "ubuntu-18.04"
-  steps:
-  - script: |
-      az login --service-principal --user $(hana-pipeline-spn-id) --password  $(hana-pipeline-spn-pw) --tenant $(landscape-tenant) --output none
-      groups=$(az group list --tag Delete=True --query [].name --output tsv)
-      for rg in $groups
-      do
-        if $(az group exists -n $rg); then
-          echo ${rg}
-          az group delete -n $rg --no-wait -y
-        fi
-      done
-    displayName: 'Clean up resource group'
 - job: scheduled_Peering_Cleanup
   pool:
     vmImage: "ubuntu-18.04"
@@ -79,4 +64,19 @@ jobs:
         az network vnet subnet delete --resource-group ${sap_landscape_rg} --vnet-name ${sap_vnet} --name ${subnet} || :
       done
     displayName: 'Clean up subnet'
+- job: scheduled_RG_Cleanup
+  pool:
+    vmImage: "ubuntu-18.04"
+  steps:
+  - script: |
+      az login --service-principal --user $(hana-pipeline-spn-id) --password  $(hana-pipeline-spn-pw) --tenant $(landscape-tenant) --output none
+      groups=$(az group list --tag Delete=True --query [].name --output tsv)
+      for rg in $groups
+      do
+        if $(az group exists -n $rg); then
+          echo ${rg}
+          az group delete -n $rg --no-wait -y
+        fi
+      done
+    displayName: 'Clean up resource group'
 

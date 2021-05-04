@@ -82,7 +82,7 @@ Licensed under the MIT license.
     $combined = $Environment + $region
 
     if ($null -ne $iniContent[$combined] ) {
-        $sub = $iniContent[$combined]["kvsubscription"] 
+        $sub = $iniContent[$combined]["STATE_SUBSCRIPTION"] 
     }
     else {
         $Category1 = @{"subscription" = "" }
@@ -92,7 +92,7 @@ Licensed under the MIT license.
     
     # Subscription & repo path
 
-    $sub = $iniContent[$combined]["kvsubscription"] 
+    $sub = $iniContent[$combined]["STATE_SUBSCRIPTION"] 
     $repo = $iniContent["Common"]["repo"]
 
     $changed = $false

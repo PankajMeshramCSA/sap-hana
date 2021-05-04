@@ -33,7 +33,7 @@
     }
   ],
   "infrastructure": {
-    "environment"                   : "QA",
+    "environment"                   : "PROD",
     "region"                        : "westus2",
     "vnets": {
       "sap": {

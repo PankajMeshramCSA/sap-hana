@@ -90,3 +90,13 @@ variable "assign_subscription_permissions" {
   description = "Assign permissions on the subscription"
   default = true
 }
+
+variable "deployment" {
+  description = "The type of deployment"
+  default = "update"
+}
+
+variable "terraform_template_version" {
+  description = "The version of Terraform templates that were identified in the state file"
+  default = ""
+}

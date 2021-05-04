@@ -87,3 +87,7 @@ output "firewall_id" {
 output "db_asg_id" {
   value = azurerm_application_security_group.db.id
 }
+
+output "use_local_credentials" {
+  value = local.use_local_credentials
+}

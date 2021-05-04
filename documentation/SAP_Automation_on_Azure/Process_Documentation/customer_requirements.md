@@ -1,4 +1,4 @@
-Details required from infrastructure perspective
+# ![SAP Deployment Automation Framework](../assets/images/UnicornSAPBlack64x64.png)**SAP Deployment Automation Framework** #Details required from infrastructure perspective
 
 ![infrastructure details](../assets/images/infra_custo.png)
 

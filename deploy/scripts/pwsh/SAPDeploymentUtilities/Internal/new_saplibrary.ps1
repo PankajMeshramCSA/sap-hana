@@ -40,7 +40,7 @@ Licensed under the MIT license.
         #Parameter file
         [Parameter(Mandatory = $true)][string]$Parameterfile,
         #Deployer parameterfile
-        [Parameter(Mandatory = $true)][string]$DeployerFolderRelativePath,
+        [Parameter(Mandatory = $false)][string]$DeployerFolderRelativePath,
         [Parameter(Mandatory = $false)][Switch]$Silent
     )
 
@@ -54,7 +54,7 @@ Licensed under the MIT license.
         $autoApprove=" --auto-approve "
     }
 
-    Write-Host "Using the Deployer state file:" + $DeployerFolderRelativePath
+    Write-Host "Using the Deployer state file:"  $DeployerFolderRelativePath
 
     $fInfo = Get-ItemProperty -Path $Parameterfile
     if (!$fInfo.Exists ) {
@@ -87,7 +87,7 @@ Licensed under the MIT license.
 
     $sub = $env:ARM_SUBSCRIPTION_ID
     if ($null -ne $iniContent[$combined]) {
-        $sub = $iniContent[$combined]["kvsubscription"]
+        $sub = $iniContent[$combined]["STATE_SUBSCRIPTION"]
     }
 
     $ctx = Get-AzContext
@@ -108,6 +108,7 @@ Licensed under the MIT license.
     Select-AzSubscription -SubscriptionId $sub
     $Cmd = "az account set --sub $sub"
     Add-Content -Path "deployment.log" -Value $Cmd
+    Write-Verbose $Cmd
 
     & ([ScriptBlock]::Create($Cmd)) 
 
@@ -157,6 +158,8 @@ Licensed under the MIT license.
     
     $Cmd = "terraform -chdir=$terraform_module_directory $Command"
     Add-Content -Path "deployment.log" -Value $Cmd
+    Write-Verbose $Cmd
+
     & ([ScriptBlock]::Create($Cmd)) 
     if ($LASTEXITCODE -ne 0) {
         $Env:TF_DATA_DIR = $null
@@ -173,6 +176,8 @@ Licensed under the MIT license.
     
     $Cmd = "terraform -chdir=$terraform_module_directory $Command"
     Add-Content -Path "deployment.log" -Value $Cmd
+    Write-Verbose $Cmd
+
     $planResults = & ([ScriptBlock]::Create($Cmd)) | Out-String 
     
     if ($LASTEXITCODE -ne 0) {
@@ -212,12 +217,20 @@ Licensed under the MIT license.
         
         $Cmd = "terraform -chdir=$terraform_module_directory $Command"
         Add-Content -Path "deployment.log" -Value $Cmd
+        Write-Verbose $Cmd
+        
         & ([ScriptBlock]::Create($Cmd))  
         if ($LASTEXITCODE -ne 0) {
             $Env:TF_DATA_DIR = $null
             throw "Error executing command: $Cmd"
         }
 
+        if ($null -eq $iniContent[$combined] ) {
+            $Category1 = @{"subscription" = "" }
+            $iniContent += @{$combined = $Category1 }
+            Out-IniFile -InputObject $iniContent -Path $fileINIPath
+        }
+        
         $Command = " output remote_state_resource_group_name"
         $Cmd = "terraform -chdir=$terraform_module_directory $Command"
         $rgName = & ([ScriptBlock]::Create($Cmd)) | Out-String 

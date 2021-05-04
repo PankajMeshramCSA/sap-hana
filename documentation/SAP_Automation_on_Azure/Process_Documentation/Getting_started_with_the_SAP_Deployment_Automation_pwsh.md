@@ -24,7 +24,7 @@ Once the pre-requisites are met, proceed with the next steps.
 
     cd sap-hana
 
-    git checkout beta
+    git checkout
    ```
 
 4. Copy the content from the
@@ -129,19 +129,21 @@ This step will deploy the deployment infrastructure and the shared library to th
 Import the Powershell module by running the
 
 ```PowerShell
-Import-Module  C:\Azure_SAP_Automated_Deployment\sap-hana\deploy\scripts\pwsh\SAPDeploymentUtilities\Output\SAPDeploymentUtilities\SAPDeploymentUtilities.psd1
+   Import-Module              C:\Azure_SAP_Automated_Deployment\sap-hana\deploy\scripts\pwsh\SAPDeploymentUtilities\Output\SAPDeploymentUtilities\SAPDeploymentUtilities.psd1
 ```
 
-For preparing the region (Deployer, Library) use the New-SAPAutomationRegion cmdlet
+For preparing the region (Deployer, Library) use the New-SAPAutomationRegion cmdlet. Navigate to the root folder of your repository containing your parameter files (WORKSPACES).
 
 ```PowerShell
-New-SAPAutomationRegion -DeployerParameterfile .\DEPLOYER\MGMT-WEEU-DEP00-INFRASTRUCTURE\MGMT-WEEU-DEP00-INFRASTRUCTURE.json  -LibraryParameterfile .\LIBRARY\MGMT-WEEU-SAP_LIBRARY\MGMT-WEEU-SAP_LIBRARY.json
+   cd C:\Azure_SAP_Automated_Deployment\WORKSPACES
+   New-SAPAutomationRegion -DeployerParameterfile .\DEPLOYER\MGMT-WEEU-DEP00-INFRASTRUCTURE\MGMT-WEEU-DEP00-INFRASTRUCTURE.json  -LibraryParameterfile .\LIBRARY\MGMT-WEEU-SAP_LIBRARY\MGMT-WEEU-SAP_LIBRARY.json
 ```
 
 or
 
 ```PowerShell
-New-SAPAutomationRegion -DeployerParameterfile .\DEPLOYER\MGMT-WEEU-DEP00-INFRASTRUCTURE\MGMT-WEEU-DEP00-INFRASTRUCTURE.json  -LibraryParameterfile .\LIBRARY\MGMT-WEEU-SAP_LIBRARY\MGMT-WEEU-SAP_LIBRARY.json -Force
+   cd C:\Azure_SAP_Automated_Deployment\WORKSPACES
+   New-SAPAutomationRegion -DeployerParameterfile .\DEPLOYER\MGMT-WEEU-DEP00-INFRASTRUCTURE\MGMT-WEEU-DEP00-INFRASTRUCTURE.json  -LibraryParameterfile .\LIBRARY\MGMT-WEEU-SAP_LIBRARY\MGMT-WEEU-SAP_LIBRARY.json -Force
 ```
 
 The script will deploy the deployment infrastructure and create the Azure keyvault for storing the Service Principal details.
@@ -150,22 +152,47 @@ The script will deploy the deployment infrastructure and create the Azure keyvau
 
 The -Force parameter can be used to clean up the terraform deployment support files from the file system (.terraform folder, terrafrom.tfstate file).
 
-The script will them deploy the rest of the resources required.
+It is also possible to provide the Service Principal details as part of the script parameters:
+
+```PowerShell
+   cd C:\Azure_SAP_Automated_Deployment\WORKSPACES
+   New-SAPAutomationRegion -DeployerParameterfile .\DEPLOYER\MGMT-WEEU-DEP00-INFRASTRUCTURE\MGMT-WEEU-DEP00-INFRASTRUCTURE.json  
+   -LibraryParameterfile .\LIBRARY\MGMT-WEEU-SAP_LIBRARY\MGMT-WEEU-SAP_LIBRARY.json 
+   -Subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+   -SPN_id yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+   -SPN_password ************************
+   -Tenant_id zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz  
+   -Silent
+```
+
 
 ## **Deploying the SAP workload zone** ## 
 
 Before the actual SAP system can be deployed a workload zone needs to be prepared. For deploying the DEV workload zone (vnet & keyvaults) navigate to the folder(LANDSCAPE/DEV-WEEU-SAP01-INFRASTRUCTURE) containing the DEV-WEEU-SAP01-INFRASTRUCTURE.json parameter file and use the New-SAPWorkloadZone cmdlet
 
 ```PowerShell
-New-SAPWorkloadZone -Parameterfile .\DEV-WEEU-SAP01-INFRASTRUCTURE.json
+   cd C:\Azure_SAP_Automated_Deployment\WORKSPACES\LANDSCAPE\DEV-WEEU-SAP01-INFRASTRUCTURE
+   New-SAPWorkloadZone -Parameterfile .\DEV-WEEU-SAP01-INFRASTRUCTURE.json
 ```
-
-environment name.
 
 If the deployer deployment uses a different environment name it is possible to specify that using the Deployerenvironment parameter,
 
 ```PowerShell
-New-SAPWorkloadZone -Parameterfile .\DEV-WEEU-SAP01-INFRASTRUCTURE.json -Deployerenvironment MGMT
+   cd C:\Azure_SAP_Automated_Deployment\WORKSPACES\LANDSCAPE\DEV-WEEU-SAP01-INFRASTRUCTURE
+   New-SAPWorkloadZone -Parameterfile .\DEV-WEEU-SAP01-INFRASTRUCTURE.json -Deployerenvironment MGMT
+```
+
+It is also possible to provide the Service Principal details as part of the parameters:
+
+```PowerShell
+   cd C:\Azure_SAP_Automated_Deployment\WORKSPACES\LANDSCAPE\DEV-WEEU-SAP01-INFRASTRUCTURE
+   New-SAPWorkloadZone -Parameterfile .\DEV-WEEU-SAP01-INFRASTRUCTURE.json 
+   -Deployerenvironment MGMT
+   -Subscription xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+   -SPN_id yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+   -SPN_password ************************
+   -Tenant_id zzzzzzzz-zzzz-zzzz-zzzz-zzzzzzzzzzzz  
+
 ```
 
 ## **Removing the SAP workload zone** ##
@@ -175,7 +202,8 @@ For removing the SAP workload zone navigate to the folder(DEV-WEEU-SAP01-INFRAST
 Remove-SAPSystem cmdlet:
 
 ```PowerShell
-Remove-SAPSystem -Parameterfile .\DEV-WEEU-SAP01-INFRASTRUCTURE.json -Type sap_landscape
+   cd C:\Azure_SAP_Automated_Deployment\WORKSPACES\LANDSCAPE\DEV-WEEU-SAP01-INFRASTRUCTURE
+   Remove-SAPSystem -Parameterfile .\DEV-WEEU-SAP01-INFRASTRUCTURE.json -Type sap_landscape
 ```
 
 ## **Deploying the SAP system** ##
@@ -183,7 +211,8 @@ Remove-SAPSystem -Parameterfile .\DEV-WEEU-SAP01-INFRASTRUCTURE.json -Type sap_l
 For deploying the SAP system navigate to the folder(DEV-WEEU-SAP01-X00) containing the DEV-WEEU-SAP01-X00.json parameter file and use the New-SAPSystem cmdlet:
 
 ```PowerShell
-New-SAPSystem -Parameterfile .\DEV-WEEU-SAP01-X00.json -Type sap_system
+   cd C:\Azure_SAP_Automated_Deployment\WORKSPACES\SYSTEM\DEV-WEEU-SAP01-X00
+   New-SAPSystem -Parameterfile .\DEV-WEEU-SAP01-X00.json -Type sap_system
 ```
 
 ## **Clean up the deployment** ##
@@ -191,5 +220,6 @@ New-SAPSystem -Parameterfile .\DEV-WEEU-SAP01-X00.json -Type sap_system
 For removing the SAP system navigate to the folder(DEV-WEEU-SAP01-X00) containing the DEV-WEEU-SAP01-X00.json parameter file and use the Remove-SAPSystem cmdlet:
 
 ```PowerShell
-Remove-SAPSystem -Parameterfile .\DEV-WEEU-SAP01-X00.json -Type sap_system
+   cd C:\Azure_SAP_Automated_Deployment\WORKSPACES\SYSTEM\DEV-WEEU-SAP01-X00
+   Remove-SAPSystem -Parameterfile .\DEV-WEEU-SAP01-X00.json -Type sap_system
 ```

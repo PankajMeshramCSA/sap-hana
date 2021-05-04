@@ -59,14 +59,23 @@ variable "db_asg_id" {
   description = "Database Application Security Group"
 }
 
+variable "deployment" {
+  description = "The type of deployment"
+}
+
+variable "terraform_template_version" {
+  description = "The version of Terraform templates that were identified in the state file"
+}
+
+
 locals {
   // Imports database sizing information
 
 
-  sizes         = jsondecode(file(length(var.custom_disk_sizes_filename) > 0  ? format("%s/%s",path.cwd, var.custom_disk_sizes_filename) : format("%s%s",path.module,"/../../../../../configs/anydb_sizes.json")))
+  sizes         = jsondecode(file(length(var.custom_disk_sizes_filename) > 0 ? format("%s/%s", path.cwd, var.custom_disk_sizes_filename) : format("%s%s", path.module, "/../../../../../configs/anydb_sizes.json")))
   custom_sizing = length(var.custom_disk_sizes_filename) > 0
 
-  faults = jsondecode(file(format("%s%s",path.module,"/../../../../../configs/max_fault_domain_count.json")))
+  faults = jsondecode(file(format("%s%s", path.module, "/../../../../../configs/max_fault_domain_count.json")))
 
   computer_names       = var.naming.virtualmachine_names.ANYDB_COMPUTERNAME
   virtualmachine_names = var.naming.virtualmachine_names.ANYDB_VMNAME
@@ -124,9 +133,14 @@ locals {
   anydb_ostype = upper(local.anydb_platform) == "SQLSERVER" ? "WINDOWS" : try(local.anydb.os.os_type, "LINUX")
   anydb_oscode = upper(local.anydb_ostype) == "LINUX" ? "l" : "w"
   anydb_size   = try(local.anydb.size, "Default")
-  anydb_sku    = try(lookup(local.sizes, local.anydb_size).compute.vm_size, "Standard_E4s_v3")
-  anydb_fs     = try(local.anydb.filesystem, "xfs")
-  anydb_ha     = try(local.anydb.high_availability, false)
+
+  db_sizing = local.enable_deployment ? lookup(local.sizes.db, local.anydb_size).storage : []
+  db_size   = local.enable_deployment ? lookup(local.sizes.db, local.anydb_size).compute : {}
+
+  anydb_sku = try(local.db_size.vm_size, "Standard_E4s_v3")
+
+  anydb_fs = try(local.anydb.filesystem, "xfs")
+  anydb_ha = try(local.anydb.high_availability, false)
 
   db_sid       = lower(substr(local.anydb_platform, 0, 3))
   loadbalancer = try(local.anydb.loadbalancer, {})
@@ -263,7 +277,7 @@ locals {
     anydb_lb       = 4
     anydb_admin_vm = 4
     anydb_db_vm    = 5 + 1
-    observer_db_vm = 5 
+    observer_db_vm = 5
   }
 
   // Ports used for specific DB Versions
@@ -291,16 +305,37 @@ locals {
     }
   ])
 
-  db_sizing = local.enable_deployment ? local.custom_sizing ? lookup(try(local.sizes.db, local.sizes), local.anydb_size).storage : lookup(local.sizes, local.anydb_size).storage : []
+  // OS disk to be created for DB nodes
+  // disk_iops_read_write only apply for ultra
+  os_disk = flatten(
+    [
+      for storage_type in local.db_sizing : [
+        for idx, disk_count in range(storage_type.count) : {
+          storage_account_type      = storage_type.disk_type,
+          disk_size_gb              = storage_type.size_gb,
+          disk_iops_read_write      = try(storage_type.disk-iops-read-write, null)
+          disk_mbps_read_write      = try(storage_type.disk-mbps-read-write, null)
+          caching                   = storage_type.caching,
+          write_accelerator_enabled = try(storage_type.write_accelerator, false)
+        }
+        if !try(storage_type.append, false)
+      ]
+      if storage_type.name == "os"
+    ]
+  )
+
+
+
+  // List of data disks to be created for  DB nodes
+  // disk_iops_read_write only apply for ultra
 
   data_disk_per_dbnode = (length(local.anydb_vms) > 0) ? flatten(
     [
       for storage_type in local.db_sizing : [
         for idx, disk_count in range(storage_type.count) : {
-          suffix               = format("%s%02d", storage_type.name, disk_count + local.offset)
-          storage_account_type = storage_type.disk_type,
-          disk_size_gb         = storage_type.size_gb,
-          //The following two lines are for Ultradisks only
+          suffix                    = format("%s%02d", storage_type.name, disk_count + local.offset)
+          storage_account_type      = storage_type.disk_type,
+          disk_size_gb              = storage_type.size_gb,
           disk_iops_read_write      = try(storage_type.disk-iops-read-write, null)
           disk_mbps_read_write      = try(storage_type.disk-mbps-read-write, null)
           caching                   = storage_type.caching,
@@ -308,20 +343,19 @@ locals {
           type                      = storage_type.name
           lun                       = storage_type.lun_start + idx
         }
-        if !try(storage_type.growth, false)
+        if !try(storage_type.append, false)
       ]
       if storage_type.name != "os"
     ]
   ) : []
 
-  growth_data_disk_per_dbnode = (length(local.anydb_vms) > 0) ? flatten(
+  append_data_disk_per_dbnode = (length(local.anydb_vms) > 0) ? flatten(
     [
       for storage_type in local.db_sizing : [
         for idx, disk_count in range(storage_type.count) : {
-          suffix               = format("%s%02d", storage_type.name, disk_count + local.offset)
-          storage_account_type = storage_type.disk_type,
-          disk_size_gb         = storage_type.size_gb,
-          //The following two lines are for Ultradisks only
+          suffix                    = format("%s%02d", storage_type.name, storage_type.lun_start + disk_count + local.offset)
+          storage_account_type      = storage_type.disk_type,
+          disk_size_gb              = storage_type.size_gb,
           disk_iops_read_write      = try(storage_type.disk-iops-read-write, null)
           disk_mbps_read_write      = try(storage_type.disk-mbps-read-write, null)
           caching                   = storage_type.caching,
@@ -329,12 +363,13 @@ locals {
           type                      = storage_type.name
           lun                       = storage_type.lun_start + idx
         }
+        if try(storage_type.append, false)
       ]
-      if try(storage_type.growth, false)
+      if storage_type.name != "os"
     ]
   ) : []
 
-  all_data_disk_per_dbnode = concat(local.data_disk_per_dbnode, local.growth_data_disk_per_dbnode)
+  all_data_disk_per_dbnode = distinct(concat(local.data_disk_per_dbnode, local.append_data_disk_per_dbnode))
 
   anydb_disks = flatten([
     for vm_counter, anydb_vm in local.anydb_vms : [
@@ -356,10 +391,10 @@ locals {
   //Disks for Ansible
   // host: xxx, LUN: #, type: sapusr, size: #
 
-  db_disks_ansible = flatten([for idx, vm in local.anydb_vms : [
+  db_disks_ansible = distinct(flatten([for idx, vm in local.anydb_vms : [
     for idx, datadisk in local.anydb_disks :
     format("{ host: '%s', LUN: %d, type: '%s' }", vm.computername, datadisk.lun, datadisk.type)
-  ]])
+  ]]))
 
   enable_ultradisk = try(
     compact(

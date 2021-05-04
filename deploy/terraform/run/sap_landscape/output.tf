@@ -10,6 +10,10 @@ output "landscape_key_vault_private_arm_id" {
   value = try(module.sap_landscape.kv_prvt, "")
 }
 
+output "landscape_key_vault_spn_arm_id" {
+  value = local.spn_key_vault_arm_id
+}
+
 output "sid_public_key_secret_name" {
   value = try(module.sap_landscape.sid_public_key_secret_name, "")
 }

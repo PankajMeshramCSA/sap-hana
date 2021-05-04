@@ -4,8 +4,8 @@
     "enable_deployment"             : true,
     "ers_instance_number"           : "02",
     "os": {
-      "offer"                       : "sles-sap-12-sp5",
       "publisher"                   : "SUSE",
+      "offer"                       : "sles-sap-12-sp5",
       "sku"                         : "gen2",
       "version"                     : "latest"
     },
@@ -21,8 +21,8 @@
     {
       "high_availability"           : false,
       "os": {
-        "offer"                     : "sles-sap-12-sp5",
         "publisher"                 : "SUSE",
+        "offer"                     : "sles-sap-12-sp5",
         "sku"                       : "gen2",
         "version"                   : "latest"
       },

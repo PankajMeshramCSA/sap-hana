@@ -155,13 +155,10 @@ resource "local_file" "ansible_inventory_new_yml" {
 
 resource "local_file" "sap-parameters_yml" {
   content = templatefile(format("%s/sap-parameters.yml.tmpl",path.module), {
-    sid          = var.hdb_sid,
-    environment  = var.infrastructure.environment,
-    kv_uri       = local.kv_name,
-    uname_secret = local.uname_secret,
-    pwd_secret   = local.pwd_secret,
-    key_secret   = local.key_secret
-    disks        = var.disks
+    sid           = var.hdb_sid,
+    kv_uri        = local.kv_name,
+    secret_prefix = local.secret_prefix,
+    disks         = var.disks
     }
   )
   filename             = format("%s/ansible_config_files/sap-parameters.yaml",path.cwd)

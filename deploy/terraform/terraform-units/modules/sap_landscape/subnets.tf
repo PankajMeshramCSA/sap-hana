@@ -80,7 +80,8 @@ resource "azurerm_network_security_group" "admin" {
 resource "azurerm_subnet_network_security_group_association" "admin" {
   provider                  = azurerm.main
   count                     = local.sub_admin_defined && !local.sub_admin_nsg_exists ? 1 : 0
-  subnet_id                 = azurerm_subnet.admin[0].id
+   
+  subnet_id                 = local.sub_admin_existing ? local.sub_admin_id : azurerm_subnet.admin[0].id
   network_security_group_id = azurerm_network_security_group.admin[0].id
 }
 
@@ -98,7 +99,7 @@ resource "azurerm_network_security_group" "db" {
 resource "azurerm_subnet_network_security_group_association" "db" {
   provider                  = azurerm.main
   count                     = local.sub_db_defined && !local.sub_db_nsg_exists ? 1 : 0
-  subnet_id                 = azurerm_subnet.db[0].id
+  subnet_id                 = local.sub_db_existing ? local.sub_db_id : azurerm_subnet.db[0].id
   network_security_group_id = azurerm_network_security_group.db[0].id
 }
 
@@ -116,7 +117,7 @@ resource "azurerm_network_security_group" "app" {
 resource "azurerm_subnet_network_security_group_association" "app" {
   provider                  = azurerm.main
   count                     = local.sub_app_defined && !local.sub_app_nsg_exists ? 1 : 0
-  subnet_id                 = azurerm_subnet.app[0].id
+  subnet_id                 = local.sub_app_existing ? local.sub_app_id : azurerm_subnet.app[0].id
   network_security_group_id = azurerm_network_security_group.app[0].id
 }
 
@@ -134,7 +135,7 @@ resource "azurerm_network_security_group" "web" {
 resource "azurerm_subnet_network_security_group_association" "web" {
   provider                  = azurerm.main
   count                     = local.sub_web_defined && !local.sub_web_nsg_exists ? 1 : 0
-  subnet_id                 = azurerm_subnet.web[0].id
+  subnet_id                 = local.sub_web_existing ? local.sub_web_id : azurerm_subnet.web[0].id
   network_security_group_id = azurerm_network_security_group.web[0].id
 }
 
