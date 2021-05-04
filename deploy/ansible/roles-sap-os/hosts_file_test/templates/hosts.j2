@@ -58,9 +58,11 @@ interface:
         eth0
 #}
 DEBUG:    {{ interface }}
+{#
+if ipv4 not found, then that NIC is not configured
+#}
 {%      if 'ipv4' in hostvars[host]['ansible_' + interface] %}
-DEBUG:        hostvars[{{ host }}]['{{ 'ansible_' + interface }}']['ipv4']['address']
-DEBUG:            {{ hostvars[host]['ansible_' + interface]['ipv4'] }}
+DEBUG:        {{ hostvars[host]['ansible_' + interface]['ipv4']['address'] }}
 {%      endif %}
 {%    endfor %}
 {%  endfor %}
