@@ -35,6 +35,16 @@
                       map(attribute='service') |
                       list }}"
 
+- name:             "1.16 - Restart Services : {{ distro_name }}"
+  service:
+    name:           "{{ item }}"
+    state:          restarted
+  loop:             "{{ services_to_process |
+                      selectattr('state', 'equalto', 'restarted') |
+                      map(attribute='service') |
+                      list }}"
+
+
 - name:             "1.16 - Enable Services : {{ distro_name }}"
   service:
     name:           "{{ item }}"
@@ -44,21 +54,21 @@
                       map(attribute='service') |
                       list }}"
 
-- name:             "1.16 - Disable Services : {{ distro_name }}"
-  service:
-    name:           "{{ item }}"
-    enabled:         no
-  loop:           "{{ services_to_process |
-                      selectattr('state', 'equalto', 'disabled') |
-                      map(attribute='service') |
-                      list }}"
-
 - name:             "1.16 - Stop Services : {{ distro_name }}"
   service:
     name:           "{{ item }}"
     state:          stopped
   loop:           "{{ services_to_process |
                       selectattr('state', 'equalto', 'stopped') |
+                      map(attribute='service') |
+                      list }}"
+
+- name:             "1.16 - Disable Services : {{ distro_name }}"
+  service:
+    name:           "{{ item }}"
+    enabled:         no
+  loop:           "{{ services_to_process |
+                      selectattr('state', 'equalto', 'disabled') |
                       map(attribute='service') |
                       list }}"
 

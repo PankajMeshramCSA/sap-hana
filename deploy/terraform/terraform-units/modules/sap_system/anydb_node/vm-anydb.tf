@@ -13,7 +13,7 @@ resource "azurerm_network_interface" "anydb_db" {
   ip_configuration {
     primary   = true
     name      = "ipconfig1"
-    subnet_id = var.db_subnet
+    subnet_id = var.db_subnet.id
 
     private_ip_address = local.use_DHCP ? (
       null) : (

@@ -19,6 +19,10 @@ variable "use_deployer" {
   description = "Use the deployer"
 }
 
+variable "create_spn" {
+  description = "Flag controlling the Fencing SPN creation"
+}
+
 variable "enable_purge_control_for_keyvaults" {
   description = "Allow the deployment to control the purge protection"
 }

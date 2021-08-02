@@ -1,7 +1,8 @@
 ---
-- import_tasks: set_runtime_facts.yaml
+- import_tasks: set_runtime_facts.yml
 - import_tasks: pre_checks.yml
 
+# Import this task only if the clusert is not yet created
 - import_tasks: provision.yml
   when: cluster_existence_check_result.rc != 0
 

@@ -3,8 +3,6 @@
   "deployer_tfstate_key"                   : "",
   "landscape_tfstate_key"                  : "",
   "infrastructure": {
-<<<<<<< HEAD
-=======
     "environment"                          : "NP",
     "region"                               : "westeurope",
     "resource_group": {
@@ -15,7 +13,6 @@
       "arm_ids"                            : [],
       "names"                              : [""]
     },
->>>>>>> d265c161bce5c4b29e8f5799af8dc35a4c3fdc70
     "anchor_vms": {
       "sku"                                : "Standard_D4s_v4",
       "authentication": {
@@ -29,28 +26,8 @@
         "offer"                            : "sles-sap-12-sp5",
         "sku"                              : "gen1"
       },
-<<<<<<< HEAD
-      "nic_ips": [
-        "",
-        "",
-        ""
-      ],
-      "use_DHCP": false
-    },
-    "environment": "NP",
-    "region": "westeurope",
-    "resource_group": {
-      "name": "",
-      "arm_id": ""
-    },
-    "ppg":{
-      "arm_ids" : [],
-      "names": [""]
-    
-=======
       "nic_ips"                            : ["","",""],
       "use_DHCP"                           : false
->>>>>>> d265c161bce5c4b29e8f5799af8dc35a4c3fdc70
 
     },
     "vnets": {
@@ -59,41 +36,6 @@
         "name"                             : "",
         "address_space"                    : "10.1.0.0/16",
         "subnet_admin": {
-<<<<<<< HEAD
-          "name": "",
-          "prefix": "10.1.1.0/24",
-          "arm_id": "",
-          "nsg": {
-            "name": "",
-            "arm_id": ""
-          }
-        },
-        "subnet_db": {
-          "name": "",
-          "prefix": "10.1.2.0/24",
-          "arm_id": "",
-          "nsg": {
-            "name": "",
-            "arm_id": ""
-          }
-        },
-        "subnet_app": {
-          "name": "",
-          "prefix": "10.1.3.0/24",
-          "arm_id": "",
-          "nsg": {
-            "name": "",
-            "arm_id": ""
-          }
-        },
-        "subnet_web": {
-          "name": "",
-          "prefix": "10.1.4.0/24",
-          "arm_id": "",
-          "nsg": {
-            "name": "",
-            "arm_id": ""
-=======
           "name":                          "",
           "prefix"                         : "10.1.1.0/24",
           "arm_id"                         : "",
@@ -127,7 +69,6 @@
           "nsg"                            : {
             "name"                         : "",
             "arm_id"                       : ""
->>>>>>> d265c161bce5c4b29e8f5799af8dc35a4c3fdc70
           }
         }
       }

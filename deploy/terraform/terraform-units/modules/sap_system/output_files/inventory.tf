@@ -124,7 +124,7 @@ resource "local_file" "ansible_inventory_yml" {
 */
 resource "local_file" "ansible_inventory_new_yml" {
   content = templatefile(format("%s%s", path.module, "/ansible_inventory_new.yml.tmpl"), {
-    ips_dbnodes = length(local.hdb_vms) > 0 ? local.ips_dbnodes_admin : local.ips_anydbnodes,
+    ips_dbnodes = local.ips_dbnodes_db,
     dbnodes     = length(local.hdb_vms) > 0 ? local.hdb_vms : local.anydb_vms
     ips_scs = length(local.ips_scs) > 0 ? (
       length(local.ips_scs) > 1 ? (
@@ -146,28 +146,28 @@ resource "local_file" "ansible_inventory_new_yml" {
     ips_web = length(local.ips_web) > 0 ? local.ips_web : [],
     sid     = var.hdb_sid,
     passervers = length(local.ips_app) > 0 ? (
-      slice(var.naming.virtualmachine_names.APP_VMNAME, 0, 1)) : (
+      slice(var.naming.virtualmachine_names.APP_COMPUTERNAME, 0, 1)) : (
       []
     ),
     appservers = length(local.ips_app) > 1 ? (
-      slice(var.naming.virtualmachine_names.APP_VMNAME, 1, length(local.ips_app))) : (
+      slice(var.naming.virtualmachine_names.APP_COMPUTERNAME, 1, length(local.ips_app))) : (
       []
     ),
     scsservers = length(local.ips_scs) > 0 ? (
       length(local.ips_scs) > 1 ? (
-        slice(var.naming.virtualmachine_names.SCS_VMNAME, 0, 1)) : (
-        var.naming.virtualmachine_names.SCS_VMNAME
+        slice(var.naming.virtualmachine_names.SCS_COMPUTERNAME, 0, 1)) : (
+        var.naming.virtualmachine_names.SCS_COMPUTERNAME
       )) : (
       []
     ),
     ersservers = length(local.ips_scs) > 0 ? (
       length(local.ips_scs) > 1 ? (
-        slice(var.naming.virtualmachine_names.SCS_VMNAME, 1, length(local.ips_scs))) : (
+        slice(var.naming.virtualmachine_names.SCS_COMPUTERNAME, 1, length(local.ips_scs))) : (
         []
       )) : (
       []
     ),
-    webservers        = length(local.ips_web) > 0 ? var.naming.virtualmachine_names.WEB_VMNAME : [],
+    webservers        = length(local.ips_web) > 0 ? var.naming.virtualmachine_names.WEB_COMPUTERNAME : [],
     prefix            = var.naming.prefix.SDU,
     separator         = var.naming.separator,
     platform          = lower(length(local.hdb_vms) > 0 ? "HANA" : local.anydb_vms[0].platform)
@@ -189,26 +189,31 @@ resource "local_file" "ansible_inventory_new_yml" {
   directory_permission = "0770"
 }
 
-# resource "local_file" "sap-parameters_yml" {
-#   content = templatefile(format("%s/sap-parameters.yml.tmpl", path.module), {
-#     sid           = var.hdb_sid,
-#     kv_uri        = local.kv_name,
-#     secret_prefix = local.secret_prefix,
-#     disks         = var.disks
-#     scs_ha        = var.scs_ha
-#     db_ha         = var.db_ha
-#     dns           = local.dns_label
-#     }
-#   )
-#   filename             = format("%s/sap-parameters.yaml", path.cwd)
-#   file_permission      = "0660"
-#   directory_permission = "0770"
-# }
+resource "local_file" "sap-parameters_yml" {
+  content = templatefile(format("%s/sap-parameters.yml.tmpl", path.module), {
+    sid           = var.hdb_sid,
+    kv_uri        = local.kv_name,
+    secret_prefix = local.secret_prefix,
+    disks         = var.disks
+    scs_ha        = var.scs_ha
+    scs_lb_ip     = var.scs_lb_ip
+    db_lb_ip      = var.db_lb_ip
+    db_ha         = var.db_ha
+    dns           = local.dns_label
+    bom           = local.bom
+    sapbits       = local.sapbits
+    pass          = local.pass
+    }
+  )
+  filename             = format("%s/sap-parameters.yaml", path.cwd)
+  file_permission      = "0660"
+  directory_permission = "0770"
+}
 
 
 resource "azurerm_storage_blob" "hosts_yaml" {
   provider               = azurerm.deployer
-  name                   = format("%s_hosts.yaml", trimspace(var.naming.prefix.SDU))
+  name                   = format("%s_hosts.yaml", length(trimspace(var.naming.prefix.SDU)) > 0 ? trimspace(var.naming.prefix.SDU) : var.hdb_sid)
   storage_account_name   = local.tfstate_storage_account_name
   storage_container_name = local.ansible_container_name
   type                   = "Block"
@@ -216,50 +221,42 @@ resource "azurerm_storage_blob" "hosts_yaml" {
 }
 
 resource "azurerm_storage_blob" "sap_parameters_yaml" {
+  depends_on = [
+    local_file.sap-parameters_yml
+  ]
   provider               = azurerm.deployer
-  name                   = format("%s_sap-parameters.yaml", trimspace(var.naming.prefix.SDU))
+  name                   = format("%s_sap-parameters.yaml", length(trimspace(var.naming.prefix.SDU)) > 0 ? trimspace(var.naming.prefix.SDU) : var.hdb_sid)
   storage_account_name   = local.tfstate_storage_account_name
   storage_container_name = local.ansible_container_name
   type                   = "Block"
-  source                 = format("%s/sap-parameters.yaml", path.cwd)
-}
-
-
-resource "null_resource" "create-parameters-file" {
-  provisioner "local-exec" {
-    command = "ansible localhost --module-name lineinfile --args ${local.argsempty}"
-  }
-  triggers = {
-    val = local.argsempty
-  }
-
-}
-
-
-resource "null_resource" "update-parameters-file" {
-  depends_on = [
-    null_resource.create-parameters-file
-  ]
-  triggers = {
-    val = local.args
-  }
-
-  provisioner "local-exec" {
-    command = "ansible localhost --module-name blockinfile --args ${local.args}"
-  }
+  source                 = local_file.sap-parameters_yml.filename
 }
 
 locals {
-  sid        = var.hdb_sid
-  kv_uri     = local.kv_name
-  scs_ha     = var.scs_ha
-  db_ha      = var.db_ha
-  diskstring = format("disks:\n  - %s", join("\n  - ", var.disks))
-  # scs_high_availability:         ${scs_ha}
-  # db_high_availability:          ${db_ha}
-  parameters = format("sap_sid:               %s\nkv_uri:                %s\nsecret_prefix:         %s\nscs_high_availability: %s\ndb_high_availability:  %s\nscs_lb_ip:             %s\ndb_lb_ip:              %s", local.sid, local.kv_uri, local.secret_prefix, local.scs_ha, local.db_ha, var.scs_lb_ip, var.db_lb_ip)
+  fileContents     = fileexists(format("%s/sap-parameters.yaml", path.cwd)) ? file(format("%s/sap-parameters.yaml", path.cwd)) : ""
+  fileContentsList = split("\n", local.fileContents)
 
-  args      = format("\"create=true path=%s state=present mode='0660' marker='# {mark} TERRAFORM CREATED BLOCK' insertbefore='^...' block='%s\n\n%s'\"", format("%s/sap-parameters.yaml", path.cwd), local.parameters, local.diskstring)
-  argsempty = format("\"create=true path=%s state=present mode='0660' line='%s'\"", format("%s/sap-parameters.yaml", path.cwd), format("---\nbom_base_name:\nsapbits_location_base_path:\nsap_fqdn:               %s\n...", local.dns_label))
+  items = compact([for strValue in local.fileContentsList :
+    length(trimspace(strValue)) > 0 ? (
+      length(split(":", strValue)) > 1 ? (
+        substr(trimspace(strValue), 0, 1) != "-" ? (
+          trimspace(strValue)) : (
+          ""
+        )
+        ) : (
+        ""
+      )) : (
+      ""
+    )
+    ]
+  )
 
+  itemvalues = tomap({ for strValue in local.items :
+    trimspace(split(":", strValue)[0]) => trimspace(substr(strValue, length(split(":", strValue)[0]) + 1, -1))
+  })
+
+  bom     = lookup(local.itemvalues, "bom_base_name", "12")
+  sapbits = lookup(local.itemvalues, "sapbits_location_base_path", "22")
+  pass    = lookup(local.itemvalues, "password_master", "32")
 }
+

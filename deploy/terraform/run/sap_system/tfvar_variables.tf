@@ -279,6 +279,9 @@ variable "database_no_ppg" {
   default = false
 }
 
+variable "database_loadbalancer_ip" {
+  default = ""
+}
 
 variable "database_vm_nodes" {
   default = [{
@@ -347,8 +350,6 @@ variable "application_server_zones" {
   default = []
 }
 
-<<<<<<< HEAD
-=======
 variable "application_server_no_avset" {
   default = false
 }
@@ -357,7 +358,6 @@ variable "application_server_no_ppg" {
   default = false
 }
 
->>>>>>> d265c161bce5c4b29e8f5799af8dc35a4c3fdc70
 variable "application_server_image" {
   default = {
     "os_type"         = ""
@@ -397,8 +397,6 @@ variable "webdispatcher_server_zones" {
   default = []
 }
 
-<<<<<<< HEAD
-=======
 variable "webdispatcher_server_no_avset" {
   default = false
 }
@@ -406,8 +404,6 @@ variable "webdispatcher_server_no_avset" {
 variable "webdispatcher_server_no_ppg" {
   default = false
 }
-
->>>>>>> d265c161bce5c4b29e8f5799af8dc35a4c3fdc70
 
 variable "webdispatcher_server_image" {
   default = {
@@ -449,8 +445,6 @@ variable "scs_server_zones" {
   default = []
 }
 
-<<<<<<< HEAD
-=======
 variable "scs_server_no_avset" {
   default = false
 }
@@ -458,7 +452,6 @@ variable "scs_server_no_avset" {
 variable "scs_server_no_ppg" {
   default = false
 }
->>>>>>> d265c161bce5c4b29e8f5799af8dc35a4c3fdc70
 
 variable "scs_server_image" {
   default = {

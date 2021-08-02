@@ -12,9 +12,9 @@
 - hosts:          localhost
 
   name:           BOM Validator
-  gather_facts:   false
+  gather_facts:   true
   connection:     local
-  become:         yes
+  become:         no
   become_user:    root
  
   vars_files:

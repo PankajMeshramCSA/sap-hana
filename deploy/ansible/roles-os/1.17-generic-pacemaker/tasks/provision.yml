@@ -4,13 +4,6 @@
 # This file runs common pre-provisioning tasks before the OS specific clustering is performed    8
 ##################################################################################################
 
-#Deprecating this task- The clustering sofware would be installed as part of 1.4-packages
-#- name: Ensure clustering software is installed
-#  package:
-#    name: "{{ item }}"
-#    state: present
-#  loop: "{{ ha_packages[ansible_os_family] | flatten(levels=1) }}"
-  
 
 - name: Ensure systemctl daemon is reloaded
   systemd:
@@ -42,24 +35,6 @@
     user: root
     key: "{{ hostvars[secondary_instance_name].cluster_public_ssh_key.stdout }}"
 
-
-# Deprecated- Hosts names with both DB IP and Admin IP are already set up 
-# Set up Hosts entries for the cluster nodes
-#- name: Ensure the Primary node hosts entry exists
-#  lineinfile:
-#    path: /etc/hosts
-#    state: present
-#    insertafter: EOF
-#    regexp: "{{ primary_instance.name }}"
-#    line: "{{ primary_instance.ip_db }} {{ primary_instance.name }}"
-
-#- name: Ensure the Secondary node hosts entry exists
-#  lineinfile:
-#    path: /etc/hosts
-#    state: present
-#    insertafter: EOF
-#    regexp: "{{ secondary_instance.name }}"
-#    line: "{{ secondary_instance.ip_db }} {{ secondary_instance.name }}"
 
 # Clustering commands are based on the Host OS
 - name: Cluster based on OS in VM

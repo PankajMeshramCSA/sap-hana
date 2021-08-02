@@ -91,10 +91,10 @@ database_vm_image={
 #database_high_availability=true
 
 database_platform="HANA"
-database_size="Default"
+database_size="S4Demo"
 
 #database_vm_zones=["1"]
-#database_vm_use_DHCP=true
+database_vm_use_DHCP=true
 
 #Application tier
 enable_app_tier_deployment=true

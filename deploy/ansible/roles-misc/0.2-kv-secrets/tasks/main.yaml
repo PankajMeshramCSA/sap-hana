@@ -111,15 +111,20 @@
   set_fact:
     fencing_spn_client_id: "{{ secret_prefix }}-fencing-spn-id"
 
+- name: "SPN Secrets:  Fencing agent SPN Client ID"
+  debug:
+    var:                          sap_fencing_spn_client_id
+    verbosity:                    1
 
 - name: "SPN Secrets: Retrieve Fencing agent SPN Client ID details"
   command: >-
     az keyvault secret show
       --vault-name {{ kv_uri }}
       --name {{ fencing_spn_client_id }}
+      --debug
   changed_when: false
   register: keyvault_secret_show_fencing_spn_client_id
-  no_log: true
+  no_log: false
   when:
     - tier == "fencing"
 

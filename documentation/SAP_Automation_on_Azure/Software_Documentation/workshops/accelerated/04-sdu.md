@@ -65,7 +65,7 @@
     ```
     <br/>
 
-2. Create input parameter [JSON](templates/NP-EUS2-SAP00-X00.json)
+2. Create input parameter
     <br/>*`Observe Naming Convention`*<br/>
     ```bash
     mkdir -p ~/Azure_SAP_Automated_Deployment/WORKSPACES/SYSTEM/DEMO-SCUS-SAP00-X00; cd $_
@@ -119,7 +119,7 @@
     ```
 
 3. Deployment
-    <br/>*`User the deployment data from the previous step for storageaccountname and vault. `*<br/>
+   
      ```bash
      $DEPLOYMENT_REPO_PATH/deploy/scripts/installer.sh            \
      --parameterfile DEMO-SCUS-SAP00-X00.json                     \

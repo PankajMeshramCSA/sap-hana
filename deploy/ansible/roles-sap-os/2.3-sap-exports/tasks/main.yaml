@@ -1,5 +1,4 @@
 ---
-
 - name: "Exports: Create SAP Directories"
   file:
     path:   "{{ item.path }}"
@@ -13,7 +12,7 @@
             item.tier == tier
 
 
-- name: "Exports: NFS Server Config"
+- name: "Exports: NFS Server Config on Suse"
   lineinfile:
     path:   "{{ item.path }}"
     regexp: "{{ item.regexp }}"
@@ -27,18 +26,34 @@
     - { tier: 'preparation', path: '/etc/exports',       regexp: '^/usr/sap/install',            line: '/usr/sap/install *(rw,sync,no_wdelay,no_root_squash)' }
     - { tier: 'preparation', path: '/etc/sysconfig/nfs', regexp: '^NFS3_SERVER_SUPPORT=',        line: 'NFS3_SERVER_SUPPORT="no"' }
     - { tier: 'preparation', path: '/etc/sysconfig/nfs', regexp: '^NFS4_SUPPORT=',               line: 'NFS4_SUPPORT="yes"' }
-  when:     item.tier == "all" or
-            item.tier == tier
+  when:     (ansible_os_family|upper == "SUSE" or (ansible_os_family|lower ~ ansible_distribution_major_version) == "redhat7") and (item.tier == "all" or item.tier == tier)
 
 
-- name: "Exports: Enable NFS Service"
-  service:
-    name:    nfsserver
-    state:   restarted
-    enabled: yes
+- name: "Exports: NFS Server Config on RHEL8"
+  lineinfile:
+    path:   "{{ item.path }}"
+    regexp: "{{ item.regexp }}"
+    line:   "{{ item.line }}"
+    owner:  root
+    group:  root
+    mode:   0644
+  loop:
+    - { tier: 'preparation', path: '/etc/exports',       regexp: '^/sapmnt/{{ sap_sid|upper }}', line: '/sapmnt/{{ sap_sid|upper }} *(rw,sync,no_wdelay,no_root_squash)' }
+    - { tier: 'preparation', path: '/etc/exports',       regexp: '^/usr/sap/trans',              line: '/usr/sap/trans *(rw,sync,no_wdelay,no_root_squash)'              }
+    - { tier: 'preparation', path: '/etc/exports',       regexp: '^/usr/sap/install',            line: '/usr/sap/install *(rw,sync,no_wdelay,no_root_squash)'            }
+    - { tier: 'preparation', path: '/etc/nfs.conf',      regexp: '^# vers3=',                    line: ' vers3=n'                                                        }
+    - { tier: 'preparation', path: '/etc/nfs.conf',      regexp: '^# vers4.1=',                  line: ' vers4.1=y'                                                      }
+    - { tier: 'preparation', path: '/etc/nfs.conf',      regexp: '^# vers4.2=',                  line: ' vers4.2=y'                                                      }
+  when:     (ansible_os_family|lower ~ ansible_distribution_major_version) == "redhat8" and (item.tier == "all" or item.tier == tier)
+ 
 
-
-
+# Leveraging functionality from the 1.16-serices role
+# - name: "Exports: Enable NFS Service on Suse"
+#   service:
+#     name:    nfsserver
+#     state:   restarted
+#     enabled: yes
+#   when:      ansible_os_family|upper == "SUSE"
 
 
 # - name: Ensure the NFS utils package is installed

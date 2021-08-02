@@ -81,7 +81,7 @@ module "hdb_node" {
   db_asg_id                  = module.common_infrastructure.db_asg_id
   terraform_template_version = var.terraform_template_version
   deployment                 = var.deployment
-  cloudinit_growpart_config  = module.common_infrastructure.cloudinit_growpart_config
+  cloudinit_growpart_config  = null # This needs more consideration module.common_infrastructure.cloudinit_growpart_config
   license_type               = var.license_type
 
 }
@@ -115,7 +115,7 @@ module "app_tier" {
   landscape_tfstate          = data.terraform_remote_state.landscape.outputs
   terraform_template_version = var.terraform_template_version
   deployment                 = var.deployment
-  cloudinit_growpart_config  = module.common_infrastructure.cloudinit_growpart_config
+  cloudinit_growpart_config  = null # This needs more consideration module.common_infrastructure.cloudinit_growpart_config
   license_type               = var.license_type
 
 }
@@ -147,7 +147,7 @@ module "anydb_node" {
   db_asg_id                  = module.common_infrastructure.db_asg_id
   terraform_template_version = var.terraform_template_version
   deployment                 = var.deployment
-  cloudinit_growpart_config  = module.common_infrastructure.cloudinit_growpart_config
+  cloudinit_growpart_config  = null # This needs more consideration module.common_infrastructure.cloudinit_growpart_config
   license_type               = var.license_type
 
 }

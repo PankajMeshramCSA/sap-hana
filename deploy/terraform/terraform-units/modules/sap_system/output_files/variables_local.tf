@@ -106,8 +106,8 @@ variable "use_local_credentials" {
 
 variable "authentication_type" {
   description = "VM Authentication type"
-  default = "key"
-  
+  default     = "key"
+
 }
 
 variable "db_ha" {
@@ -186,15 +186,15 @@ locals {
     if database != {}
   ])
 
-  ips_primary_scs = length(var.nics_scs_admin) > 0 ? var.nics_scs_admin : var.nics_scs
-  ips_primary_app = length(var.nics_app_admin) > 0 ? var.nics_app_admin : var.nics_app
-  ips_primary_web = length(var.nics_web_admin) > 0 ? var.nics_web_admin : var.nics_web
+  ips_primary_scs = var.nics_scs
+  ips_primary_app = var.nics_app
+  ips_primary_web = var.nics_web
 
   ips_scs = [for key, value in local.ips_primary_scs : value.private_ip_address]
   ips_app = [for key, value in local.ips_primary_app : value.private_ip_address]
   ips_web = [for key, value in local.ips_primary_web : value.private_ip_address]
 
-  ips_primary_anydb = length(var.nics_anydb_admin) > 0 ? var.nics_anydb_admin : var.nics_anydb
+  ips_primary_anydb = var.nics_anydb
   ips_anydbnodes    = [for key, value in local.ips_primary_anydb : value.private_ip_address]
 
   anydatabases = [
@@ -228,4 +228,7 @@ locals {
 
   secret_prefix = var.use_local_credentials ? var.naming.prefix.SDU : var.naming.prefix.VNET
   dns_label     = try(var.landscape_tfstate.dns_label, "")
+
+
+
 }

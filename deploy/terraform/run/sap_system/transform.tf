@@ -62,12 +62,13 @@ locals {
   }
 
   db_authentication = {
-      type     = try(coalesce(var.database_vm_authentication_type, try(var.databases[0].authentication.type, "")), "")
-      username = try(coalesce(var.automation_username, try(var.databases[0].authentication.username, "")), "")
+    type     = try(coalesce(var.database_vm_authentication_type, try(var.databases[0].authentication.type, "")), "")
+    username = try(coalesce(var.automation_username, try(var.databases[0].authentication.username, "")), "")
   }
   db_authentication_defined = (length(local.db_authentication.type) + length(local.db_authentication.username)) > 3
-  avset_arm_ids = distinct(concat(var.database_vm_avset_arm_ids, try(var.databases[0].avset_arm_ids, [])))
-  db_avset_arm_ids_defined = length(local.avset_arm_ids) > 0
+  avset_arm_ids             = distinct(concat(var.database_vm_avset_arm_ids, try(var.databases[0].avset_arm_ids, [])))
+  db_avset_arm_ids_defined  = length(local.avset_arm_ids) > 0
+  frontend_ip               = try(coalesce(var.database_loadbalancer_ip, try(var.databases[0].loadbalancer.frontend_ip, "")), "")
 
   databases_temp = {
     high_availability = var.database_high_availability || try(var.databases[0].high_availability, false)
@@ -284,7 +285,7 @@ locals {
   )
 
   application = merge(local.application_temp, (
-    local.app_authentication_defined ? {authentication = local.app_authentication } : null), (
+    local.app_authentication_defined ? { authentication = local.app_authentication } : null), (
     local.app_os_specified ? { app_os = local.app_os } : null), (
     local.scs_os_specified ? { scs_os = local.scs_os } : (local.app_os_specified ? { scs_os = local.app_os } : null)), (
     local.web_os_specified ? { web_os = local.web_os } : (local.app_os_specified ? { web_os = local.app_os } : null)), (
@@ -297,7 +298,7 @@ locals {
     length(local.scs_admin_nic_ips) > 0 ? { scs_admin_nic_ips = local.scs_admin_nic_ips } : null), (
     length(local.scs_lb_ips) > 0 ? { scs_lb_ips = local.scs_lb_ips } : null), (
     length(local.web_nic_ips) > 0 ? { web_nic_ips = local.web_nic_ips } : null), (
-    length(local.web_admin_nic_ips) > 0 ? { web_admin_nic_ips  = local.web_admin_nic_ips } : null), (
+    length(local.web_admin_nic_ips) > 0 ? { web_admin_nic_ips = local.web_admin_nic_ips } : null), (
     length(local.web_lb_ips) > 0 ? { web_lb_ips = local.web_lb_ips } : null), (
     length(local.app_tags) > 0 ? { app_tags = local.app_tags } : null), (
     length(local.scs_tags) > 0 ? { scs_tags = local.scs_tags } : null), (
@@ -307,11 +308,11 @@ locals {
 
   databases = [merge(local.databases_temp, (
     local.db_os_specified ? { os = local.db_os } : null), (
-    local.db_authentication_defined ? {authentication = local.db_authentication } : null), (
-    local.db_avset_arm_ids_defined ? {avset_arm_ids = local.avset_arm_ids } : null), (
+    local.db_authentication_defined ? { authentication = local.db_authentication } : null), (
+    local.db_avset_arm_ids_defined ? { avset_arm_ids = local.avset_arm_ids } : null), (
     length(local.dbnodes) > 0 ? { dbnodes = local.dbnodes } : null), (
-    length(local.db_zones_temp) > 0 ? { zones = local.db_zones_temp } : null
-    )
+    length(local.db_zones_temp) > 0 ? { zones = local.db_zones_temp } : null), (
+    length(local.frontend_ip) > 0 ? { loadbalancer = { frontend_ip = local.frontend_ip } } : { loadbalancer = {} })
     )
   ]
 
