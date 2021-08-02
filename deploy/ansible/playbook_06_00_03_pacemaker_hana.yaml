@@ -11,7 +11,7 @@
 #       1) HSR Configuration
 #       2) PACEMAKER Config
 
-- hosts:          scs                                           # TODO: Replace this with new inventory group; Change to correct group
+- hosts:          "{{ sap_sid|upper }}_DB"                                           # TODO: Replace this with new inventory group; Change to correct group
 
   name:           PACEMAKER - HANA
   remote_user:    "{{ orchestration_ansible_user }}"                
