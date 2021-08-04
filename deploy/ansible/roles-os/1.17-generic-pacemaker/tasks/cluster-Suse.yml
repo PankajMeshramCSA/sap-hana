@@ -17,22 +17,24 @@
   register: raise_process_limit
 
 # Reduce the size of Dirty Cache Parameter 1
-- name: Reduce the size of Dirty Cache vm.dirty_bytes  
-  lineinfile:
-    path: /etc/sysctl.conf
-    state: present
-    regexp: "^#?\\s*vm.dirty_bytes="
-    line: "vm.dirty_bytes=629145600"
-  register: reduce_dirty_cache_1
+# Deprecated- these changes will happen through 1.9-kernelparameters 
+#- name: Reduce the size of Dirty Cache vm.dirty_bytes  
+#  lineinfile:
+#    path: /etc/sysctl.conf
+#    state: present
+#    regexp: "^#?\\s*vm.dirty_bytes="
+#    line: "vm.dirty_bytes=629145600"
+#  register: reduce_dirty_cache_1
 
 # Reduce the size of Dirty Cache Parameter 2
-- name: Reduce the size of dirty cache vm.dirty_background_bytes
-  lineinfile:
-    path: /etc/sysctl.conf
-    state: present
-    regexp: "^#?\\s*vm.dirty_background="
-    line: "vm.dirty_background_bytes=314572800"
-  register: reduce_dirty_cache_2
+# Deprecated- these changes will happen through 1.9-kernelparameters 
+#- name: Reduce the size of dirty cache vm.dirty_background_bytes
+#  lineinfile:
+#    path: /etc/sysctl.conf
+#    state: present
+#    regexp: "^#?\\s*vm.dirty_background="
+#    line: "vm.dirty_background_bytes=314572800"
+#  register: reduce_dirty_cache_2
 
 # eth1 is the "db" NIC
 - name: Ensure clustering can manage Virtual IPs on the Database Interface
