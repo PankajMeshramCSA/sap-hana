@@ -67,7 +67,7 @@ parameters:
       - { name: 'fs.protected_symlinks',                         value: '1',          state: 'present' }
       - { name: 'kernel.suid_dumpable',                          value: '0',          state: 'present' }
       - { name: 'kernel.unprivileged_bpf_disabled',              value: '1',          state: 'present' }
-						- { name: 'vm.dirty_bytes',                                value: '629145600',  state: 'present' }
+      - { name: 'vm.dirty_bytes',                                value: '629145600',  state: 'present' }
       - { name: 'vm.dirty_background_bytes',                     value: '314572800',  state: 'present' }
 
     redhat7:
