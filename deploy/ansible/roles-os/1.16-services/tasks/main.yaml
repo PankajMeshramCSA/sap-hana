@@ -11,14 +11,15 @@
 # Analyse the service list for this distribution selecting only those
 # services assigned to the active tier or 'all'.
 - name:             Determine services appropriate for tier
-  set_fact:
+  ansible.builtin.set_fact:
     services_to_process: "{{ services[distro_id] |
                            selectattr('tier', 'in', ['all', tier]) |
                            selectattr('node_tier', 'in', ['all', node_tier]) |
                            list }}"
 
 # Print list of matching services if verbosity is 1 or greater
-- debug:
+- name: "[DEBUG] 1.16 - Show services"
+  ansible.builtin.debug:
     var: services_to_process
     verbosity: 1
 
@@ -27,7 +28,7 @@
 # approach as it only calls the underlying distro specific service manager
 # once per state value.
 - name:             "1.16 - Start Services : {{ distro_name }}"
-  service:
+  ansible.builtin.service:
     name:           "{{ item }}"
     state:          started
   loop:             "{{ services_to_process |
@@ -36,7 +37,7 @@
                       list }}"
 
 - name:             "1.16 - Restart Services : {{ distro_name }}"
-  service:
+  ansible.builtin.service:
     name:           "{{ item }}"
     state:          restarted
   loop:             "{{ services_to_process |
@@ -46,7 +47,7 @@
 
 
 - name:             "1.16 - Enable Services : {{ distro_name }}"
-  service:
+  ansible.builtin.service:
     name:           "{{ item }}"
     enabled:         yes
   loop:             "{{ services_to_process |
@@ -55,7 +56,7 @@
                       list }}"
 
 - name:             "1.16 - Stop Services : {{ distro_name }}"
-  service:
+  ansible.builtin.service:
     name:           "{{ item }}"
     state:          stopped
   loop:           "{{ services_to_process |
@@ -64,7 +65,7 @@
                       list }}"
 
 - name:             "1.16 - Disable Services : {{ distro_name }}"
-  service:
+  ansible.builtin.service:
     name:           "{{ item }}"
     enabled:         no
   loop:           "{{ services_to_process |

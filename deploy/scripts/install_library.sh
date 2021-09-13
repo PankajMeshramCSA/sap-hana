@@ -99,14 +99,12 @@ ext=$(echo ${parameterfile} | cut -d. -f2)
 # Helper variables
 if [ "${ext}" == json ]; then
     environment=$(jq --raw-output .infrastructure.environment "${parameterfile}")
-    region=$(jq --raw-output .infrastructure.region "${parameterfile}")
+    location=$(jq --raw-output .infrastructure.region "${parameterfile}")
     use_deployer=$(jq --raw-output .deployer.use "${parameterfile}")
 else
     
-    load_config_vars "${param_dirname}"/"${parameterfile}" "library_environment"
-    environment=$(echo ${library_environment} | xargs)
-    load_config_vars "${param_dirname}"/"${parameterfile}" "library_location"
-    region=$(echo ${library_location} | xargs)
+    load_config_vars "${param_dirname}"/"${parameterfile}" "environment"
+    load_config_vars "${param_dirname}"/"${parameterfile}" "location"
 
     load_config_vars "${param_dirname}"/"${parameterfile}" "deployer_use"
     use_deployer=$deployer_use
@@ -125,20 +123,20 @@ then
     echo "#                                                                                       #"
     echo "#                           Incorrect parameter file.                                   #"
     echo "#                                                                                       #"
-    echo "#     The file needs to contain the infrastructure.environment attribute!!              #"
+    echo "#              The file needs to contain the environment attribute!!                    #"
     echo "#                                                                                       #"
     echo "#########################################################################################"
     echo ""
     exit -1
 fi
 
-if [ ! -n "${region}" ]
+if [ ! -n "${location}" ]
 then
     echo "#########################################################################################"
     echo "#                                                                                       #"
     echo "#                           Incorrect parameter file.                                   #"
     echo "#                                                                                       #"
-    echo "#       The file needs to contain the infrastructure.region attribute!!                 #"
+    echo "#               The file needs to contain the location attribute!!                      #"
     echo "#                                                                                       #"
     echo "#########################################################################################"
     echo ""
@@ -166,7 +164,7 @@ fi
 #Persisting the parameters across executions
 automation_config_directory=~/.sap_deployment_automation/
 generic_config_information="${automation_config_directory}"config
-library_config_information="${automation_config_directory}""${environment}""${region}"
+library_config_information="${automation_config_directory}""${environment}""${location}"
 
 #Plugins
 if [ ! -d "$HOME/.terraform.d/plugin-cache" ]
@@ -198,6 +196,7 @@ if [ ! -n "${DEPLOYMENT_REPO_PATH}" ]; then
     echo "#      ARM_SUBSCRIPTION_ID (subscription containing the state file storage account)     #"
     echo "#                                                                                       #"
     echo "#########################################################################################"
+    unset TF_DATA_DIR
     exit 4
 fi
 
@@ -219,6 +218,7 @@ if [ ! -n "$ARM_SUBSCRIPTION_ID" ]; then
     echo "#      ARM_SUBSCRIPTION_ID (subscription containing the state file storage account)     #"
     echo "#                                                                                       #"
     echo "#########################################################################################"
+    unset TF_DATA_DIR
     exit 3
 fi
 
@@ -235,6 +235,7 @@ then
     echo "#                                                                                       #"
     echo "#########################################################################################"
     echo ""
+    unset TF_DATA_DIR
     exit -1
 fi
 
@@ -286,7 +287,20 @@ else
                 fi
             fi
             terraform -chdir="${terraform_module_directory}" init -upgrade=true -reconfigure -backend-config "path=${param_dirname}/terraform.tfstate"
+            return_value=$?
+            if [ 0 != $return_value ] ; then
+                echo ""
+                echo "#########################################################################################"
+                echo "#                                                                                       #"
+                echo -e "#                          $boldreduscore Errors during the init phase $resetformatting                               #"    
+                echo "#                                                                                       #"
+                echo "#########################################################################################"
+                echo ""
+                unset TF_DATA_DIR
+                exit $return_value
+            fi
         else
+            unset TF_DATA_DIR
             exit 0
         fi
     fi
@@ -313,16 +327,21 @@ if [ -n "${str1}" ]; then
     echo ""
     echo "#########################################################################################"
     echo "#                                                                                       #"
-    echo -e "#                          $boldreduscore Errors during the plan phase $resetformatting                                #"    
+    echo -e "#                          $boldreduscore Errors during the plan phase $resetformatting                               #"    
     echo "#                                                                                       #"
     echo "#########################################################################################"
     echo ""
-    echo $str1
-    rm plan_output.log
-    exit -1
+
+    if [ -f plan_output.log ]; then
+        cat plan_output.log
+        rm plan_output.log
+    fi
+    unset TF_DATA_DIR
+    exit $return_value
 fi
 
 if [ -f plan_output.log ]; then
+    cat plan_output.log
     rm plan_output.log
 fi
 
@@ -337,10 +356,11 @@ echo ""
 if [ -n "${deployer_statefile_foldername}" ]; 
 then
     echo "Deployer folder specified:" "${deployer_statefile_foldername}"
-    terraform -chdir="${terraform_module_directory}" apply ${approve} -var-file="${var_file}" -var deployer_statefile_foldername="${deployer_statefile_foldername}" 2>error.log
+    terraform -chdir="${terraform_module_directory}" apply ${approve} -var-file="${var_file}" -var deployer_statefile_foldername="${deployer_statefile_foldername}" 
 else
-    terraform -chdir="${terraform_module_directory}" apply ${approve} -var-file="${var_file}" 2>error.log
+    terraform -chdir="${terraform_module_directory}" apply ${approve} -var-file="${var_file}" 
 fi
+return_value=$?
  
 str1=$(grep "Error: " error.log)
 if [ -n "${str1}" ]
@@ -352,12 +372,9 @@ then
     echo "#                                                                                       #"
     echo "#########################################################################################"
     echo ""
-    cat error.log
-    rm error.log
     unset TF_DATA_DIR
     exit -1
 fi
-return_value=-1
 REMOTE_STATE_SA=$(terraform -chdir="${terraform_module_directory}" output remote_state_storage_account_name| tr -d \")
 temp=$(echo "${REMOTE_STATE_SA}" | grep -m1 "Warning")
 if [ -z "${temp}" ]
@@ -365,9 +382,7 @@ then
     temp=$(echo "${REMOTE_STATE_SA}" | grep "Backend reinitialization required")
     if [ -z "${temp}" ]
     then
-        echo "save"
         save_config_var "REMOTE_STATE_SA" "${library_config_information}"
-        return_value=0
     fi
 fi
 
@@ -379,7 +394,6 @@ then
     if [ -z "${temp}" ]
     then
         save_config_var "tfstate_resource_id" "${library_config_information}"
-        return_value=0
     fi
 fi
 

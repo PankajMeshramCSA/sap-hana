@@ -1,13 +1,15 @@
 ---
 
 ###########################################################################################
-# This file calls the OS specefic tasks to configure HANA specific clustering resources  #8
+# This file calls the OS specific tasks to configure HANA specific clustering resources  #8
 ###########################################################################################
 
 
 # Clustering commands are based on the Host OS
 - name: Cluster based on OS in VM
   include_tasks: "5.5.4.0-cluster-{{ ansible_os_family }}.yml"
+  when: cluster_existence_check_result.rc != 0
   
+...
 
 

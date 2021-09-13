@@ -19,6 +19,18 @@ variable "use_deployer" {
   description = "Use the deployer"
 }
 
+variable "ANF_settings" {
+  description = "ANF settings"
+  default = {
+    use           = false
+    name          = ""
+    arm_id        = ""
+    service_level = "Standard"
+    size_in_tb    = 4
+
+  }
+}
+
 variable "create_spn" {
   description = "Flag controlling the Fencing SPN creation"
 }
@@ -29,12 +41,12 @@ variable "enable_purge_control_for_keyvaults" {
 
 variable "dns_label" {
   description = "DNS label"
-  default = ""
+  default     = ""
 }
 
 variable "dns_resource_group_name" {
   description = "DNS resource group name"
-  default = ""
+  default     = ""
 }
 
 locals {
@@ -116,7 +128,7 @@ locals {
 
   // SAP vnet
   vnet_sap_arm_id = try(var.infrastructure.vnets.sap.arm_id, "")
-  vnet_sap_exists = length(local.vnet_sap_arm_id) > 0 
+  vnet_sap_exists = length(local.vnet_sap_arm_id) > 0
   vnet_sap_name   = local.vnet_sap_exists ? try(split("/", local.vnet_sap_arm_id)[8], "") : format("%s%s", local.prefix, local.resource_suffixes.vnet)
   vnet_sap_addr   = local.vnet_sap_exists ? "" : try(var.infrastructure.vnets.sap.address_space, "")
 
@@ -252,6 +264,19 @@ locals {
   )
   sub_web_prefix = local.sub_web_defined ? try(var.infrastructure.vnets.sap.subnet_web.prefix, "") : ""
 
+  sub_anf_defined  = (length(try(var.infrastructure.vnets.sap.subnet_anf.arm_id, "")) + length(try(var.infrastructure.vnets.sap.subnet_anf.prefix, ""))) > 0
+  sub_anf_arm_id   = local.sub_anf_defined ? try(var.infrastructure.vnets.sap.subnet_anf.arm_id, "") : ""
+  sub_anf_existing = length(local.sub_anf_arm_id) > 0
+  sub_anf_name = local.sub_anf_existing ? (
+    try(split("/", local.sub_anf_arm_id)[10], "")) : (
+    length(try(var.infrastructure.vnets.sap.subnet_anf.name, "")) > 0 ? (
+      var.infrastructure.vnets.sap.subnet_anf.name) : (
+      format("%s%s%s", local.prefix, var.naming.separator, local.resource_suffixes.anf_subnet)
+    )
+  )
+  sub_anf_prefix = local.sub_anf_defined ? try(var.infrastructure.vnets.sap.subnet_anf.prefix, "") : ""
+
+
   //NSGs
 
   sub_admin_nsg_arm_id = local.sub_admin_defined ? try(var.infrastructure.vnets.sap.subnet_admin.nsg.arm_id, "") : ""
@@ -293,5 +318,8 @@ locals {
       format("%s%s%s", local.prefix, var.naming.separator, local.resource_suffixes.web_subnet_nsg)
     )
   )
+
+  # Store the Deployer KV in workload zone KV
+  deployer_kv_user_name = try(var.deployer_tfstate.deployer_kv_user_name, "")
 
 }

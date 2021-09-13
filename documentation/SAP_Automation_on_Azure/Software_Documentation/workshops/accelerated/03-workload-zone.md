@@ -84,7 +84,27 @@ Logon to the deployer using the ssh key downloaded in the previous step.
     }
     EOF
     ```
-    <br/>
+
+    ```bash
+    mkdir -p ~/Azure_SAP_Automated_Deployment/WORKSPACES/LANDSCAPE/DEMO-WEEU-SAP00-INFRASTRUCTURE; cd $_
+
+    cat <<EOF > DEMO-WEEU-SAP00-INFRASTRUCTURE.json
+    {
+      "infrastructure": {
+        "environment"                         : "DEMO",
+        "region"                              : "westeurope",
+        "vnets": {
+          "sap": {
+            "name"                            : "SAP00",
+            "address_space"                   : "10.1.0.0/16"
+          }
+        }
+      }
+    }
+    EOF
+    ```
+
+<br/>
 
 3. Deployment
     <br/>*`User the deployment data from the previous step for storageaccountname and vault. `*<br/>
@@ -97,7 +117,53 @@ Logon to the deployer using the ssh key downloaded in the previous step.
      --vault DEMOSCUSDEP00user###                                            \
      ```
 
+For *westeurope* use
 
-<br/><br/><br/><br/>
+    <br/>*`User the deployment data from the previous step for storageaccountname and vault. `*<br/>
+     ```bash
+     $DEPLOYMENT_REPO_PATH/deploy/scripts/install_workloadzone.sh            \
+     --parameterfile DEMO-WEEU-SAP00-INFRASTRUCTURE.json                     \
+     --auto-approve
+     ```
+
+4. Deployment providing the SPN Details. In this option the deployment of the workload zone requires different deployment credentials
+
+    <br/>*Use the deployment data from the previous step for storageaccountname and vault.*<br/>
+
+```bash
+     subscription=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+     spn_id=yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+     spn_secret=zzzzzzzzzzzzzzz                                          
+     tenant_id=ttttttttt-tttt-tttt-tttt-ttttttttttt
+     deployer_environment=DEMO
+
+```
+
+```bash
+     $DEPLOYMENT_REPO_PATH/deploy/scripts/install_workloadzone.sh            \
+     --parameterfile DEMO-SCUS-SAP00-INFRASTRUCTURE.json                     \
+     --deployer_environment $deployer_environment                            \
+     --subscription $subscription                                            \ 
+     --spn_id $spn_id                                                        \
+     --spn_secret "$spn_secret"                                              \
+     --tenant_id $tenant_id                                                  \     
+     --auto-approve
+```
+
+</br>
+For *westeurope* use:
+
+</br>
+
+```bash
+     $DEPLOYMENT_REPO_PATH/deploy/scripts/install_workloadzone.sh            \
+     --parameterfile DEMO-WEEU-SAP00-INFRASTRUCTURE.json                     \
+     --deployer_environment $deployer_environment                            \
+     --subscription $subscription                                            \ 
+     --spn_id $spn_id                                                        \
+     --spn_secret "$spn_secret"                                              \
+     --tenant_id $tenant_id                                                  \     
+     --auto-approve
+```
 
 # Next: [SAP Deployment Unit - SDU](04-sdu.md) <!-- omit in toc -->

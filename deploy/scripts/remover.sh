@@ -186,8 +186,7 @@ automation_config_directory="$HOME/.sap_deployment_automation/"
 generic_config_information="${automation_config_directory}"config
 system_config_information="${automation_config_directory}""${environment}""${region}"
 
-key=$(echo "${parameterfile}" | cut -d. -f1)
-
+key=$(echo "${parameterfile_name}" | cut -d. -f1)
 
 #Plugins
 if [ ! -d "$HOME/.terraform.d/plugin-cache" ]; then
@@ -251,6 +250,22 @@ fi
 
 account_set=0
 
+cloudIDUsed=$(az account show | grep "cloudShellID")
+if [ ! -z "${cloudIDUsed}" ];
+then 
+    echo ""
+    echo "#########################################################################################"
+    echo "#                                                                                       #"
+    echo -e "#         $boldred Please login using your credentials or service principal credentials! $resetformatting       #"
+    echo "#                                                                                       #"
+    echo "#########################################################################################"
+    echo ""
+    exit 67                                                                                             #addressee unknown
+fi
+
+#setting the user environment variables
+set_executing_user_environment_variables "none"
+
 if [ ! -z "${STATE_SUBSCRIPTION}" ]; then
     $(az account set --sub "${STATE_SUBSCRIPTION}")
     account_set=1
@@ -284,8 +299,6 @@ if [ -f backend.tf ]; then
     rm backend.tf
 fi
 
-#check_output=0
-
 echo ""
 echo "#########################################################################################"
 echo "#                                                                                       #"
@@ -294,14 +307,13 @@ echo "#                                                                         
 echo "#########################################################################################"
 echo ""
 
-
-
 terraform -chdir="${terraform_module_directory}" init -upgrade=true -reconfigure \
 --backend-config "subscription_id=${STATE_SUBSCRIPTION}" \
 --backend-config "resource_group_name=${REMOTE_STATE_RG}" \
 --backend-config "storage_account_name=${REMOTE_STATE_SA}" \
 --backend-config "container_name=tfstate" \
 --backend-config "key=${key}.terraform.tfstate"
+
 
 echo ""
 echo "#########################################################################################"

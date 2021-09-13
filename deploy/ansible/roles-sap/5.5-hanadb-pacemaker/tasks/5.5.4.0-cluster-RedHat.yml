@@ -12,24 +12,24 @@
 
 
 - name: Optimise the Pacemaker cluster for SAP HANA
-  when: ansible_hostname == primary_instance_name
   block:
     - name: Enable Maintenance mode for the cluster
-      shell: pcs property set maintenance-mode=true
+      ansible.builtin.shell: pcs property set maintenance-mode=true
 
     - name: Ensure the SAP HANA Topology resource is created
-      shell: >
+      ansible.builtin.shell: >
         pcs resource create SAPHanaTopology_{{ hdb_sid | upper }}_{{ hdb_instance_number }} SAPHanaTopology
         SID={{ hdb_sid | upper }} InstanceNumber={{ hdb_instance_number }}
         op start timeout=600
         op stop timeout=300
         op monitor interval=10 timeout=600
         clone clone-max=2 clone-node-max=1 interleave=true
+      register:             SAPHanaTopology
+      failed_when:          SAPHanaTopology.rc > 1
 
     - name: Ensure the SAP HANA resource is created
-      when: ansible_distribution_major_version == "7"
-      shell: >
-        pcs resource create SAPHana_{{ hdb_sid | upper }}_{{ hdb_instance_number }} SAPHana
+      ansible.builtin.shell: >
+        pcs resource create SAPHana_{{ hdb_sid | upper }}_{{ instance_number }} SAPHana
         SID={{ hdb_sid | upper }} InstanceNumber={{ hdb_instance_number }}
         PREFER_SITE_TAKEOVER=true DUPLICATE_PRIMARY_TIMEOUT=7200
         AUTOMATED_REGISTER=false
@@ -40,10 +40,10 @@
         op promote timeout={{ cluster_SAPHana_timeouts.promote }}
         op demote timeout={{ cluster_SAPHana_timeouts.demote }}
         master notify=true clone-max=2 clone-node-max=1 interleave=true
+      when: ansible_distribution_major_version == "7"
     
     - name: Ensure the SAP HANA resource is created
-      when: ansible_distribution_major_version == "8"
-      shell: >
+      ansible.builtin.shell: >
         pcs resource create SAPHana_{{ hdb_sid | upper }}_{{ hdb_instance_number }} SAPHana
         SID={{ hdb_sid | upper }} InstanceNumber={{ hdb_instance_number }}
         PREFER_SITE_TAKEOVER=true DUPLICATE_PRIMARY_TIMEOUT=7200
@@ -55,48 +55,45 @@
         op promote timeout={{ cluster_SAPHana_timeouts.promote }}
         op demote timeout={{ cluster_SAPHana_timeouts.demote }}
         promotable meta notify=true clone-max=2 clone-node-max=1 interleave=true
+      when: ansible_distribution_major_version == "8"
 
 
     - name: Ensure the Virtual IP resource for the Load Balancer Front End IP is created
-      shell: pcs resource create vip_{{ hdb_sid | upper }}_{{ hdb_instance_number }} IPaddr2 ip="{{ hdb_lb_frontendip }}"
+      ansible.builtin.shell: pcs resource create vip_{{ hdb_sid | upper }}_{{ hdb_instance_number }} IPaddr2 ip="{{ db_lb_ip }}"
 
     - name: Ensure the netcat resource for the Load Balancer Healthprobe is created
-      shell: pcs resource create nc_{{ hdb_sid | upper }}_{{ hdb_instance_number }} azure-lb port=625{{ hdb_instance_number }}
+      ansible.builtin.shell: pcs resource create nc_{{ hdb_sid | upper }}_{{ hdb_instance_number }} azure-lb port=625{{ instance_number }}
 
     - name: Ensure the Virtual IP group resource is created
-      shell: pcs resource group add g_ip_{{ hdb_sid | upper }}_{{ hdb_instance_number }} nc_{{ hdb_sid | upper }}_{{ hdb_instance_number }} vip_{{ hdb_sid | upper }}_{{ hdb_instance_number }}
+      ansible.builtin.shell: pcs resource group add g_ip_{{ hdb_sid | upper }}_{{ hdb_instance_number }} nc_{{ hdb_sid | upper }}_{{ instance_number }} vip_{{ hdb_sid | upper }}_{{ instance_number }}
 
     - name: Ensure the order constraint for the SAP HANA Topology is configured
-      when: ansible_distribution_major_version == "7"
-      shell: pcs constraint order SAPHanaTopology_{{ hdb_sid | upper }}_{{ hdb_instance_number }}-clone then SAPHana_{{ hdb_sid | upper }}_{{ hdb_instance_number }}-master symmetrical=false
+      ansible.builtin.shell: pcs constraint order SAPHanaTopology_{{ hdb_sid | upper }}_{{ hdb_instance_number }}-clone then SAPHana_{{ hdb_sid | upper }}_{{ instance_number }}-master symmetrical=false
 
     - name: Ensure the Virtual IP group is configured to the Master node
-      when: ansible_distribution_major_version == "7"
-      shell: pcs constraint colocation add g_ip_{{ hdb_sid | upper }}_{{ hdb_instance_number }} with master SAPHana_{{ hdb_sid | upper }}_{{ hdb_instance_number }}-master 4000
-    
-    - name: Ensure the order constraint for the SAP HANA Topology is configured
-      when: ansible_distribution_major_version == "8"
-      shell: pcs constraint order SAPHanaTopology_{{ hdb_sid | upper }}_{{ hdb_instance_number }}-clone then SAPHana_{{ hdb_sid | upper }}_{{ hdb_instance_number }}-clone symmetrical=false
+      ansible.builtin.shell: pcs constraint colocation add g_ip_{{ hdb_sid | upper }}_{{ hdb_instance_number }} with master SAPHana_{{ hdb_sid | upper }}_{{ instance_number }}-master 4000
 
     - name: Ensure the Virtual IP group is configured to the Master node
       when: ansible_distribution_major_version == "8"
       shell: pcs constraint colocation add g_ip_{{ hdb_sid | upper }}_{{ hdb_instance_number }} with master SAPHana_{{ hdb_sid | upper }}_{{ hdb_instance_number }}-clone 4000
     
     - name: Disable Maintenance mode for the cluster
-      shell: pcs property set maintenance-mode=false
+      ansible.builtin.shell: pcs property set maintenance-mode=false
 
     - name: Ensure Cluster Status is ok 
-      shell: pcs status | grep '^Online:'
+      ansible.builtin.shell: pcs status | grep '^Online:'
       register: cluster_stable_check
       retries: 30
       delay: 10
       until: "'{{ primary_instance_name }} {{ secondary_instance_name }}' in cluster_stable_check.stdout or '{{ secondary_instance_name }} {{ primary_instance_name }}' in cluster_stable_check.stdout"
 
     - name: Ensure Cluster resources are started 
-      shell: pcs status | grep '^Started:'
+      ansible.builtin.shell: pcs status | grep '^Started:'
       register: hana_cluster_resource_check
       retries: 30
       delay: 10
-      until: "'{{ primary_instance_name }} {{ secondary_instance_name }}' in cluster_stable_check.stdout or '{{ secondary_instance_name }} {{ primary_instance_name }}' in cluster_stable_check.stdout"
+      until: "'{{ primary_instance_name }} {{ secondary_instance.name }}' in cluster_stable_check.stdout or '{{ secondary_instance.name }} {{ primary_instance_name }}' in cluster_stable_check.stdout"
+
+  when: ansible_hostname == primary_instance_name
     
 #End of HANA clustering resources 

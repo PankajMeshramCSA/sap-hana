@@ -41,22 +41,42 @@ This step will leverage an Ansible playbool to download software from SAP, the d
     | S-Password                 | Password of S User Account                             |
     | sapbits-access-key         | Access key for the SAP Library sapbits storage account |
 
+2. Add secrets to KeyVault.
+   - Where `<Deployer-User_KV_name>` is the keyvault name.
+   - Where `<S-Username>` is the S user account name
+   - Where `<S-Password>` is the S user account's password
+   - Where `<access-key>` is the access key for the storage account
+
+```bash
+    az keyvault secret set --name "S-Username" --vault-name "<Deployer-User_KV_name>" --value "<S-Username>";
+    az keyvault secret set --name "S-Password" --vault-name "<Deployer-User_KV_name>" --value "<S-Password>";
+    # If not populated
+    az keyvault secret set --name "sapbits-access-key" --vault-name "<Deployer-User_KV_name>" --value "<access-key>";
+```
+
 ### SAP Software Download - Ansible ###
 
 <br>
 
-1. From the SAP Deployment Workspace directory, create a new directory 'BOMS'.
+1. From the SAP Deployment Workspace directory, create a new directory 'BOMS' and the sap-parameter.yaml file.
 
     ```bash
-    mkdir -p ~/Azure_SAP_Automated_Deployment/WORKSPACES/BOMS
-    cd ~/Azure_SAP_Automated_Deployment/WORKSPACES/BOMS
-    ```
+    mkdir -p ~/Azure_SAP_Automated_Deployment/WORKSPACES/BOMS; cd $_
+    cat <<EOF > sap-parameters.yaml
+    ---
+    bom_base_name:               S41909SPS03_v0004ms
+    sapbits_location_base_path:  https://<storage_account_FQDN>/sapbits
+    kv_uri:                      
+    ...
+    EOF
+    
+ ```
+    
+2. Update the `sap-parameters.yaml` parameter file.
 
-2. Create the `sap-parameters.yaml` parameter file.
-
-    ```bash
+ ```bash
     vi sap-parameters.yaml
-    ```
+ ```
 
     Values to be updated:
 
@@ -66,7 +86,7 @@ This step will leverage an Ansible playbool to download software from SAP, the d
     | sapbits_location_base_path | https://<storage_account_FQDN>/sapbits    |
     | kv_uri                     | Name of Key Vault containing the secrets  |
 
-3. Execute the Ansible Playbook.
+4. Execute the Ansible Playbook.
 
     There are three ways to do this.
 
@@ -77,8 +97,8 @@ This step will leverage an Ansible playbool to download software from SAP, the d
         ```
 
         ```bash
-        1) BOM Validator
-        2) BOM Downloader
+        1) BOM Downloader
+        2) BOM Uploader
         3) Quit
         Please select playbook: 
         ```
@@ -94,8 +114,8 @@ This step will leverage an Ansible playbool to download software from SAP, the d
         ```
 
         Use the following playbooks in the command, as shown in the order below.
-        - `playbook_bom_validator.yaml`
         - `playbook_bom_downloader.yaml`
+        - `playbook_bom_uploader.yaml`
 
     3. (*Optional*) Execute the Ansible playbooks sequentially via a single `ansible-playbook` command.
 
@@ -104,6 +124,6 @@ This step will leverage an Ansible playbool to download software from SAP, the d
           --user        azureadm                                                                           \
           --private-key sshkey                                                                             \
           --extra-vars="@sap-parameters.yaml"                                                              \
-          ~/Azure_SAP_Automated_Deployment/sap-hana/deploy/ansible/playbook_bom_validator.yaml             \
           ~/Azure_SAP_Automated_Deployment/sap-hana/deploy/ansible/playbook_bom_downloader.yaml            \
+          ~/Azure_SAP_Automated_Deployment/sap-hana/deploy/ansible/playbook_bom_uploader.yaml              
         ```

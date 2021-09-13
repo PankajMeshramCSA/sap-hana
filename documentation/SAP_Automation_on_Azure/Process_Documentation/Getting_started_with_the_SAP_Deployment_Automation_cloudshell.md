@@ -10,6 +10,27 @@ To be able to run the deployments from the cloud shell we need to clone the sap-
 
 Open the cloud shell and use bash.
 
+## **Authenticating using cloud shell** ##
+Terraform only supports authenticating to Azure via the Azure CLI. Authenticating using Azure PowerShell is not supported.
+
+For the purpose of this document we will talk about two ways of authenticating to Azure via cloud shell, click on the links provided and follow documentation to authenticate to azure:
+- [Authenticating via a Microsoft account using Cloud Shell](https://docs.microsoft.com/en-us/azure/developer/terraform/get-started-cloud-shell-powershell?tabs=bash#authenticate-to-azure-via-a-microsoft-account)
+- Authenticating via a service principal:
+  1. [If you don't have a service principal, create a service principal](https://docs.microsoft.com/en-us/azure/developer/terraform/get-started-cloud-shell-powershell?tabs=bash#create-a-service-principal).
+  2. [Authenticate to Azure using environment variables.](https://docs.microsoft.com/en-us/azure/developer/terraform/get-started-cloud-shell-powershell?tabs=bash#specify-service-principal-credentials-in-environment-variables)
+  3. ~~Authenticate to Azure using the Terraform provider block~~ (not recommended, see below)
+
+  ``` 
+  🚨❗ 
+  The ability to specify your Azure subscription credentials in a Terraform configuration file can be convenient - especially when testing.
+  However, it is not advisable to store credentials in a clear-text file that can be viewed by non-trusted individuals.
+  ```
+  
+  ```
+  ⚠️ Do not move to next section without completing this section
+
+  ```
+
 ## **Deployment** ##
 
 1. Navigate to the home root directory

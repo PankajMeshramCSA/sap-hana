@@ -5,11 +5,21 @@
 # +------------------------------------4--------------------------------------*/
 ---
 
-# TODO: Playbook not yet written
-#       This is a placeholder 
-#       This should probably be two playbooks:
-#       1) ERS Install and Config
-#       2) PACEMAKER Config of SCS and ERS
+- hosts: localhost
+  name: Get SAP Password from KeyVault
+  remote_user:    "{{ orchestration_ansible_user }}"
+  become:         no
+  become_user:    root
+  gather_facts:   yes
+  vars_files:
+    - vars/ansible-input-api.yaml                               # API Input template with defaults
+  tasks:
+
+  - include_role:
+      name:     roles-misc/0.1-passwords
+      public:   yes      
+    tags:
+       - 0.1-passwords
 
 - hosts:          "{{ sap_sid|upper }}_SCS"                                           
 
@@ -35,11 +45,26 @@
 # -------------------------------------+---------------------------------------8
 
   # Specify the active tier for this playbook run
- # - set_fact:
- #     tier:     os
+   - set_fact:
+       password_ha_db_cluster:     "{{ hostvars.localhost.db_cluster_password }}"
 
    - include_role:
       name:     roles-os/6.0.0.01-HANA
+     when: db_high_availability == true          
+
+- hosts: localhost
+  name: Log results
+  remote_user:    "{{ orchestration_ansible_user }}"
+  become:         no
+  become_user:    root
+  gather_facts:   yes
+  vars_files:
+    - vars/ansible-input-api.yaml                               # API Input template with defaults
+  tasks:
+  - ansible.builtin.file:
+      path: "{{ _workspace_directory }}/.step601"
+      state: touch
+
 
 ...
 # /*----------------------------------------------------------------------------8

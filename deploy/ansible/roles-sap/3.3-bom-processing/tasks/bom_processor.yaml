@@ -44,7 +44,7 @@
 
 #   02) Create static download directories
 - name:     "BOM: Create SAP download directories"
-  file:
+  ansible.builtin.file:
     path:   "{{ item.path }}"
     state:  directory
     mode:   0755
@@ -56,7 +56,7 @@
 
 #   03) Create dynamic extract directories
 - name: "BOM: Create BOM directories"
-  file:
+  ansible.builtin.file:
     path:   "{{ target_media_location }}/{{ item.extractDir }}"
     state:  directory
     mode:   0755
@@ -69,7 +69,7 @@
 
 # Download Files
 #------------------<DEBUGGING>-------------------
-# - debug:  
+# - ansible.builtin.debug:  
 #     msg:      
 #       - "URL : {{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
 #       - "DEST: {{ target_media_location }}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
@@ -82,8 +82,8 @@
 #   04) Download media from bom
 # Loop throough BOM media files and download to correct location
 - name: "BOM: Download Files"
-  get_url:
-    url:         "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
+  ansible.builtin.get_url:
+    url:         "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}{% if sapbits_sas_token is not undefined %}?{{ sapbits_sas_token }}{% endif %}"
     dest:        "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
     mode:        "{% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
     tmp_dest:    '/mnt/resource'
@@ -100,7 +100,7 @@
 
 #   05) Extract files - SAPCAR
 - name:         "BOM: Extract File, SAPCAR"
-  command:      "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+  ansible.builtin.command:      "{{ target_media_location }}/downloads/SAPCAR -manifest SIGNATURE.SMF -xf {{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
   args:
     chdir:      "{{ target_media_location }}/{{ item.extractDir }}"
     creates:    "{{ target_media_location }}/{{ item.extractDir }}/{% if item.creates is defined %}{{ item.creates }}{% else %}NOT_DEFINED{% endif %}"
@@ -115,7 +115,7 @@
 
 #   06) Extract files - UNRAR
 - name:         "BOM: Extract File, UNRAR"
-  command:      unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+  ansible.builtin.command:      unrar x "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/{% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
   args:
     chdir:      "{{ target_media_location }}/{{ item.extractDir }}"
     creates:    "{{ target_media_location }}/{{ item.extractDir }}/{% if item.creates is defined %}{{ item.creates }}{% else %}NOT_DEFINED{% endif %}"
@@ -146,7 +146,7 @@
 
 # #   08) Purge BOM file from Ansible Controller
 # - name:         "Ensure {{ bom_name }} is absent"
-#   file:
+#   ansible.builtin.file:
 #     path:       "{{ inventory_dir }}/{{ bom_name }}.yaml"
 #     state:      absent
 #   delegate_to:  localhost
@@ -172,7 +172,7 @@
 
 
 # - name:         "Ensure {{ target_media_location }} exists"
-#   file:
+#   ansible.builtin.file:
 #     path:       "{{ target_media_location }}"
 #     state:      directory
 #   check_mode:   "{{ test_mode is defined and test_mode }}"
@@ -211,7 +211,7 @@
 
 #------------------<DEBUGGING>-------------------
 # - name:           Ensure target folders exist
-#   debug:  
+#   ansible.builtin.debug:  
 #     msg:          "{{ download_location }}"
 #   loop:           "{{
 #                       bom_media |
@@ -226,9 +226,9 @@
 #------------------</DEBUGGING>------------------
 
 # - name: "Ensure media property is iterated"
-#   block:
+#   ansible.builtin.block:
 #     - name: Ensure target folders exist
-#       file:
+#       ansible.builtin.file:
 #         path: "{{ download_location }}"
 #         state: directory
 #       loop: "{{
@@ -245,7 +245,7 @@
 
 
 #------------------<DEBUGGING>-------------------
-# - debug:  
+# - ansible.builtin.debug:  
 #     msg:          "{{ download_iterator }}"
 #   loop:           "{{ bom_media | flatten(levels=1) }}"
 #   loop_control:
@@ -273,7 +273,7 @@
 
 
 # - name: Determine SWPM archive name
-#   set_fact:
+#   ansible.builtin.set_fact:
 #     swpm_archive: "{{ swpm_entry.override_target_filename is defined | ternary(swpm_entry.override_target_filename, swpm_entry.archive) }}"
 #   vars:
 #     swpm_entry: "{{
@@ -285,25 +285,25 @@
 #       }}"
 
 # - name: Ensure SAPCAR is executable
-#   file:
+#   ansible.builtin.file:
 #     path: "{{ download_basket_dir }}/{{ sapcar_executable }}"
 #     mode: "0755"
 
 
 # - name: Ensure SWPM directory is present
-#   file:
+#   ansible.builtin.file:
 #     path: "{{ target_media_location }}/SWPM"
 #     state: directory
 
 
 # - name: Ensure SWPM is unarchived
-#   command: >
+#   ansible.builtin.command: >
 #     {{ download_basket_dir }}/{{ sapcar_executable }} -xf {{ download_basket_dir }}/{{ swpm_archive }} -R {{ target_media_location }}/SWPM/
 #   args:
 #     creates: "{{ target_media_location }}/SWPM/SIGNATURE.SMF"
 
 # - name: Determine SAPCAR executable file name
-#   set_fact:
+#   ansible.builtin.set_fact:
 #     sapcar_executable: "{{ sapcar_entry.override_target_filename is defined | ternary(sapcar_entry.override_target_filename, sapcar_entry.archive) }}"
 #   vars:
 #     sapcar_entry: "{{

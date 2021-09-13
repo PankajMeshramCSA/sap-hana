@@ -11,7 +11,7 @@ product_ids:
   dbl:    NW_ABAP_DB:S4HANA1909.CORE.HDB.ABAP
   pas:    NW_ABAP_CI:S4HANA1909.CORE.HDB.ABAP
   app:    NW_DI:S4HANA1909.CORE.HDB.PD
-  web:
+  web:    NW_Webdispatcher:NW750.IND.PD
 
 materials:
   dependencies:
@@ -94,13 +94,13 @@ materials:
       path:         download_basket
       url:          https://softwaredownloads.sap.com/file/0020000000703122018
 
-    # SWPM
+   # SWPM
     - name:         "SWPM20SP09; OS: Linux on x86_64 64bit"
-      archive:      SWPM20SP09_1-80003424.SAR
+      archive:      SWPM20SP09_3-80003424.SAR
       extract:      true
       extractDir:   SWPM
       creates:      SIGNATURE.SMF
-      url:          https://softwaredownloads.sap.com/file/0020000000991372021
+      url:          https://softwaredownloads.sap.com/file/0020000001174792021
 
     # DB Export
     - name:         "File on DVD"
@@ -234,10 +234,10 @@ materials:
       download:     false
       url:          https://softwaredownloads.sap.com/file/0020000000410162020
 
-    - name:         "Patch 1 for SOFTWARE UPDATE MANAGER 2.0 SP11 ; OS: Linux on x86_64 64bit"
-      archive:      SUM20SP11_1-80002456.SAR
+    - name:         "Patch 4 for SOFTWARE UPDATE MANAGER 2.0 SP11 ; OS: Linux on x86_64 64bit"
+      archive:      SUM20SP11_4-80002456.SAR
       download:     false
-      url:          https://softwaredownloads.sap.com/file/0020000000991942021 
+      url:          https://softwaredownloads.sap.com/file/0020000001213242021
 
     - name:         "SP12 Patch4 for UMML4HANA 1"
       archive:      HANAUMML12_4-70001054.ZIP
