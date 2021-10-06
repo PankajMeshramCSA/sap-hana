@@ -13,7 +13,7 @@ HANA DB Linux Server private IP range: .10 -
 # Creates the admin traffic NIC and private IP address for database nodes
 resource "azurerm_network_interface" "nics_dbnodes_admin" {
   provider = azurerm.main
-  count    = local.enable_deployment ? length(local.hdb_vms) : 0
+  count    = local.enable_deployment && var.hana_dual_nics ? length(local.hdb_vms) : 0
   name     = format("%s%s", local.hdb_vms[count.index].name, local.resource_suffixes.admin_nic)
 
   location                      = var.resource_group[0].location
@@ -132,12 +132,23 @@ resource "azurerm_linux_virtual_machine" "vm_dbnode" {
   ) : null
   zone = local.use_avset ? null : local.zones[count.index % max(local.db_zone_count, 1)]
 
-  network_interface_ids = local.enable_storage_subnet ? ([
-    azurerm_network_interface.nics_dbnodes_db[count.index].id,
-    azurerm_network_interface.nics_dbnodes_admin[count.index].id,
-    azurerm_network_interface.nics_dbnodes_storage[count.index].id]) : ([
-    azurerm_network_interface.nics_dbnodes_db[count.index].id,
-    azurerm_network_interface.nics_dbnodes_admin[count.index].id]
+  network_interface_ids = local.enable_storage_subnet ? (
+    [
+      azurerm_network_interface.nics_dbnodes_db[count.index].id,
+      azurerm_network_interface.nics_dbnodes_admin[count.index].id,
+      azurerm_network_interface.nics_dbnodes_storage[count.index].id
+    ]
+    ) : (
+    var.hana_dual_nics ?
+    (
+      [
+        azurerm_network_interface.nics_dbnodes_db[count.index].id,
+        azurerm_network_interface.nics_dbnodes_admin[count.index].id
+      ]) : (
+      [
+        azurerm_network_interface.nics_dbnodes_db[count.index].id
+      ]
+    )
   )
 
   size = local.hdb_vms[count.index].size
@@ -213,4 +224,20 @@ resource "azurerm_virtual_machine_data_disk_attachment" "vm_dbnode_data_disk" {
   caching                   = local.data_disk_list[count.index].caching
   write_accelerator_enabled = local.data_disk_list[count.index].write_accelerator_enabled
   lun                       = local.data_disk_list[count.index].lun
+}
+
+# VM Extension 
+resource "azurerm_virtual_machine_extension" "hdb_linux_extension" {
+  provider             = azurerm.main
+  count                = local.enable_deployment ? length(local.hdb_vms) : 0
+  name                 = "MonitorX64Linux"
+  virtual_machine_id   = azurerm_linux_virtual_machine.vm_dbnode[count.index].id
+  publisher            = "Microsoft.AzureCAT.AzureEnhancedMonitoring"
+  type                 = "MonitorX64Linux"
+  type_handler_version = "1.0"
+  settings             = <<SETTINGS
+  {
+    "system": "SAP"
+  }
+SETTINGS
 }

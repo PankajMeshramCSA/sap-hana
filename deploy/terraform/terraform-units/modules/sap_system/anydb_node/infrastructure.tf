@@ -45,8 +45,8 @@ resource "azurerm_lb_probe" "anydb" {
 
 # Create the Load Balancer Rules
 resource "azurerm_lb_rule" "anydb" {
-  provider                  = azurerm.main
-  count                          = local.enable_deployment && local.db_server_count > 0 ? 1 : 0
+  provider                       = azurerm.main
+  count                          = local.enable_db_lb_deployment && local.db_server_count > 0 ? 1 : 0
   resource_group_name            = var.resource_group[0].name
   loadbalancer_id                = azurerm_lb.anydb[0].id
   name                           = format("%s%s%s", local.prefix, var.naming.separator, local.resource_suffixes.db_alb_rule)

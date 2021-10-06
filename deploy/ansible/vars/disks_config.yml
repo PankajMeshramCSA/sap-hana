@@ -93,20 +93,19 @@ logical_volumes:
     size:       '1g'
     fstype:     'xfs'
 
-  - tier:       'preparation'
+  - tier:       'sapos'
     node_tier:  'scs'
     vg:         'vg_sap'
     lv:         'lv_sapmnt'
     size:       '128g'
     fstype:     'xfs'
 
-  - tier:       'preparation'
+  - tier:       'sapos'
     node_tier:  'scs'
     vg:         'vg_sap'
     lv:         'lv_usrsapinstall'
     size:       '100%FREE'
     fstype:     'xfs'
-
 
 
 # Define a dynamic expression based upon the 'item' fact that can

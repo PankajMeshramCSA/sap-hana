@@ -36,6 +36,7 @@ locals {
     environment = coalesce(var.environment, try(var.infrastructure.environment, ""))
     region      = coalesce(var.location, try(var.infrastructure.region, ""))
     codename    = try(var.codename, try(var.infrastructure.codename, ""))
+    tags        = try(merge(var.resourcegroup_tags, try(var.infrastructure.tags, {})), {})
   }
 
   authentication = {
@@ -48,11 +49,24 @@ locals {
     enable_secure_transfer = true
     create_fencing_spn     = var.create_fencing_spn || try(var.options.create_fencing_spn, false)
   }
-  key_vault = {
-    kv_user_id = try(coalesce(var.user_keyvault_id, try(var.key_vault.kv_user_id, "")), "")
-    kv_prvt_id = try(coalesce(var.automation_keyvault_id, try(var.key_vault.kv_prvt_id, "")), "")
-    kv_prvt_id = try(coalesce(var.spn_keyvault_id, try(var.key_vault.kv_spn_id, "")), "")
+  key_vault_temp = {
   }
+
+  user_kv_specified = (length(var.user_keyvault_id) + length(try(var.key_vault.kv_user_id, ""))) > 0
+  user_kv           = local.user_kv_specified ? try(coalesce(var.user_keyvault_id, try(var.key_vault.kv_user_id, "")), "") : ""
+  prvt_kv_specified = (length(var.automation_keyvault_id) + length(try(var.key_vault.kv_prvt, ""))) > 0
+  prvt_kv           = local.prvt_kv_specified ? try(coalesce(var.automation_keyvault_id, try(var.key_vault.kv_prvt_id, "")), "") : ""
+  spn_kv_specified  = (length(var.spn_keyvault_id) + length(try(var.key_vault.kv_spn_id, ""))) > 0
+  spn_kv            = local.spn_kv_specified ? try(coalesce(var.spn_keyvault_id, try(var.key_vault.kv_spn_id, "")), "") : ""
+
+  key_vault = merge(local.key_vault_temp, (
+    local.user_kv_specified ? { kv_user_id = local.user_kv } : null), (
+    local.prvt_kv_specified ? { kv_prvt_id = local.prvt_kv } : null), (
+    local.spn_kv_specified ? { kv_spn_id = local.spn_kv } : null
+    )
+  )
+
+
   diagnostics_storage_account = {
     arm_id = try(coalesce(var.diagnostics_storage_account_arm_id, try(var.diagnostics_storage_account.arm_id, "")), "")
   }

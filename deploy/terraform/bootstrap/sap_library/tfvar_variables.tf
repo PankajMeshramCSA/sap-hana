@@ -29,6 +29,10 @@ variable "resourcegroup_arm_id" {
   default = ""
 }
 
+variable "resourcegroup_tags" {
+  default = {}
+}
+
 /*
 
 /*
@@ -53,7 +57,7 @@ variable "deployer_vnet" {
   default = ""
 }
 
-variable "deployer_use" {
+variable "use_deployer" {
   default = true
 }
 
@@ -157,4 +161,8 @@ variable "library_ansible_blob_container_name" {
 
 variable "enable_purge_control_for_keyvaults" {
   default = true
+}
+
+variable "use_private_endpoint" {
+  default = false
 }

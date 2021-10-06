@@ -1,17 +1,17 @@
 ---
 # Download time:  xx Minutes (Full    - xx GB)
 # Download time:  xx Minutes (Partial - xx GB)
-#                 
+#
 name:    'SOLMAN72FPS12_v0001ms'
 target:  'Solution Manager 7.2 FPS 12'
 version: 0001ms
 
 product_ids:
-  scs:    
-  dbl:    
-  pas:    
-  app:    
-  web:    
+  scs:
+  dbl:
+  pas:
+  app:
+  web:
 
 materials:
   dependencies:

@@ -28,6 +28,10 @@ variable "resourcegroup_arm_id" {
   default = ""
 }
 
+variable "resourcegroup_tags" {
+  default = {}
+}
+
 /*
 
 This block describes the variables for the VNet block in the json file
@@ -266,4 +270,8 @@ variable "create_fencing_spn" {
 
 variable "enable_purge_control_for_keyvaults" {
   default = true
+}
+
+variable "use_private_endpoint" {
+  default = false
 }

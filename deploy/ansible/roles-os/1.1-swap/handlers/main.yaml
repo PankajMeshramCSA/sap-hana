@@ -1,8 +1,8 @@
 # ---
 
-- name:                           Restart waagent
-  service:
-    name:                         waagent
-    state:                        restarted
+- name:                                Restart waagent
+  ansible.builtin.service:
+    name:                              waagent
+    state:                             restarted
 
 # ...

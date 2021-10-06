@@ -17,24 +17,24 @@ locals {
   ]
 
   anydb_computer_names = [for idx in range(var.db_server_count) :
-    format("%sd%s%02dl%d%s", lower(var.sap_sid), lower(var.db_sid), idx + var.resource_offset, 0, local.random_id_vm_verified)
+    format("%sdb%02dl%d%s", lower(var.sap_sid), idx + var.resource_offset, 0, local.random_id_vm_verified)
   ]
 
   anydb_computer_names_ha = [for idx in range(var.db_server_count) :
-    format("%sd%s%02dl%d%s", lower(var.sap_sid), lower(var.db_sid), idx + var.resource_offset, 1, local.random_id_vm_verified)
+    format("%sdb%02dl%d%s", lower(var.sap_sid),  idx + var.resource_offset, 1, local.random_id_vm_verified)
   ]
 
   anydb_vm_names = [for idx in range(var.db_server_count) :
     length(var.db_zones) > 0 ? (
-      format("%sd%s%sz%s%s%02dl%d%s", lower(var.sap_sid), lower(var.db_sid), local.separator, var.db_zones[idx % max(length(var.db_zones), 1)], local.separator, idx + var.resource_offset, 0, local.random_id_vm_verified)) : (
-      format("%sd%s%02dl%d%s", lower(var.sap_sid), lower(var.db_sid), idx + var.resource_offset, 0, local.random_id_vm_verified)
+      format("%sdb%sz%s%s%02dl%d%s", lower(var.sap_sid), local.separator, var.db_zones[idx % max(length(var.db_zones), 1)], local.separator, idx + var.resource_offset, 0, local.random_id_vm_verified)) : (
+      format("%sdb%02dl%d%s", lower(var.sap_sid), idx + var.resource_offset, 0, local.random_id_vm_verified)
     )
   ]
 
   anydb_vm_names_ha = [for idx in range(var.db_server_count) :
     length(var.db_zones) > 0 ? (
-      format("%sd%s%sz%s%s%02dl%d%s", lower(var.sap_sid), lower(var.db_sid), local.separator, var.db_zones[idx % max(length(var.db_zones), 1)], local.separator, idx + var.resource_offset, 1, local.random_id_vm_verified)) : (
-      format("%sd%s%02dl%d%s", lower(var.sap_sid), lower(var.db_sid), idx + var.resource_offset, 1, local.random_id_vm_verified)
+      format("%sdb%sz%s%s%02dl%d%s", lower(var.sap_sid), local.separator, var.db_zones[idx % max(length(var.db_zones), 1)], local.separator, idx + var.resource_offset, 1, local.random_id_vm_verified)) : (
+      format("%sdb%02dl%d%s", lower(var.sap_sid), idx + var.resource_offset, 1, local.random_id_vm_verified)
     )
   ]
 

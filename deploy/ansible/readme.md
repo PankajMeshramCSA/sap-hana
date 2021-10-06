@@ -20,7 +20,7 @@ ansible-playbook                                                                
                   \"sapbits_location_base_path\":   \"https://npeus2saplib4b2.blob.core.windows.net/sapbits\",        \
                   \"target_media_location\":        \"/usr/sap/install\",                                             \
                   \"sap_sid\":                      \"X00\",                                                          \
-                  \"hdb_sid\":                      \"HDB\"                                                           \
+                  \"db_sid\":                      \"HDB\"                                                           \
                 }"                                                                                                    \
 ~/Azure_SAP_Automated_Deployment/centiq-sap-hana/deploy/ansible/playbook_00_transition_start_for_sap_install_refactor.yaml     \
 ~/Azure_SAP_Automated_Deployment/centiq-sap-hana/deploy/ansible/playbook_01_os_base_config.yaml                       \
@@ -53,7 +53,7 @@ ansible-playbook                                                                
                   \"sapbits_location_base_path\":   \"https://npeus2saplib4b2.blob.core.windows.net/sapbits\",  \
                   \"target_media_location\":        \"/usr/sap/install\",                                       \
                   \"sap_sid\":                      \"X00\",                                                    \
-                  \"hdb_sid\":                      \"HDB\"                                                     \
+                  \"db_sid\":                      \"HDB\"                                                     \
                 }"                                                                                              \
 ~/Azure_SAP_Automated_Deployment/centiq-sap-hana/deploy/ansible/playbook_02_os_sap_specific_config.yaml
 

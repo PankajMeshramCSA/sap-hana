@@ -28,6 +28,11 @@ variable "resourcegroup_arm_id" {
   default = ""
 }
 
+
+variable "resourcegroup_tags" {
+  default = {}
+}
+
 /*
 
 This block describes the variables for the VNet block in the json file
@@ -192,5 +197,9 @@ variable "firewall_allowed_ipaddresses" {
 }
 
 variable "deployer_assign_subscription_permissions" {
+  default = false
+}
+
+variable "use_private_endpoint" {
   default = false
 }

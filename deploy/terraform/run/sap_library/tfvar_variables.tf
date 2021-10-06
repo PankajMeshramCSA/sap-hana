@@ -29,6 +29,10 @@ variable "resourcegroup_arm_id" {
   default = ""
 }
 
+variable "resourcegroup_tags" {
+  default = {}
+}
+
 /*
 
 /*
@@ -53,7 +57,7 @@ variable "deployer_vnet" {
   default = ""
 }
 
-variable "deployer_use" {
+variable "use_deployer" {
   default = true
 }
 
@@ -154,3 +158,8 @@ variable "library_ansible_blob_container_is_existing" {
 variable "library_ansible_blob_container_name" {
   default = "ansible"
 }
+
+variable "use_private_endpoint" {
+  default = false
+}
+

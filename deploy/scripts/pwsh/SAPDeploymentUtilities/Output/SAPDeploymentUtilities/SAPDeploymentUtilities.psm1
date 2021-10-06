@@ -171,6 +171,8 @@ Licensed under the MIT license.
         [Parameter(Mandatory = $false)][string]$SPN_password,
         #Tenant
         [Parameter(Mandatory = $false)][string]$Tenant_id,
+        [Parameter(Mandatory = $false)][string]$Vault,
+        [Parameter(Mandatory = $false)][string]$StorageAccountName,
         [Parameter(Mandatory = $false)][Switch]$Force,
         [Parameter(Mandatory = $false)][Switch]$Silent
     )
@@ -186,11 +188,13 @@ Licensed under the MIT license.
     $fileDir = Join-Path -Path $dirInfo.ToString() -ChildPath $LibraryParameterfile
     [IO.FileInfo] $fInfo = $fileDir
 
-    $fInfo = Get-ItemProperty -Path $LibraryParameterfile
-    if ($false -eq $fInfo.Exists ) {
+    if ($false -eq (Test-Path $LibraryParameterfile)) {
         Write-Error ("File " + $LibraryParameterfile + " does not exist")
         return
     }
+
+    $fInfo = Get-ItemProperty -Path $LibraryParameterfile
+
 
     $fileDir = Join-Path -Path $dirInfo.ToString() -ChildPath $DeployerParameterfile
     [IO.FileInfo] $fInfo = $fileDir
@@ -201,10 +205,31 @@ Licensed under the MIT license.
         return
     }
 
-    $jsonData = Get-Content -Path $DeployerParameterfile | ConvertFrom-Json
+    $Environment = ""
+    $region = ""
+    $KeyValuePairs = @{}
 
-    $Environment = $jsonData.infrastructure.environment
-    $region = $jsonData.infrastructure.region
+    if ($fInfo.Extension -eq ".tfvars") {
+        $paramContent = Get-Content -Path $DeployerParameterfile
+
+        foreach ($param in $paramContent) {
+            if ($param.Contains("=")) {
+                $KeyValuePairs.Add($param.Split("=")[0].ToLower(), $param.Split("=")[1].Replace("""", ""))
+            }
+           
+        }
+        $Environment = $KeyValuePairs["environment"]
+        $region = $KeyValuePairs["location"]
+
+    }
+    else {
+        $jsonData = Get-Content -Path $DeployerParameterfile | ConvertFrom-Json
+
+        $Environment = $jsonData.infrastructure.environment
+        $region = $jsonData.infrastructure.region
+            
+    }
+
 
     # Initialize Terraform plugin cache
     $CachePath = (Join-Path -Path $Env:APPDATA -ChildPath "terraform.d\plugin-cache")
@@ -217,14 +242,15 @@ Licensed under the MIT license.
 
     $mydocuments = [environment]::getfolderpath("mydocuments")
     $fileINIPath = $mydocuments + "\sap_deployment_automation.ini"
-
-    if ( -not (Test-Path -Path $fileINIPath)) {
-        New-Item -Path $mydocuments -Name "sap_deployment_automation.ini" -ItemType "file" -Value "[Common]`nrepo=`nsubscription=`n[$region]`nDeployer=`nLandscape=`n[$Environment]`nDeployer=`n[$combined]`nDeployer=`nSubscription=" -Force
+    
+    
+    if (-not (Test-Path -Path $fileINIPath)) {
+        New-Item -Path $mydocuments -Name "sap_deployment_automation.ini" -ItemType "file" -Value "[Common]`nrepo=`nsubscription=`n[$region]`nDeployer=`nLandscape=`n[$Environment]`nDeployer=`n[$combined]`nDeployer=`nSubscription=$Subscription`nSTATE_SUBSCRIPTION=$Subscription" -Force
     }
 
     $iniContent = Get-IniContent -Path $fileINIPath
 
-    $key = $fInfo.Name.replace(".json", ".terraform.tfstate")
+    $key = $fInfo.Name.replace($fInfo.Extension, ".terraform.tfstate")
     
     if ($null -ne $iniContent[$region] ) {
         $iniContent[$region]["Deployer"] = $key
@@ -277,11 +303,46 @@ Licensed under the MIT license.
         $iniContent[$combined]["step"] = $step
     }
 
+
+
+    if(($StorageAccountName.Length -gt 0) &&  ($step -le 3))
+    {
+        $step = 3   
+        $rID = Get-AzResource -Name $StorageAccountName -ResourceType Microsoft.Storage/storageAccounts 
+        $rgName = $rID.ResourceGroupName
+
+        $tfstate_resource_id = $rID.ResourceId
+
+        $iniContent[$combined]["REMOTE_STATE_SA"] = $StorageAccountName
+        $iniContent[$combined]["REMOTE_STATE_RG"] = $rgName
+        $iniContent[$combined]["tfstate_resource_id"] = $tfstate_resource_id
+        Out-IniFile -InputObject $iniContent -Path $fileINIPath
+        $iniContent = Get-IniContent -Path $fileINIPath
+ 
+
+    }
+
+
     $ctx = Get-AzContext
     if ($null -eq $ctx) {
         Connect-AzAccount
     }
  
+    $foo = az account show
+    $accountData = $foo | ConvertFrom-Json
+
+    try {
+        if($accountData.user.cloudShellID) 
+        {
+            Write-Error ("Please login using either an account or a Service Principal")
+            return
+    
+        }
+    }
+    catch {
+        
+    }
+
     $errors_occurred = $false
     $fileDir = (Join-Path -Path $dirInfo.ToString() -ChildPath $DeployerParameterfile)
     [IO.FileInfo] $fInfo = $fileDir
@@ -563,9 +624,31 @@ Licensed under the MIT license.
     $fileINIPath = $mydocuments + "\sap_deployment_automation.ini"
     $iniContent = Get-IniContent -Path $fileINIPath
 
-    $jsonData = Get-Content -Path $Parameterfile | ConvertFrom-Json
-    $Environment = $jsonData.infrastructure.environment
-    $region = $jsonData.infrastructure.region
+    $Environment = ""
+    $region = ""
+    $KeyValuePairs = @{}
+
+    if ($fInfo.Extension -eq ".tfvars") {
+        $paramContent = Get-Content -Path $Parameterfile
+
+        foreach ($param in $paramContent) {
+            if ($param.Contains("=")) {
+                $KeyValuePairs.Add($param.Split("=")[0].ToLower(), $param.Split("=")[1].Replace("""", ""))
+            }
+           
+        }
+        $Environment = $KeyValuePairs["environment"]
+        $region = $KeyValuePairs["location"]
+
+    }
+    else {
+        $jsonData = Get-Content -Path $Parameterfile | ConvertFrom-Json
+
+        $Environment = $jsonData.infrastructure.environment
+        $region = $jsonData.infrastructure.region
+            
+    }
+
 
     Write-Host "Region:"$region
     Write-Host "Environment:"$Environment
@@ -857,7 +940,7 @@ Licensed under the MIT license.
         $extra_vars = " -var-file=" + (Join-Path -Path $curDir -ChildPath "terraform.tfvars")
     }
 
-    $key = $fInfo.Name.replace(".json", ".terraform.tfstate")
+    $key = $fInfo.Name.replace($fInfo.Extension, ".terraform.tfstate")
     $landscapeKey = ""
     if ($Type -eq "sap_landscape") {
         $landscapeKey = $key
@@ -870,10 +953,31 @@ Licensed under the MIT license.
 
     $sub = $env:ARM_SUBSCRIPTION_ID
     
-    $jsonData = Get-Content -Path $Parameterfile | ConvertFrom-Json
+    $Environment = ""
+    $region = ""
+    $KeyValuePairs = @{}
 
-    $Environment = $jsonData.infrastructure.environment
-    $region = $jsonData.infrastructure.region
+    if ($fInfo.Extension -eq ".tfvars") {
+        $paramContent = Get-Content -Path $Parameterfile
+
+        foreach ($param in $paramContent) {
+            if ($param.Contains("=")) {
+                $KeyValuePairs.Add($param.Split("=")[0].ToLower(), $param.Split("=")[1].Replace("""", ""))
+            }
+           
+        }
+        $Environment = $KeyValuePairs["environment"]
+        $region = $KeyValuePairs["location"]
+
+    }
+    else {
+        $jsonData = Get-Content -Path $Parameterfile | ConvertFrom-Json
+
+        $Environment = $jsonData.infrastructure.environment
+        $region = $jsonData.infrastructure.region
+            
+    }
+
     $combined = $Environment + $region
     
     $spn_kvSpecified = $jsonData.key_vault.kv_spn_id.Length -gt 0
@@ -1664,16 +1768,12 @@ Licensed under the MIT license.
     }
 
     $DataDir = Join-Path -Path $fInfo.Directory.FullName -ChildPath ".terraform"
-    
-    $mydocuments = [environment]::getfolderpath("mydocuments")
-    $fileINIPath = $mydocuments + "\sap_deployment_automation.ini"
-    $iniContent = Get-IniContent -Path $fileINIPath
 
-    $Environment = ""
-    $region = ""
     $saName = $StorageAccountName
     $repo = ""
 
+    $Environment = ""
+    $region = ""
     $KeyValuePairs = @{}
 
     if ($fInfo.Extension -eq ".tfvars") {
@@ -1698,6 +1798,18 @@ Licensed under the MIT license.
     }
 
     $combined = $Environment + $region
+
+    $mydocuments = [environment]::getfolderpath("mydocuments")
+    $fileINIPath = $mydocuments + "\sap_deployment_automation.ini"
+    
+    if ($false -eq (Test-Path $fileINIPath )) {
+        Write-Host "No ini file"
+        New-Item -Path $mydocuments -Name "sap_deployment_automation.ini" -ItemType "file" -Value "[$combined]`nDeployer=`nSubscription=$Subscription`nSTATE_SUBSCRIPTION=$State_subscription`nVault=$vault`nREMOTE_STATE_SA=$StorageAccountName" -Force
+    }
+
+    $iniContent = Get-IniContent -Path $fileINIPath
+
+
 
     if ($true -eq $Force) {
         $iniContent.Remove($combined)
@@ -1739,12 +1851,27 @@ Licensed under the MIT license.
         Connect-AzAccount 
     }
 
+    
+    $foo = az account show
+    $accountData = $foo | ConvertFrom-Json
 
-    Write-Host $State_subscription
+    try {
+        if($accountData.user.cloudShellID) 
+        {
+            Write-Error ("Please login using either an account or a Service Principal")
+            return
+    
+        }
+    }
+    catch {
+        
+    }
+
     $current_Subscription = (Get-AzContext).Subscription.Id
 
     if ($State_subscription.Length -gt 0) {
         if ($current_Subscription -ne $State_subscription) {
+            Write-Host "Changing the subscription to: " $State_subscription
             Select-AzSubscription -SubscriptionId $State_subscription
         }
 
@@ -1755,7 +1882,7 @@ Licensed under the MIT license.
 
     if ($null -eq $iniContent[$combined]) {
         if ($StorageAccountName.Length -gt 0) {
-            $rID = Get-AzResource -Name $StorageAccountName -ResourceType Microsoft.Storage/storageAccounts
+            $rID = Get-AzResource -Name $StorageAccountName -ResourceType Microsoft.Storage/storageAccounts 
             $rgName = $rID.ResourceGroupName
 
             $tfstate_resource_id = $rID.ResourceId
@@ -1767,7 +1894,7 @@ Licensed under the MIT license.
      
         }
         else {
-            if ($StorageAccountName.Length > 0) {
+            if ($StorageAccountName.Length -gt 0) {
 
             }
             else {
@@ -1944,6 +2071,45 @@ Licensed under the MIT license.
 
     Write-Host -ForegroundColor green "Initializing Terraform  New-SAPWorkloadZone"
 
+    $terraform_module_directory = Join-Path -Path $repo -ChildPath "\deploy\terraform\run\$Type"
+    $Env:TF_DATA_DIR = (Join-Path -Path $fInfo.Directory.FullName -ChildPath ".terraform")
+
+
+    Write-Host -ForegroundColor green "Initializing Terraform  New-SAPWorkloadZone"
+
+    $Command = " init -upgrade=true -reconfigure -backend-config ""subscription_id=$state_subscription_id"" -backend-config ""resource_group_name=$rgName"" -backend-config ""storage_account_name=$saName"" -backend-config ""container_name=tfstate"" -backend-config ""key=$envkey"" "
+    if (Test-Path ".terraform" -PathType Container) {
+        if (Test-Path ".\.terraform\terraform.tfstate" -PathType Leaf) {
+
+            $jsonData = Get-Content -Path .\.terraform\terraform.tfstate | ConvertFrom-Json
+
+            if ("azurerm" -eq $jsonData.backend.type) {
+                $Command = " init -upgrade=true"
+            }
+        }
+    } 
+
+    $Cmd = "terraform -chdir=$terraform_module_directory $Command"
+    Add-Content -Path "deployment.log" -Value $Cmd
+    Write-Verbose $Cmd
+
+    & ([ScriptBlock]::Create($Cmd)) 
+    if ($LASTEXITCODE -ne 0) {
+        $Env:TF_DATA_DIR = $null
+        throw "Error executing command: $Cmd"
+    }
+
+    $deployer_tfstate_key_parameter = ""
+    $tfstate_parameter = " -var tfstate_resource_id=" + $tfstate_resource_id
+    if ($Deployerstatefile.Length -gt 0) {
+        $deployer_tfstate_key_parameter = " -var deployer_tfstate_key=" + $Deployerstatefile
+    }
+    else {
+        if ($deployer_tfstate_key.Length -gt 0) {
+            $deployer_tfstate_key_parameter = " -var deployer_tfstate_key=" + $deployer_tfstate_key    
+        }
+    }
+
     $Command = " init -upgrade=true -backend-config ""subscription_id=$state_subscription_id"" -backend-config ""resource_group_name=$rgName"" -backend-config ""storage_account_name=$saName"" -backend-config ""container_name=tfstate"" -backend-config ""key=$envkey"" "
     if (Test-Path ".terraform" -PathType Container) {
         if (Test-Path ".\.terraform\terraform.tfstate" -PathType Leaf) {
@@ -1984,7 +2150,6 @@ Licensed under the MIT license.
     Add-Content -Path "deployment.log" -Value $Cmd
     Write-Verbose $Cmd
 
-    
     $Command = " output automation_version"
 
     $Cmd = "terraform -chdir=$terraform_module_directory $Command"
@@ -2692,10 +2857,32 @@ Licensed under the MIT license.
     $repo = $iniContent["Common"]["repo"]
 
 
-    $jsonData = Get-Content -Path $Parameterfile | ConvertFrom-Json
+    $Environment = ""
+    $region = ""
+    $KeyValuePairs = @{}
 
-    $Environment = $jsonData.infrastructure.environment
-    $region = $jsonData.infrastructure.region
+    if ($fInfo.Extension -eq ".tfvars") {
+        $paramContent = Get-Content -Path $Parameterfile
+
+        foreach ($param in $paramContent) {
+            if ($param.Contains("=")) {
+                $KeyValuePairs.Add($param.Split("=")[0].ToLower(), $param.Split("=")[1].Replace("""", ""))
+            }
+           
+        }
+        $Environment = $KeyValuePairs["environment"]
+        $region = $KeyValuePairs["location"]
+
+    }
+    else {
+        $jsonData = Get-Content -Path $Parameterfile | ConvertFrom-Json
+
+        $Environment = $jsonData.infrastructure.environment
+        $region = $jsonData.infrastructure.region
+            
+    }
+
+
     $combined = $Environment + $region
 
     $ctx = Get-AzContext

@@ -72,9 +72,31 @@ Licensed under the MIT license.
     $fileINIPath = $mydocuments + "\sap_deployment_automation.ini"
     $iniContent = Get-IniContent -Path $fileINIPath
 
-    $jsonData = Get-Content -Path $Parameterfile | ConvertFrom-Json
-    $Environment = $jsonData.infrastructure.environment
-    $region = $jsonData.infrastructure.region
+    $Environment = ""
+    $region = ""
+    $KeyValuePairs = @{}
+
+    if ($fInfo.Extension -eq ".tfvars") {
+        $paramContent = Get-Content -Path $Parameterfile
+
+        foreach ($param in $paramContent) {
+            if ($param.Contains("=")) {
+                $KeyValuePairs.Add($param.Split("=")[0].ToLower(), $param.Split("=")[1].Replace("""", ""))
+            }
+           
+        }
+        $Environment = $KeyValuePairs["environment"]
+        $region = $KeyValuePairs["location"]
+
+    }
+    else {
+        $jsonData = Get-Content -Path $Parameterfile | ConvertFrom-Json
+
+        $Environment = $jsonData.infrastructure.environment
+        $region = $jsonData.infrastructure.region
+            
+    }
+
 
     Write-Host "Region:"$region
     Write-Host "Environment:"$Environment

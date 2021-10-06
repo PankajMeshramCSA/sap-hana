@@ -6,7 +6,7 @@
 ---
 # -------------------------------------+---------------------------------------8
 #
-# <Comment Header> 
+# <Comment Header>
 #
 # -------------------------------------+---------------------------------------8
 # TODO: 20210127 Review
@@ -48,7 +48,6 @@
   include_tasks:    "{{ ansible_os_family | lower }}-{{ ansible_distribution_major_version }}-os_config.yml"
   when:     ansible_os_family|upper == "REDHAT" or
             ansible_os_family|upper == "SUSE"
-
 
 
 ...

@@ -6,6 +6,11 @@ resource "azurerm_subnet" "admin" {
   resource_group_name  = local.vnet_sap_exists ? data.azurerm_virtual_network.vnet_sap[0].resource_group_name : azurerm_virtual_network.vnet_sap[0].resource_group_name
   virtual_network_name = local.vnet_sap_exists ? data.azurerm_virtual_network.vnet_sap[0].name : azurerm_virtual_network.vnet_sap[0].name
   address_prefixes     = [local.sub_admin_prefix]
+
+  enforce_private_link_endpoint_network_policies = true
+  enforce_private_link_service_network_policies  = false
+
+  service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
 }
 
 // Creates db subnet of SAP VNET
@@ -26,6 +31,10 @@ resource "azurerm_subnet" "app" {
   resource_group_name  = local.vnet_sap_exists ? data.azurerm_virtual_network.vnet_sap[0].resource_group_name : azurerm_virtual_network.vnet_sap[0].resource_group_name
   virtual_network_name = local.vnet_sap_exists ? data.azurerm_virtual_network.vnet_sap[0].name : azurerm_virtual_network.vnet_sap[0].name
   address_prefixes     = [local.sub_app_prefix]
+
+  enforce_private_link_endpoint_network_policies = true
+  enforce_private_link_service_network_policies  = false
+  service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
 }
 
 // Creates web subnet of SAP VNET
@@ -176,3 +185,39 @@ resource "azurerm_subnet_route_table_association" "web" {
   route_table_id = azurerm_route_table.rt[0].id
 }
 
+# Creates network security rule to allow internal traffic for SAP db subnet
+resource "azurerm_network_security_rule" "nsr_internal_db" {
+  provider                     = azurerm.main
+  count                        = local.sub_db_nsg_exists ? 0 : 0
+  name                         = "allow-internal-traffic"
+  resource_group_name          = local.vnet_sap_exists ? data.azurerm_virtual_network.vnet_sap[0].resource_group_name : azurerm_virtual_network.vnet_sap[0].resource_group_name
+  network_security_group_name  = azurerm_network_security_group.db[0].name
+  priority                     = 101
+  direction                    = "Inbound"
+  access                       = "allow"
+  protocol                     = "Tcp"
+  source_port_range            = "*"
+  destination_port_range       = "*"
+  source_address_prefixes      = !local.vnet_sap_exists ? azurerm_virtual_network.vnet_sap[0].address_space : data.azurerm_virtual_network.vnet_sap[0].address_space
+  destination_address_prefixes = azurerm_subnet.db[0].address_prefixes
+}
+
+# Creates network security rule to deny external traffic for SAP db subnet
+resource "azurerm_network_security_rule" "nsr_external_db" {
+  provider = azurerm.main
+
+  count               = local.sub_db_nsg_exists ? 0 : 0
+  name                = "deny-inbound-traffic"
+  resource_group_name = local.vnet_sap_exists ? data.azurerm_virtual_network.vnet_sap[0].resource_group_name : azurerm_virtual_network.vnet_sap[0].resource_group_name
+
+
+  network_security_group_name  = azurerm_network_security_group.db[0].name
+  priority                     = 102
+  direction                    = "Inbound"
+  access                       = "deny"
+  protocol                     = "Tcp"
+  source_port_range            = "*"
+  destination_port_range       = "*"
+  source_address_prefix        = "*"
+  destination_address_prefixes = azurerm_subnet.db[0].address_prefixes
+}

@@ -88,16 +88,12 @@ Licensed under the MIT license.
     }
 
     $DataDir = Join-Path -Path $fInfo.Directory.FullName -ChildPath ".terraform"
-    
-    $mydocuments = [environment]::getfolderpath("mydocuments")
-    $fileINIPath = $mydocuments + "\sap_deployment_automation.ini"
-    $iniContent = Get-IniContent -Path $fileINIPath
 
-    $Environment = ""
-    $region = ""
     $saName = $StorageAccountName
     $repo = ""
 
+    $Environment = ""
+    $region = ""
     $KeyValuePairs = @{}
 
     if ($fInfo.Extension -eq ".tfvars") {
@@ -122,6 +118,18 @@ Licensed under the MIT license.
     }
 
     $combined = $Environment + $region
+
+    $mydocuments = [environment]::getfolderpath("mydocuments")
+    $fileINIPath = $mydocuments + "\sap_deployment_automation.ini"
+    
+    if ($false -eq (Test-Path $fileINIPath )) {
+        Write-Host "No ini file"
+        New-Item -Path $mydocuments -Name "sap_deployment_automation.ini" -ItemType "file" -Value "[$combined]`nDeployer=`nSubscription=$Subscription`nSTATE_SUBSCRIPTION=$State_subscription`nVault=$vault`nREMOTE_STATE_SA=$StorageAccountName" -Force
+    }
+
+    $iniContent = Get-IniContent -Path $fileINIPath
+
+
 
     if ($true -eq $Force) {
         $iniContent.Remove($combined)
@@ -163,12 +171,27 @@ Licensed under the MIT license.
         Connect-AzAccount 
     }
 
+    
+    $foo = az account show
+    $accountData = $foo | ConvertFrom-Json
 
-    Write-Host $State_subscription
+    try {
+        if($accountData.user.cloudShellID) 
+        {
+            Write-Error ("Please login using either an account or a Service Principal")
+            return
+    
+        }
+    }
+    catch {
+        
+    }
+
     $current_Subscription = (Get-AzContext).Subscription.Id
 
     if ($State_subscription.Length -gt 0) {
         if ($current_Subscription -ne $State_subscription) {
+            Write-Host "Changing the subscription to: " $State_subscription
             Select-AzSubscription -SubscriptionId $State_subscription
         }
 
@@ -179,7 +202,7 @@ Licensed under the MIT license.
 
     if ($null -eq $iniContent[$combined]) {
         if ($StorageAccountName.Length -gt 0) {
-            $rID = Get-AzResource -Name $StorageAccountName -ResourceType Microsoft.Storage/storageAccounts
+            $rID = Get-AzResource -Name $StorageAccountName -ResourceType Microsoft.Storage/storageAccounts 
             $rgName = $rID.ResourceGroupName
 
             $tfstate_resource_id = $rID.ResourceId
@@ -191,7 +214,7 @@ Licensed under the MIT license.
      
         }
         else {
-            if ($StorageAccountName.Length > 0) {
+            if ($StorageAccountName.Length -gt 0) {
 
             }
             else {
@@ -374,7 +397,7 @@ Licensed under the MIT license.
 
     Write-Host -ForegroundColor green "Initializing Terraform  New-SAPWorkloadZone"
 
-    $Command = " init -upgrade=true -backend-config ""subscription_id=$state_subscription_id"" -backend-config ""resource_group_name=$rgName"" -backend-config ""storage_account_name=$saName"" -backend-config ""container_name=tfstate"" -backend-config ""key=$envkey"" "
+    $Command = " init -upgrade=true -reconfigure -backend-config ""subscription_id=$state_subscription_id"" -backend-config ""resource_group_name=$rgName"" -backend-config ""storage_account_name=$saName"" -backend-config ""container_name=tfstate"" -backend-config ""key=$envkey"" "
     if (Test-Path ".terraform" -PathType Container) {
         if (Test-Path ".\.terraform\terraform.tfstate" -PathType Leaf) {
 

@@ -3,7 +3,7 @@
 # |                          Role to process the BOM                           |
 # |                                                                            |
 # +------------------------------------4--------------------------------------*/
-# Description:  Downloads the files specified in BOM file from SAP to the 
+# Description:  Downloads the files specified in BOM file from SAP to the
 #               ansible controller and uploads them to the storage account.
 #
 #
@@ -29,10 +29,9 @@
 ---
 
 
-
 # -------------------------------------+---------------------------------------8
 #
-# Description:  Validation for Prerequisites 
+# Description:  Validation for Prerequisites
 #
 - import_tasks:     pre_checks.yaml
 # -------------------------------------+---------------------------------------8
@@ -43,16 +42,18 @@
 # Description:  Create BOM download directories".
 #
 
-- name:     "BOM: Create BOM download directories"
-  file:
-    path:   "{{ item.path }}"
-    state:  directory
-    mode:   0755
+- name:                                "BOM: Create BOM download directories"
+  ansible.builtin.file:
+    path:                              "{{ item.path }}"
+    state:                             directory
+    mode:                              0755
+  become:                              true
+  become_user:                         root
   loop:
-    - { path: "{{ download_directory }}" }
-    - { path: "{{ download_directory }}/tmp" }
-    - { path: "{{ download_directory }}/bom" }
-    - { path: "{{ download_directory }}/files" }
+    - path: "{{ download_directory }}"
+    - path: "{{ download_directory }}/tmp"
+    - path: "{{ download_directory }}/bom"
+    - path: "{{ download_directory }}/files"
 
 
 # -------------------------------------+---------------------------------------8
@@ -62,24 +63,23 @@
 # TODO:
 #       Enhance so a single task loops over bas bom and dependencies
 #
-- include_tasks:    "bom_validator.yaml"
+- include_tasks:                       "bom_validator.yaml"
   vars:
-    bom_name:       "{{ bom_base_name }}"
+    bom_name:                          "{{ bom_base_name }}"
 # -------------------------------------+---------------------------------------8
-
 
 
 # -------------------------------------+---------------------------------------8
 #
 # Description:  Call BOM processor, passing dependent BOM names.
 #
-- include_tasks:    "bom_validator.yaml"
+- include_tasks:                       "bom_validator.yaml"
   vars:
-    bom_name:       "{{ bom_dependency.name }}"
-  loop:             "{{ bom.materials.dependencies | flatten(levels=1) }}"
+    bom_name:                          "{{ bom_dependency.name }}"
+  loop:                                "{{ bom.materials.dependencies | flatten(levels=1) }}"
   loop_control:
-    loop_var:       bom_dependency
-  when:             
+    loop_var:                          bom_dependency
+  when:
     - bom.materials.dependencies is defined
     - bom.materials.dependencies|length>0
 # -------------------------------------+---------------------------------------8

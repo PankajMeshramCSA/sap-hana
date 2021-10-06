@@ -30,8 +30,8 @@ cluster_status_report_wait_in_s: 60
 # The following values should be same as iSCSI configuration
 # run 'sudo targetcli ls' on iSCSI target virtual machines to get all iSCSI configuration
 cluster_name: db{{ sid | lower }}
-#storage_object: sbd{{ cluster_name }}
-#target: "{{ iscsi_object }}.{{ cluster_name }}.local:{{ cluster_name }}"
+# storage_object: sbd{{ cluster_name }}
+# target: "{{ iscsi_object }}.{{ cluster_name }}.local:{{ cluster_name }}"
 
 # HANA utility commands
 sapcontrol_command: "sapcontrol -nr {{ hdb_instance_number }}"

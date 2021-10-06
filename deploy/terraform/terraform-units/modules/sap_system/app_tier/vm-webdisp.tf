@@ -54,7 +54,6 @@ resource "azurerm_network_interface" "web_admin" {
 # Create the Linux Web dispatcher VM(s)
 resource "azurerm_linux_virtual_machine" "web" {
   provider            = azurerm.main
-  depends_on          = [var.anydb_vm_ids, var.hdb_vm_ids]
   count               = local.enable_deployment ? (upper(local.web_ostype) == "LINUX" ? local.webdispatcher_count : 0) : 0
   name                = format("%s%s%s%s", local.prefix, var.naming.separator, local.web_virtualmachine_names[count.index], local.resource_suffixes.vm)
   computer_name       = local.web_computer_names[count.index]
@@ -148,7 +147,6 @@ resource "azurerm_linux_virtual_machine" "web" {
 # Create the Windows Web dispatcher VM(s)
 resource "azurerm_windows_virtual_machine" "web" {
   provider            = azurerm.main
-  depends_on          = [var.anydb_vm_ids, var.hdb_vm_ids]
   count               = local.enable_deployment ? (upper(local.web_ostype) == "WINDOWS" ? local.webdispatcher_count : 0) : 0
   name                = format("%s%s%s%s", local.prefix, var.naming.separator, local.web_virtualmachine_names[count.index], local.resource_suffixes.vm)
   computer_name       = local.web_computer_names[count.index]
@@ -262,4 +260,35 @@ resource "azurerm_virtual_machine_data_disk_attachment" "web" {
   caching                   = local.web_data_disks[count.index].caching
   write_accelerator_enabled = local.web_data_disks[count.index].write_accelerator_enabled
   lun                       = local.web_data_disks[count.index].lun
+}
+
+resource "azurerm_virtual_machine_extension" "web_lnx_aem_extension" {
+  provider             = azurerm.main
+  count                = local.enable_deployment ? (upper(local.web_ostype) == "LINUX" ? local.webdispatcher_count : 0) : 0
+  name                 = "MonitorX64Linux"
+  virtual_machine_id   = azurerm_linux_virtual_machine.web[count.index].id
+  publisher            = "Microsoft.AzureCAT.AzureEnhancedMonitoring"
+  type                 = "MonitorX64Linux"
+  type_handler_version = "1.0"
+  settings             = <<SETTINGS
+  {
+    "system": "SAP"
+  }
+SETTINGS
+}
+
+
+resource "azurerm_virtual_machine_extension" "web_win_aem_extension" {
+  provider             = azurerm.main
+  count                = local.enable_deployment ? (upper(local.web_ostype) == "WINDOWS" ? local.webdispatcher_count : 0) : 0
+  name                 = "MonitorX64Windows"
+  virtual_machine_id   = azurerm_windows_virtual_machine.web[count.index].id
+  publisher            = "Microsoft.AzureCAT.AzureEnhancedMonitoring"
+  type                 = "MonitorX64Windows"
+  type_handler_version = "1.0"
+  settings             = <<SETTINGS
+  {
+    "system": "SAP"
+  }
+SETTINGS
 }

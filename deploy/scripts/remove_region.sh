@@ -155,8 +155,8 @@ if [ "${ext}" == json ]; then
     region=$(jq --raw-output .infrastructure.region "${deployer_parameter_file}")
 else
 
-    load_config_vars "${root_dirname}"/"${deployer_parameter_file}" "environment"
-    load_config_vars "${root_dirname}"/"${deployer_parameter_file}" "location"
+    load_config_vars "${deployer_parameter_file}" "environment"
+    load_config_vars "${deployer_parameter_file}" "location"
     region=$(echo ${location} | xargs)
 fi
 

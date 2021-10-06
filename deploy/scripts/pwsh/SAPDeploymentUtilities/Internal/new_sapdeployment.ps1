@@ -132,7 +132,7 @@ Licensed under the MIT license.
         $extra_vars = " -var-file=" + (Join-Path -Path $curDir -ChildPath "terraform.tfvars")
     }
 
-    $key = $fInfo.Name.replace(".json", ".terraform.tfstate")
+    $key = $fInfo.Name.replace($fInfo.Extension, ".terraform.tfstate")
     $landscapeKey = ""
     if ($Type -eq "sap_landscape") {
         $landscapeKey = $key
@@ -145,10 +145,31 @@ Licensed under the MIT license.
 
     $sub = $env:ARM_SUBSCRIPTION_ID
     
-    $jsonData = Get-Content -Path $Parameterfile | ConvertFrom-Json
+    $Environment = ""
+    $region = ""
+    $KeyValuePairs = @{}
 
-    $Environment = $jsonData.infrastructure.environment
-    $region = $jsonData.infrastructure.region
+    if ($fInfo.Extension -eq ".tfvars") {
+        $paramContent = Get-Content -Path $Parameterfile
+
+        foreach ($param in $paramContent) {
+            if ($param.Contains("=")) {
+                $KeyValuePairs.Add($param.Split("=")[0].ToLower(), $param.Split("=")[1].Replace("""", ""))
+            }
+           
+        }
+        $Environment = $KeyValuePairs["environment"]
+        $region = $KeyValuePairs["location"]
+
+    }
+    else {
+        $jsonData = Get-Content -Path $Parameterfile | ConvertFrom-Json
+
+        $Environment = $jsonData.infrastructure.environment
+        $region = $jsonData.infrastructure.region
+            
+    }
+
     $combined = $Environment + $region
     
     $spn_kvSpecified = $jsonData.key_vault.kv_spn_id.Length -gt 0

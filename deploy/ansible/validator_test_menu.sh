@@ -97,13 +97,8 @@ playbook_options=(
         --private-key=${ANSIBLE_PRIVATE_KEY_FILE}
         --extra-vars="_workspace_directory=`pwd`"
         --extra-vars="@${sap_params_file}"
+        --extra-vars="bom_processing=true"
         "${@}"
-)
-
-# List of playbooks to run through
-playbooks=(
-  # Retrieve the SSH key first before running remaining playbooks
-  ${cmd_dir}/pb_get-keyvault-secret.yaml
 )
 
 select opt in "${options[@]}";

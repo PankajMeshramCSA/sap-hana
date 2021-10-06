@@ -70,7 +70,7 @@ Future Steps will include:
     | -------------------------- | -------------------------------------- |
     | bom_base_name              | S419009SPS03_v1                        |
     | sapbits_location_base_path | https://<storage_account_FQDN>/sapbits |
-    | password_master            | MasterPass00                           |
+    | main_password            | MasterPass00                           |
     | sap_fqdn                   | sap.contoso.com                        |
     
     <br/>
@@ -86,13 +86,13 @@ Future Steps will include:
 
     bom_base_name:                 S41909SPS03_v1
     sapbits_location_base_path:    https://<storage_account_FQDN>/sapbits
-    password_master:               MasterPass00
+    main_password:                 MasterPass00
     sap_fqdn:                      sap.contoso.com
 
 
     # TERRAFORM CREATED
     sap_sid:                       X00
-    kv_uri:                        DEMOEUS2SAP00user298
+    kv_name:                        DEMOEUS2SAP00user298
     secret_prefix:                 DEMO-EUS2-SAP00
     scs_high_availability:         false
     db_high_availability:          false

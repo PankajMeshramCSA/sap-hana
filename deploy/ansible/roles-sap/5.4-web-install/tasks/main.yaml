@@ -11,20 +11,22 @@
 #
 
 ---
-- name:  
+- name: Initialize facts
   set_fact:
     sap_inifile:                  "{{ bom_base_name }}-web-{{ ansible_hostname }}.params"
     sap_inifile_template:         "{{ bom_base_name }}-web-inifile-param.j2"
 
 # Returns bom object
-- include_role:
+- name: Run the bom-register
+  include_role:
     name:                         roles-sap/3.3.1-bom-utility
     tasks_from:                   bom-register
   vars:
     bom_name:                     "{{ bom_base_name }}"
 
 
-- include_role:
+- name: Run the bom-template
+  include_role:
     name:                         roles-sap/3.3.1-bom-utility
     tasks_from:                   bom-template
   vars:
@@ -36,6 +38,8 @@
     sap_ciVirtualHostname:        "{{ query('inventory_hostnames', '{{ sap_sid|upper }}_PAS') | first }}"
     sap_db_hostname:              "{{ query('inventory_hostnames', '{{ sap_sid|upper }}_DB')  | first }}"
     sap_webVirtualHostname:       "{{ inventory_hostname }}"
+  tags:
+    - skip_ansible_lint
 
 # *====================================4=======================================8
 #   SAP Web Dispatcher: Install
@@ -54,6 +58,8 @@
   args:
     chdir:            /usr/sap/install/SWPM
     creates:          /etc/sap_deployment_automation/sap_deployment_web.txt
+  tags:
+    - skip_ansible_lint
   # Skip when TRUE (test mode)
   # when: not test_new_bom
 # *====================================4=======================================8

@@ -85,6 +85,8 @@ Licensed under the MIT license.
         [Parameter(Mandatory = $false)][string]$SPN_password,
         #Tenant
         [Parameter(Mandatory = $false)][string]$Tenant_id,
+        [Parameter(Mandatory = $false)][string]$Vault,
+        [Parameter(Mandatory = $false)][string]$StorageAccountName,
         [Parameter(Mandatory = $false)][Switch]$Force,
         [Parameter(Mandatory = $false)][Switch]$Silent
     )
@@ -100,11 +102,13 @@ Licensed under the MIT license.
     $fileDir = Join-Path -Path $dirInfo.ToString() -ChildPath $LibraryParameterfile
     [IO.FileInfo] $fInfo = $fileDir
 
-    $fInfo = Get-ItemProperty -Path $LibraryParameterfile
-    if ($false -eq $fInfo.Exists ) {
+    if ($false -eq (Test-Path $LibraryParameterfile)) {
         Write-Error ("File " + $LibraryParameterfile + " does not exist")
         return
     }
+
+    $fInfo = Get-ItemProperty -Path $LibraryParameterfile
+
 
     $fileDir = Join-Path -Path $dirInfo.ToString() -ChildPath $DeployerParameterfile
     [IO.FileInfo] $fInfo = $fileDir
@@ -115,10 +119,31 @@ Licensed under the MIT license.
         return
     }
 
-    $jsonData = Get-Content -Path $DeployerParameterfile | ConvertFrom-Json
+    $Environment = ""
+    $region = ""
+    $KeyValuePairs = @{}
 
-    $Environment = $jsonData.infrastructure.environment
-    $region = $jsonData.infrastructure.region
+    if ($fInfo.Extension -eq ".tfvars") {
+        $paramContent = Get-Content -Path $DeployerParameterfile
+
+        foreach ($param in $paramContent) {
+            if ($param.Contains("=")) {
+                $KeyValuePairs.Add($param.Split("=")[0].ToLower(), $param.Split("=")[1].Replace("""", ""))
+            }
+           
+        }
+        $Environment = $KeyValuePairs["environment"]
+        $region = $KeyValuePairs["location"]
+
+    }
+    else {
+        $jsonData = Get-Content -Path $DeployerParameterfile | ConvertFrom-Json
+
+        $Environment = $jsonData.infrastructure.environment
+        $region = $jsonData.infrastructure.region
+            
+    }
+
 
     # Initialize Terraform plugin cache
     $CachePath = (Join-Path -Path $Env:APPDATA -ChildPath "terraform.d\plugin-cache")
@@ -131,14 +156,15 @@ Licensed under the MIT license.
 
     $mydocuments = [environment]::getfolderpath("mydocuments")
     $fileINIPath = $mydocuments + "\sap_deployment_automation.ini"
-
-    if ( -not (Test-Path -Path $fileINIPath)) {
-        New-Item -Path $mydocuments -Name "sap_deployment_automation.ini" -ItemType "file" -Value "[Common]`nrepo=`nsubscription=`n[$region]`nDeployer=`nLandscape=`n[$Environment]`nDeployer=`n[$combined]`nDeployer=`nSubscription=" -Force
+    
+    
+    if (-not (Test-Path -Path $fileINIPath)) {
+        New-Item -Path $mydocuments -Name "sap_deployment_automation.ini" -ItemType "file" -Value "[Common]`nrepo=`nsubscription=`n[$region]`nDeployer=`nLandscape=`n[$Environment]`nDeployer=`n[$combined]`nDeployer=`nSubscription=$Subscription`nSTATE_SUBSCRIPTION=$Subscription" -Force
     }
 
     $iniContent = Get-IniContent -Path $fileINIPath
 
-    $key = $fInfo.Name.replace(".json", ".terraform.tfstate")
+    $key = $fInfo.Name.replace($fInfo.Extension, ".terraform.tfstate")
     
     if ($null -ne $iniContent[$region] ) {
         $iniContent[$region]["Deployer"] = $key
@@ -191,11 +217,46 @@ Licensed under the MIT license.
         $iniContent[$combined]["step"] = $step
     }
 
+
+
+    if(($StorageAccountName.Length -gt 0) &&  ($step -le 3))
+    {
+        $step = 3   
+        $rID = Get-AzResource -Name $StorageAccountName -ResourceType Microsoft.Storage/storageAccounts 
+        $rgName = $rID.ResourceGroupName
+
+        $tfstate_resource_id = $rID.ResourceId
+
+        $iniContent[$combined]["REMOTE_STATE_SA"] = $StorageAccountName
+        $iniContent[$combined]["REMOTE_STATE_RG"] = $rgName
+        $iniContent[$combined]["tfstate_resource_id"] = $tfstate_resource_id
+        Out-IniFile -InputObject $iniContent -Path $fileINIPath
+        $iniContent = Get-IniContent -Path $fileINIPath
+ 
+
+    }
+
+
     $ctx = Get-AzContext
     if ($null -eq $ctx) {
         Connect-AzAccount
     }
  
+    $foo = az account show
+    $accountData = $foo | ConvertFrom-Json
+
+    try {
+        if($accountData.user.cloudShellID) 
+        {
+            Write-Error ("Please login using either an account or a Service Principal")
+            return
+    
+        }
+    }
+    catch {
+        
+    }
+
     $errors_occurred = $false
     $fileDir = (Join-Path -Path $dirInfo.ToString() -ChildPath $DeployerParameterfile)
     [IO.FileInfo] $fInfo = $fileDir

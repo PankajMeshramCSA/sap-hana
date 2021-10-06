@@ -63,8 +63,8 @@
       changed_when: false
 
     - import_tasks: set_global_ini_values.yml
-    - import_tasks: stop_hana.yml
-    - import_tasks: start_hana.yml
+    - import_tasks:                   ../../../roles-misc/0.4-helpers/tasks/04.02-stop_hana.yml
+    - import_tasks:                   ../../../roles-misc/0.4-helpers/tasks/04.01-start_hana.yml
 
 - name: Ensure System Replication is configured
   become_user: "{{ sid_admin_user }}"

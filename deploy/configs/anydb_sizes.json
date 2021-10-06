@@ -49,14 +49,21 @@
           "caching": "ReadWrite"
         },
         {
+          "name": "sap",
+          "count": 1,
+          "disk_type": "Premium_LRS",
+          "size_gb": 128,
+          "caching": "ReadWrite",
+          "lun_start": 0
+        },
+        {
           "name": "data",
           "count": 1,
           "disk_type": "Premium_LRS",
           "size_gb": 256,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/data",
-          "lun_start": 0
+          "lun_start": 1
         },
         {
           "name": "log",
@@ -65,7 +72,6 @@
           "size_gb": 128,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/log",
           "lun_start": 9
         }
       ]
@@ -84,14 +90,21 @@
           "caching": "ReadWrite"
         },
         {
+          "name": "sap",
+          "count": 1,
+          "disk_type": "Premium_LRS",
+          "size_gb": 128,
+          "caching": "ReadWrite",
+          "lun_start": 0
+        },
+        {
           "name": "data",
           "count": 1,
           "disk_type": "Premium_LRS",
           "size_gb": 512,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/data",
-          "lun_start": 0
+          "lun_start": 1
         },
         {
           "name": "log",
@@ -100,7 +113,6 @@
           "size_gb": 256,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/log",
           "lun_start": 9
         }
       ]
@@ -119,14 +131,21 @@
           "caching": "ReadWrite"
         },
         {
+          "name": "sap",
+          "count": 1,
+          "disk_type": "Premium_LRS",
+          "size_gb": 128,
+          "caching": "ReadWrite",
+          "lun_start": 0
+        },
+        {
           "name": "data",
           "count": 4,
           "disk_type": "Premium_LRS",
           "size_gb": 512,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/data",
-          "lun_start": 0
+          "lun_start": 1
         },
         {
           "name": "log",
@@ -135,9 +154,9 @@
           "size_gb": 256,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/log",
           "lun_start": 9
         }
+
       ]
     },
     "2048": {
@@ -154,14 +173,21 @@
           "caching": "ReadWrite"
         },
         {
+          "name": "sap",
+          "count": 1,
+          "disk_type": "Premium_LRS",
+          "size_gb": 128,
+          "caching": "ReadWrite",
+          "lun_start": 0
+        },
+        {
           "name": "data",
           "count": 2,
           "disk_type": "Premium_LRS",
           "size_gb": 1024,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/data",
-          "lun_start": 0
+          "lun_start": 1
         },
         {
           "name": "log",
@@ -170,7 +196,6 @@
           "size_gb": 512,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/log",
           "lun_start": 9
         }
       ]
@@ -189,14 +214,21 @@
           "caching": "ReadWrite"
         },
         {
+          "name": "sap",
+          "count": 1,
+          "disk_type": "Premium_LRS",
+          "size_gb": 128,
+          "caching": "ReadWrite",
+          "lun_start": 0
+        },
+        {
           "name": "data",
           "count": 5,
           "disk_type": "Premium_LRS",
           "size_gb": 1024,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/data",
-          "lun_start": 0
+          "lun_start": 1
         },
         {
           "name": "log",
@@ -205,7 +237,6 @@
           "size_gb": 512,
           "caching": "None",
           "write_accelerator": true,
-          "mount_point": "/log",
           "lun_start": 17
         }
       ]
@@ -224,14 +255,21 @@
           "caching": "ReadWrite"
         },
         {
+          "name": "sap",
+          "count": 1,
+          "disk_type": "Premium_LRS",
+          "size_gb": 128,
+          "caching": "ReadWrite",
+          "lun_start": 0
+        },
+        {
           "name": "data",
           "count": 5,
           "disk_type": "Premium_LRS",
           "size_gb": 2048,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/data",
-          "lun_start": 0
+          "lun_start": 1
         },
         {
           "name": "log",
@@ -240,7 +278,6 @@
           "size_gb": 512,
           "caching": "None",
           "write_accelerator": true,
-          "mount_point": "/log",
           "lun_start": 17
         }
       ]
@@ -259,6 +296,14 @@
           "caching": "ReadWrite"
         },
         {
+          "name": "sap",
+          "count": 1,
+          "disk_type": "Premium_LRS",
+          "size_gb": 128,
+          "caching": "ReadWrite",
+          "lun_start": 0
+        },
+        {
           "name": "data",
           "count": 4,
           "disk_type": "Premium_LRS",
@@ -266,7 +311,7 @@
           "caching": "None",
           "write_accelerator": false,
           "mount_point": "/data",
-          "lun_start": 0
+          "lun_start": 1
         },
         {
           "name": "log",
@@ -275,7 +320,6 @@
           "size_gb": 512,
           "caching": "None",
           "write_accelerator": true,
-          "mount_point": "/log",
           "lun_start": 17
         }
       ]
@@ -294,14 +338,21 @@
           "caching": "ReadWrite"
         },
         {
+          "name": "sap",
+          "count": 1,
+          "disk_type": "Premium_LRS",
+          "size_gb": 128,
+          "caching": "ReadWrite",
+          "lun_start": 0
+        },
+        {
           "name": "data",
           "count": 5,
           "disk_type": "Premium_LRS",
           "size_gb": 4096,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/data",
-          "lun_start": 0
+          "lun_start": 1
         },
         {
           "name": "log",
@@ -310,7 +361,6 @@
           "size_gb": 512,
           "caching": "None",
           "write_accelerator": true,
-          "mount_point": "/log",
           "lun_start": 17
         }
       ]
@@ -329,14 +379,21 @@
           "caching": "ReadWrite"
         },
         {
+          "name": "sap",
+          "count": 1,
+          "disk_type": "Premium_LRS",
+          "size_gb": 128,
+          "caching": "ReadWrite",
+          "lun_start": 0
+        },
+        {
           "name": "data",
           "count": 8,
           "disk_type": "Premium_LRS",
           "size_gb": 4096,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/data",
-          "lun_start": 0
+          "lun_start": 1
         },
         {
           "name": "log",
@@ -345,7 +402,6 @@
           "size_gb": 2048,
           "caching": "None",
           "write_accelerator": true,
-          "mount_point": "/log",
           "lun_start": 17
         }
       ]
@@ -364,14 +420,21 @@
           "caching": "ReadWrite"
         },
         {
+          "name": "sap",
+          "count": 1,
+          "disk_type": "Premium_LRS",
+          "size_gb": 128,
+          "caching": "ReadWrite",
+          "lun_start": 0
+        },
+        {
           "name": "data",
           "count": 10,
           "disk_type": "Premium_LRS",
           "size_gb": 4096,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/data",
-          "lun_start": 0
+          "lun_start": 1
         },
         {
           "name": "log",
@@ -380,7 +443,6 @@
           "size_gb": 2048,
           "caching": "None",
           "write_accelerator": true,
-          "mount_point": "/log",
           "lun_start": 17
         }
       ]
@@ -399,14 +461,21 @@
           "caching": "ReadWrite"
         },
         {
+          "name": "sap",
+          "count": 1,
+          "disk_type": "Premium_LRS",
+          "size_gb": 128,
+          "caching": "ReadWrite",
+          "lun_start": 0
+        },
+        {
           "name": "data",
           "count": 13,
           "disk_type": "Premium_LRS",
           "size_gb": 4096,
           "caching": "None",
           "write_accelerator": false,
-          "mount_point": "/data",
-          "lun_start": 0
+          "lun_start": 1
         },
         {
           "name": "log",
@@ -415,7 +484,6 @@
           "size_gb": 2048,
           "caching": "None",
           "write_accelerator": true,
-          "mount_point": "/log",
           "lun_start": 17
         }
       ]

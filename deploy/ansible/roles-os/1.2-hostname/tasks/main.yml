@@ -11,20 +11,12 @@
 # -------------------------------------+---------------------------------------8
 
 # SUSE bug 1167134
-- name:         "Ensure DHCLIENT_SET_HOSTNAME is set to no for SLES"
-  lineinfile:
-    path:       /etc/sysconfig/network/dhcp
-    regexp:     '^DHCLIENT_SET_HOSTNAME='
-    line:       DHCLIENT_SET_HOSTNAME="no"
-  when:         ansible_os_family|upper == 'SUSE'
-
-
-# TODO:
-#       1) Validate Relevancy for the tasks below.
-#       2) Refactor as needed.
-#       3) This may not have been structured correctly and should be done in the hosts file instead.
-#       4) Azure seems to set the hostname correctly, by default.
-
+- name:                                "Ensure DHCLIENT_SET_HOSTNAME is set to no for SLES"
+  ansible.builtin.lineinfile:
+    path:                              /etc/sysconfig/network/dhcp
+    regexp:                            '^DHCLIENT_SET_HOSTNAME='
+    line:                              DHCLIENT_SET_HOSTNAME="no"
+  when:                                ansible_os_family|upper == 'SUSE'
 
 
 #----------------------------------------

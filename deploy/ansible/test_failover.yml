@@ -1,7 +1,7 @@
 ---
 
 - hosts: hanadbnodes
-  become: yes
+  become: true
   become_user: root
   roles:
     - role: test-failover

@@ -14,9 +14,9 @@
   name:           BOM Validator
   gather_facts:   true
   connection:     local
-  become:         no
+  become:         false
   become_user:    root
- 
+
   vars_files:
     - vars/ansible-input-api.yaml                               # API Input template with defaults
 
@@ -24,15 +24,17 @@
   tasks:
 # -------------------------------------+---------------------------------------8
 #
-# Build the list of tasks to be executed in order here. 
+# Build the list of tasks to be executed in order here.
 #
 # -------------------------------------+---------------------------------------8
 
-  - set_fact:
-      tier:     preparation
+    - name: Initialize facts
+      set_fact:
+        tier:     preparation
 
-  - include_role:
-      name:     roles-sap/0.1-bom-validator
+    - name: Run the bom-validator
+      include_role:
+        name:     roles-sap/0.1-bom-validator
 
 
 ...
