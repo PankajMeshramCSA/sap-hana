@@ -124,7 +124,7 @@ resource "local_file" "ansible_inventory_yml" {
 */
 resource "local_file" "ansible_inventory_new_yml" {
   content = templatefile(format("%s%s", path.module, "/ansible_inventory_new.yml.tmpl"), {
-    ips_dbnodes = local.ips_dbnodes_db,
+    ips_dbnodes = var.database_admin_ips,
     dbnodes     = length(local.hdb_vms) > 0 ? local.hdb_vms : local.anydb_vms
     ips_scs = length(local.ips_scs) > 0 ? (
       length(local.ips_scs) > 1 ? (
@@ -193,7 +193,7 @@ resource "local_file" "sap-parameters_yml" {
   content = templatefile(format("%s/sap-parameters.yml.tmpl", path.module), {
     sid           = var.sap_sid,
     db_sid        = var.db_sid
-    kv_uri        = local.kv_name,
+    kv_name       = local.kv_name,
     secret_prefix = local.secret_prefix,
     disks         = var.disks
     scs_ha        = var.scs_ha
@@ -202,7 +202,8 @@ resource "local_file" "sap-parameters_yml" {
     db_ha         = var.db_ha
     dns           = local.dns_label
     bom           = local.bom
-    sap_mnt       = var.sap_mnt
+    sap_mnt       = length(trimspace(var.sap_mnt)) >  0 ? format("sap_mnt:                       %s", var.sap_mnt) : ""
+    sap_transport = length(trimspace(var.sap_transport)) >  0 ? format("sap_trans:                     %s", var.sap_transport) : ""
     }
   )
   filename             = format("%s/sap-parameters.yaml", path.cwd)

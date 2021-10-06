@@ -107,28 +107,32 @@ Logon to the deployer using the ssh key downloaded in the previous step.
 <br/>
 
 3. Deployment
-    <br/>*`User the deployment data from the previous step for storageaccountname and vault. `*<br/>
-     ```bash
+    
+    *User the deployment data from the previous step for storageaccountname and vault.*
+    
+ ```bash
      $DEPLOYMENT_REPO_PATH/deploy/scripts/install_workloadzone.sh            \
      --parameterfile DEMO-SCUS-SAP00-INFRASTRUCTURE.json                     \
      --deployer_tfstate_key DEMO-SCUS-DEP00-INFRASTRUCTURE.terraform.tfstate \
      --storageaccountname demoscustfstate###                                 \
      --deployer_environment DEMO                                             \
      --vault DEMOSCUSDEP00user###                                            \
-     ```
+ ```
 
-For *westeurope* use
+For **westeurope** use
 
-    <br/>*`User the deployment data from the previous step for storageaccountname and vault. `*<br/>
-     ```bash
+ *Use the deployment data from the previous step for storageaccountname and vault*
+ 
+ 
+ ```bash
      $DEPLOYMENT_REPO_PATH/deploy/scripts/install_workloadzone.sh            \
      --parameterfile DEMO-WEEU-SAP00-INFRASTRUCTURE.json                     \
      --auto-approve
-     ```
+ ```
 
 4. Deployment providing the SPN Details. In this option the deployment of the workload zone requires different deployment credentials
 
-    <br/>*Use the deployment data from the previous step for storageaccountname and vault.*<br/>
+*Use the deployment data from the previous step for storageaccountname and vault.*
 
 ```bash
      subscription=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
@@ -150,10 +154,9 @@ For *westeurope* use
      --auto-approve
 ```
 
-</br>
-For *westeurope* use:
 
-</br>
+For **westeurope** use:
+
 
 ```bash
      $DEPLOYMENT_REPO_PATH/deploy/scripts/install_workloadzone.sh            \

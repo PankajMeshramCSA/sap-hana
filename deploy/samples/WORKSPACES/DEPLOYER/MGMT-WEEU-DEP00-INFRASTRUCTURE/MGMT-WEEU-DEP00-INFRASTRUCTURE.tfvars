@@ -14,6 +14,10 @@ location="westeurope"
 #resource_group_name=""
 #resource_group_arm_id=""
 
+
+#resourcegroup_tags = {
+# tag=value    
+#    }
 #
 # Networking information
 #
@@ -116,7 +120,7 @@ This block describes the variables for the authentication section block in the j
 This block describes the variables for the options section block in the json file
 */
 
-#enable_deployer_public_ip=false
+#deployer_enable_public_ip=false
 # firewall_deployment is a boolean flag controlling if an Azure firewall is to be deployed in the deployer VNet
 firewall_deployment=true
 
@@ -128,3 +132,6 @@ firewall_deployment=true
 
 # assign_subscription_permissions is a boolean flag controlling if the deployment credential should be assigned Contribuor permissions on the subscription
 #assign_subscription_permissions=true
+
+# use_private_endpoint is a boolean flag controlling if the keyvaults and storage accounts have private endpoints
+# use_private_endpoint=false

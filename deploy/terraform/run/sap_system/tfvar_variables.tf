@@ -28,6 +28,10 @@ variable "resourcegroup_arm_id" {
   default = ""
 }
 
+variable "resourcegroup_tags" {
+  default = {}
+}
+
 variable "proximityplacementgroup_names" {
   default = []
 }
@@ -520,7 +524,7 @@ variable "anf_sapmnt_volume_size" {
   default = 512
 }
 
-variable "anf_shared_volume_size" {
+variable "anf_transport_volume_size" {
   default = 512
 }
 
@@ -532,4 +536,9 @@ variable "use_ANF" {
 variable "use_loadbalancers_for_standalone_deployments" {
   default = true
 }
+
+variable "hana_dual_nics" {
+  default = true
+}
+
 

@@ -102,6 +102,26 @@ while :; do
     esac
 done
 
+while [ -z "${environment}" ]; do
+    read -r -p "Environment name: " environment
+done
+
+while [ -z "${region}" ]; do
+    read -r -p "Region name: " region
+done
+
+if ! valid_environment "${environment}"; then
+    echo "The 'environment' must be at most 5 characters long, composed of uppercase letters and numbers!"
+    showhelp
+    exit 65	#/* data format error */
+fi
+
+if ! valid_region_name "${region}"; then
+    echo "The 'region' must be a non-empty string composed of lowercase letters followed by numbers!"
+    showhelp
+    exit 65	#/* data format error */
+fi
+
 automation_config_directory=~/.sap_deployment_automation
 environment_config_information="${automation_config_directory}"/"${environment}""${region}"
 
@@ -110,10 +130,6 @@ if [ ! -d "${automation_config_directory}" ]; then
     mkdir "${automation_config_directory}"
 else
     touch "${environment_config_information}"
-fi
-
-if [ -z "${environment}" ]; then
-    read -r -p "Environment name:" environment
 fi
 
 if [ -z "$subscription" ]; then
@@ -141,10 +157,8 @@ fi
 
 if [ ! -n "$client_secret" ]; then
     #do not output the secret to screen
-    stty -echo
-    read -ers -p "        -> Kindly provide SPN Password: " client_secret
+    read -rs -p "        -> Kindly provide SPN Password: " client_secret
     echo "********"
-    stty echo
 fi
 
 if [ -z "${tenant_id}" ]; then
@@ -156,10 +170,6 @@ fi
 
 if [ -z "$subscription" ]; then
     read -r -p "SPN Subscription: " subscription
-fi
-
-if [ -z "${environment}" ]; then
-    read -r -p "Environment: " environment
 fi
 
 if [ -z "${keyvault}" ]; then
@@ -211,6 +221,7 @@ if [ -n "${result}" ]; then
     az keyvault set-policy -n "${keyvault}" --secret-permissions get list recover restore set --upn "${upn}"
 fi
 
+echo -e "\t $cyan Setting secret ${secretname} in keyvault ${keyvault} $resetformatting \n"
 az keyvault secret set --name "${secretname}" --vault-name "${keyvault}" --value "${subscription}" >stdout.az 2>&1
 
 result=$(grep "ERROR: The user, group or application" stdout.az)

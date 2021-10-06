@@ -23,34 +23,34 @@
 #----------------------------------------
 
 # TODO: This should probably be moved into the 1.4-packages role
-- name:   Collect facts about installed packages
-  package_facts:
+- name:                                Collect facts about installed packages
+  ansible.builtin.package_facts:
 
-- name:   Show installed package details if verbosity level specified
-  debug:
-    var:  ansible_facts.packages
-    verbosity: 2
+- name:                                Show installed package details if verbosity level specified
+  ansible.builtin.debug:
+    var:                               ansible_facts.packages
+    verbosity:                         2
 
 # The ntp package should have been uninstalled during the execution
 # of the 1.4-packages role.
-- name:   Fail if ntp still installed
-  fail:
+- name:                                Fail if ntp still installed
+  ansible.builtin.fail:
     msg: >
           The 'ntp' package is still installed. Please ensure that the
           role-os/1.4-packages role has been successfully run before
           this role runs.
   when:
-   # parentheses wrapped to keep ansible parser happy
-   -      ('ntp' in ansible_facts.packages)
+    # parentheses wrapped to keep ansible parser happy
+    -      ('ntp' in ansible_facts.packages)
 
-- name:    Ensure that required packages are installed
-  package:
-    name:  "{{ item }}"
-    state: present
+- name:                                Ensure that required packages are installed
+  ansible.builtin.package:
+    name:                              "{{ item }}"
+    state:                             present
   when:
-    -      item not in ansible_facts.packages
+    - item not in ansible_facts.packages
   loop:
-    -      'chrony'
+    - 'chrony'
   register: chrony_package_installed
 
 # -------------------------------------+---------------------------------------8
@@ -59,9 +59,9 @@
 # using the distribution provided defaults.
 #
 # -------------------------------------+---------------------------------------8
-- name: Initialise facts used to manage chrony settings
+- name:                                Initialise facts used to manage chrony settings
   set_fact:
-    chronyd_restart_required: "{{ chrony_package_installed is changed }}"
+    chronyd_restart_required:          "{{ chrony_package_installed is changed }}"
     # Generate list of chrony config entries that may need to be added
     chrony_conf_entries: >-
       {%- set _conf_entries =[] -%}
@@ -74,10 +74,10 @@
       {%- endif -%}
       {{- _conf_entries -}}
 
-- name: Show generated list of chrony conf entries
+- name:                                Show generated list of chrony conf entries
   debug:
-    var: chrony_conf_entries
-    verbosity: 1
+    var:                               chrony_conf_entries
+    verbosity:                         2
   when:
     - (chrony_conf_entries | count) == 0
 
@@ -91,28 +91,29 @@
 # well as remove the ansible managed block entru
 #
 # -------------------------------------+---------------------------------------8
-- name: Setup chrony with distribution defaults
+- name:                                Setup chrony with distribution defaults
   block:
-    - name:        Remove any ansible managed block
-      blockinfile:
-        path:      /etc/chrony.conf
-        marker:    "# {mark} ANSIBLE MANAGED BLOCK"
-        state:     absent
-      register:    chrony_remove_custom_settings
+    - name:                            Remove any ansible managed block
+      ansible.builtin.blockinfile:
+        path:                          /etc/chrony.conf
+        marker:                        "# {mark} ANSIBLE MANAGED BLOCK"
+        state:                         absent
+      register:                        chrony_remove_custom_settings
 
-    - name:        Uncomment any default entries
-      lineinfile:
-        path:      /etc/chrony.conf
-        regexp:    '^! ((pool|server) .*)$'
+    - name:                            Uncomment any default entries
+      ansible.builtin.lineinfile:
+        path:                          /etc/chrony.conf
+        regexp:                        '^! ((pool|server) .*)$'
         # need to use single quotes here to avoid quoting issues with \1
-        line:      '\1'
-        backrefs:  yes
-        state:     present
+        line:                          '\1'
+        backrefs:                      true
+        state:                         present
+      register:                        chrony_conf_updated
       when:
-        -          ansible_os_family|upper == 'SUSE'
-      register:    chrony_conf_updated
+        - ansible_os_family|upper == 'SUSE'
 
-    - set_fact:
+    - name: Set chrony facts
+      ansible.builtin.set_fact:
         chronyd_restart_required: >-
           {{ ((chronyd_restart_required | bool) or
               (chrony_remove_custom_settings is changed) or
@@ -132,9 +133,9 @@
 # -------------------------------------+---------------------------------------8
 - name: Setup chrony with override settings
   block:
-    - name:          Remove existing pool or server entries if
-                     custom settings not yet applied
-      shell: |
+    - name:                            Remove existing pool or server entries if
+                                       custom settings not yet applied
+      ansible.builtin.shell: |
         # Don't do anything if the file has ansible managed marker
         if grep >/dev/null 2>&1 "ANSIBLE MANAGED BLOCK" /etc/chrony.conf; then
           exit 0
@@ -146,22 +147,23 @@
         # comment out any existing pool or server settings and exit with
         # 55 if successful, otherwise fail with the error status of sed
         sed -i -e '/^\(pool\|server\) /s,^,! ,' /etc/chrony.conf && exit 55
-      failed_when:   chrony_remove_existing_settings.rc not in [0, 55]
-      changed_when:  chrony_remove_existing_settings.rc == 55
-      register:      chrony_remove_existing_settings
+      failed_when:                     chrony_remove_existing_settings.rc not in [0, 55]
+      changed_when:                    chrony_remove_existing_settings.rc == 55
+      register:                        chrony_remove_existing_settings
 
-    - name: Add/Update custom settings block
+    - name:                            Add/Update custom settings block
       ansible.builtin.blockinfile:
-        path:        /etc/chrony.conf
-        marker:      "# {mark} ANSIBLE MANAGED BLOCK"
-        insertafter: "^# Please consider joining the pool .*"
+        path:                          /etc/chrony.conf
+        marker:                        "# {mark} ANSIBLE MANAGED BLOCK"
+        insertafter:                   "^# Please consider joining the pool .*"
         block: |
-          {% for entry in chrony_conf_entries -%}
-          {{ entry.type }} {{ entry.name }} {{ entry.opts | join(' ') }}
-          {% endfor -%}
-      register:      chrony_conf_updated
+                                       {% for entry in chrony_conf_entries -%}
+                                       {{ entry.type }} {{ entry.name }} {{ entry.opts | join(' ') }}
+                                       {% endfor -%}
+      register:                        chrony_conf_updated
 
-    - set_fact:
+    - name:                            Set chrony facts
+      ansible.builtin.set_fact:
         chronyd_restart_required: >-
           {{ ((chronyd_restart_required | bool) or
               (chrony_conf_updated is changed) or
@@ -170,10 +172,10 @@
     # If custom pool or servers specified
     - (chrony_conf_entries | count) > 0
 
-- name: Do we need to restart chronyd?
+- name:                                Do we need to restart chronyd?
   ansible.builtin.debug:
-    var: chronyd_restart_required
-    verbosity: 1
+    var:                               chronyd_restart_required
+    verbosity:                         2
 
 # -------------------------------------+---------------------------------------8
 #
@@ -184,20 +186,20 @@
 # -------------------------------------+---------------------------------------8
 
 # On SLES systems the service is installed in a disabled state
-- name: Ensure chronyd service is enabled
+- name:                                Ensure chronyd service is enabled
   ansible.builtin.service:
-    name: chronyd
-    enabled: true
+    name:                              chronyd
+    enabled:                           true
 
 # Restart chronyd either if the package was installed or
 # configuration changes were made.
-- name: Restart chronyd service if needed
-  service:
-    name: chronyd
-    state: restarted
+- name:                                Restart chronyd service if needed
+  ansible.builtin.service:
+    name:                              chronyd
+    state:                             restarted
   when:
     - chronyd_restart_required | bool
-  register: chronyd_restarted
+  register:                            chronyd_restarted
 
 # -------------------------------------+---------------------------------------8
 #
@@ -207,10 +209,10 @@
 # is started/running.
 #
 # -------------------------------------+---------------------------------------8
-- name: Ensure chronyd service is running
+- name:                                Ensure chronyd service is running
   ansible.builtin.service:
-    name: chronyd
-    state: started
+    name:                              chronyd
+    state:                             started
   when:
     - chronyd_restarted is skipped
 

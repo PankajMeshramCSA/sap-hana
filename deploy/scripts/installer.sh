@@ -159,9 +159,6 @@ fi
 
 
 
-if [ $force == 1 ]; then
-    rm -Rf .terraform terraform.tfstate*
-fi
 
 ext=$(echo ${parameterfile_name} | cut -d. -f2)
 
@@ -216,7 +213,7 @@ parallelism=10
 
 #Provide a way to limit the number of parallell tasks for Terraform
 if [ -n "${TF_PARALLELLISM}" ]; then
-    parallelism=TF_PARALLELLISM
+    parallelism=$TF_PARALLELLISM
 fi
 
 echo "Parallelism count $parallelism"
@@ -273,7 +270,19 @@ if [ -z "$STATE_SUBSCRIPTION" ];
 then
   load_config_vars "${system_config_information}" "STATE_SUBSCRIPTION"
 else
-  save_config_vars "${system_config_information}" STATE_SUBSCRIPTION
+    echo "Saving the state subscription"
+    if is_valid_guid "STATE_SUBSCRIPTION" ; then
+        save_config_var "STATE_SUBSCRIPTION" "${workload_config_information}"
+    else
+        printf -v val %-40.40s "$STATE_SUBSCRIPTION"
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo -e "#The provided state_subscription is not valid:$boldred ${val} $resetformatting#"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        exit 65
+    fi
+
 fi
 
 echo "Terraform storage " "${REMOTE_STATE_SA}"
@@ -454,11 +463,11 @@ if [ ! -d ./.terraform/ ];
 then
     deployment_parameter=" -var deployment=new "
 
-    terraform -chdir="${terraform_module_directory}" init      \
-    --backend-config "subscription_id=${STATE_SUBSCRIPTION}"   \
-    --backend-config "resource_group_name=${REMOTE_STATE_RG}"  \
-    --backend-config "storage_account_name=${REMOTE_STATE_SA}" \
-    --backend-config "container_name=tfstate"                  \
+    terraform -chdir="${terraform_module_directory}" init -upgrade=true     \
+    --backend-config "subscription_id=${STATE_SUBSCRIPTION}"                \
+    --backend-config "resource_group_name=${REMOTE_STATE_RG}"               \
+    --backend-config "storage_account_name=${REMOTE_STATE_SA}"              \
+    --backend-config "container_name=tfstate"                               \
     --backend-config "key=${key}.terraform.tfstate"
     return_value=$?
 
@@ -664,7 +673,166 @@ if [ 0 == $return_value ] ; then
     exit $return_value
 fi
 if [ 2 == $return_value ] ; then
-    if ! grep "0 to change, 0 to destroy" plan_output.log ; then
+    echo "foo" 
+    fatal_errors=0
+    # HANA VM
+    test=$(grep vm_dbnode plan_output.log | grep -m1 replaced)
+    if [ ! -z "${test}" ] ; then
+        echo ""
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo -e "#                               $boldreduscore!!! Risk for Data loss !!!$resetformatting                              #"
+        echo "#                                                                                       #"
+        echo "#                          Database server(s) will be replaced                          #"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        echo ""
+        echo ""
+        fatal_errors=1
+    fi
+    # HANA VM disks
+    test=$(grep azurerm_managed_disk.data_disk plan_output.log | grep  -m1 replaced)
+    if [ ! -z "${test}" ] ; then
+        echo ""
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo -e "#                               $boldreduscore!!! Risk for Data loss !!!$resetformatting                              #"
+        echo "#                                                                                       #"
+        echo "#                        Database server disks will be replaced                         #"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        echo ""
+        echo ""
+        fatal_errors=1
+    fi
+
+    # AnyDB server
+    test=$(grep dbserver plan_output.log | grep -m1 replaced)
+    if [ ! -z "${test}" ] ; then
+        echo ""
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo -e "#                               $boldreduscore!!! Risk for Data loss !!!$resetformatting                              #"
+        echo "#                                                                                       #"
+        echo "#                          Database server(s) will be replaced                          #"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        echo ""
+        echo ""
+        fatal_errors=1
+    fi
+    # AnyDB disks
+    test=$(grep azurerm_managed_disk.disks plan_output.log | grep -m1 replaced)
+    if [ ! -z "${test}" ] ; then
+        echo ""
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo -e "#                               $boldreduscore!!! Risk for Data loss !!!$resetformatting                              #"
+        echo "#                                                                                       #"
+        echo "#                        Database server disks will be replaced                         #"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        echo ""
+        echo ""
+        fatal_errors=1
+    fi
+
+    # App server
+    test=$(grep virtual_machine.app plan_output.log | grep -m1 replaced)
+    if [ ! -z "${test}" ] ; then
+        echo ""
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo -e "#                               $boldreduscore!!! Risk for Data loss !!!$resetformatting                              #"
+        echo "#                                                                                       #"
+        echo "#                          Application server will be replaced                          #"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        echo ""
+        echo ""
+        fatal_errors=1
+    fi
+    # App server disks
+    test=$(grep azurerm_managed_disk.app plan_output.log | grep -m1 replaced)
+    if [ ! -z "${test}" ] ; then
+        echo ""
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo -e "#                               $boldreduscore!!! Risk for Data loss !!!$resetformatting                              #"
+        echo "#                                                                                       #"
+        echo "#                      Application server disks will be replaced                        #"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        echo ""
+        echo ""
+        fatal_errors=1
+    fi
+
+    # SCS server
+    test=$(grep virtual_machine.scs plan_output.log | grep -m1 replaced)
+    if [ ! -z "${test}" ] ; then
+        echo ""
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo -e "#                               $boldreduscore!!! Risk for Data loss !!!$resetformatting                              #"
+        echo "#                                                                                       #"
+        echo "#                        SCS server(s) disks will be replaced                           #"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        echo ""
+        echo ""
+        fatal_errors=1
+    fi
+
+    # SCS server disks
+    test=$(grep azurerm_managed_disk.scs plan_output.log | grep -m1 replaced)
+    if [ ! -z "${test}" ] ; then
+        echo ""
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo -e "#                               $boldreduscore!!! Risk for Data loss !!!$resetformatting                              #"
+        echo "#                                                                                       #"
+        echo "#                          SCS server disks will be replaced                            #"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        echo ""
+        echo ""
+        fatal_errors=1
+    fi
+
+    # Web server
+    test=$(grep virtual_machine.web plan_output.log | grep -m1 replaced)
+    if [ ! -z "${test}" ] ; then
+        echo ""
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo -e "#                               $boldreduscore!!! Risk for Data loss !!!$resetformatting                              #"
+        echo "#                                                                                       #"
+        echo "#                         Web Dispatcher server(s) will be replaced                     #"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        echo ""
+        echo ""
+        fatal_errors=1
+    fi
+    # Web dispatcher server disks
+    test=$(grep azurerm_managed_disk.web plan_output.log | grep -m1 replaced)
+    if [ ! -z "${test}" ] ; then
+        echo ""
+        echo "#########################################################################################"
+        echo "#                                                                                       #"
+        echo -e "#                               $boldreduscore!!! Risk for Data loss !!!$resetformatting                              #"
+        echo "#                                                                                       #"
+        echo "#                       Web Dispatcher server disks will be replaced                    #"
+        echo "#                                                                                       #"
+        echo "#########################################################################################"
+        echo ""
+        echo ""
+        fatal_errors=1
+    fi
+
+    if [ $fatal_errors == 1 ] ; then
+
         echo ""
         echo "#########################################################################################"
         echo "#                                                                                       #"
@@ -678,20 +846,23 @@ if [ 2 == $return_value ] ; then
             unset TF_DATA_DIR
             exit 1
         fi
-        read -n 1 -r -s -p $'Press enter to continue...\n'
-        
-        cat plan_output.log
-        read -p "Do you want to continue with the deployment Y/N?"  ans
-        answer=${ans^^}
-        if [ $answer == 'Y' ]; then
-            ok_to_proceed=true
+
+        if [ 1 == $force ]; then
+          ok_to_proceed=true
         else
-            unset TF_DATA_DIR
-            exit 1
+            read -p "Do you want to continue with the deployment Y/N?"  ans
+            answer=${ans^^}
+            if [ $answer == 'Y' ]; then
+                ok_to_proceed=true
+            else
+                unset TF_DATA_DIR
+                exit 1
+            fi
         fi
-    else
-        ok_to_proceed=true
+
     fi
+else
+    ok_to_proceed=true
 fi
 
 if [ $ok_to_proceed ]; then
@@ -702,7 +873,7 @@ if [ $ok_to_proceed ]; then
     fi
     if [ -f plan_output.log ]
     then
-        rm plan_output.log
+      rm plan_output.log
     fi
     
     echo ""

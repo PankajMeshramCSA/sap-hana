@@ -5,57 +5,59 @@
 # https://rpm.pbone.net/index.php3/stat/45/idpl/27916721/numer/8/nazwa/ha-cluster-init
 - name: Ensure Primary node initiates the Cluster
   when: inventory_hostname == primary_instance.ip_admin
-  ansible.builtin.block:
+  block:
     - name: Ensure csync2 is configured
-      ansible.builtin.shell: crm cluster init -y csync2
+      ansible.builtin.command: crm cluster init -y csync2
 
     - name: Ensure corosync is configured
-      ansible.builtin.shell: crm cluster init -y -u corosync
+      ansible.builtin.command: crm cluster init -y -u corosync
 
     - name: Ensure cluster (hdb_{{ sid | upper }}) is configured
-      ansible.builtin.shell: "crm cluster init -y cluster --name 'hdb_{{ sid | upper }}'"
+      ansible.builtin.command: "crm cluster init -y cluster --name 'hdb_{{ sid | upper }}'"
 
 - name: Ensure Secondary node joins the Cluster
   when: inventory_hostname == secondary_instance.ip_admin
-  ansible.builtin.block:
+  block:
     - name: Ensure the configuration files are synchronised
-      ansible.builtin.shell: "crm cluster join -y -c {{ primary_instance.ip_db }} csync2"
+      ansible.builtin.command: "crm cluster join -y -c {{ primary_instance.ip_db }} csync2"
 
     - name: Ensure the cluster is joined
-      ansible.builtin.shell: "crm cluster join -y -c {{ primary_instance.ip_db }} cluster"
+      ansible.builtin.command: "crm cluster join -y -c {{ primary_instance.ip_db }} cluster"
 
 - name: Ensure HA Cluster password is set to something secure
-  user:
+  ansible.builtin.user:
     name: hacluster
     password: "{{ ha_cluster_password | password_hash('sha512', 65534 | random(seed=inventory_hostname) | string) }}"
 
 - name: Ensure cluster configuration contains correct details
-  ansible.builtin.template
+  ansible.builtin.template:
     src: corosync.conf.j2
     dest: /etc/corosync/corosync.conf
     mode: 0600
 
 - name: Ensure the Corosync service is restarted on primary node.
   when: inventory_hostname == primary_instance.ip_admin
-  ansible.builtin.systemd
+  ansible.builtin.systemd:
     name: corosync
     state: restarted
 
-- pause:
+- name: Pause
+  ansible.builtin.pause:
     seconds: 15
 
 - name: Ensure the Corosync service is restarted on secondary node
   when: inventory_hostname == secondary_instance.ip_admin
-  ansible.builtin.systemd
+  ansible.builtin.systemd:
     name: corosync
     state: restarted
 
-- pause:
+- name: Pause
+  ansible.builtin.pause:
     seconds: 15
 
 - name: Ensure the cluster STONITH is created
   when: inventory_hostname == primary_instance.ip_admin
-  ansible.builtin.block:
+  block:
 
     - name: Check if SBD resource exists
       ansible.builtin.shell: crm resource list | grep 'sbd' | awk '{ print $1; }'
@@ -70,7 +72,7 @@
       when: sbd_device.stdout | length > 0
 
     - name: Ensure SBD disk STONITH resource is created
-      ansible.builtin.shell: >
+      ansible.builtin.command: >
         crm configure primitive stonith-sbd stonith:external/sbd \
         params pcmk_delay_max="15" \
         op monitor interval="15" timeout="15"
@@ -78,14 +80,15 @@
     - name: Check the current SBD status
       ansible.builtin.shell: crm_mon -1 | grep sbd
       register: sbd_report
-      changed_when: False
-      failed_when: False
+      changed_when: false
+      failed_when: false
 
-    - debug:
+    - name: Print the sdb report
+      ansible.builtin.debug:
         msg: "{{ sbd_report.stdout }}"
 
     - name: Ensure maintenance mode is enabled
-      ansible.builtin.shell: "crm configure property maintenance-mode=true"
+      ansible.builtin.command: "crm configure property maintenance-mode=true"
 
     - name: Ensure CIB Bootstrap Options are set
       ansible.builtin.shell: >
@@ -101,7 +104,8 @@
         resource-stickiness="1000"
         migration-threshold="5000"
 
-    # Operation Default recommendation from section 5.3.1 in https://www.suse.com/media/white-paper/suse_linux_enterprise_server_for_sap_applications_12_sp1.pdf#page=26
+    # Operation Default recommendation from section 5.3.1 in
+    # https://www.suse.com/media/white-paper/suse_linux_enterprise_server_for_sap_applications_12_sp1.pdf#page=26
     - name: Ensure the Operation Defaults are configured
       ansible.builtin.shell: >
         crm configure op_defaults \$id="op-options"
@@ -182,7 +186,7 @@
         msl_SAPHana_{{ sid | upper }}_HDB{{ instance_number }}
 
     - name: Ensure any required cluster resources are cleaned up
-      ansible.builtin.shell: "crm resource cleanup rsc_SAPHana_{{ sid | upper }}_HDB{{ instance_number }}"
+      ansible.builtin.command: "crm resource cleanup rsc_SAPHana_{{ sid | upper }}_HDB{{ instance_number }}"
 
     - name: Ensure maintenance mode is disabled
-      ansible.builtin.shell: "crm configure property maintenance-mode=false"
+      ansible.builtin.command: "crm configure property maintenance-mode=false"

@@ -32,64 +32,25 @@
 ---
 
 
-
 # -------------------------------------+---------------------------------------8
 #
-# Description:  Validation for Prerequisites 
+# Description:  Validation for Prerequisites
 #
-- import_tasks:     pre_checks.yaml
+- name:                                Run pre-checks
+  ansible.builtin.import_tasks:        pre_checks.yaml
 # -------------------------------------+---------------------------------------8
 
-- include_role:
-    name:                         roles-sap/3.3.1-bom-utility
-    tasks_from:                   bom-register
+- name:                                Run the bom-register
+  ansible.builtin.include_role:
+    name:                              roles-sap/3.3.1-bom-utility
+    tasks_from:                        bom-register
   vars:
-    bom_name:                     "{{ bom_base_name }}"
+    bom_name:                          "{{ bom_base_name }}"
 
 
-- name:  
-  set_fact:
-    bom_base:                     "{{ bom }}"
-
-# # -------------------------------------+---------------------------------------8
-# #
-# # Description:  Check if BOM is Microsoft supplied and register BOM as an object. 
-# #               If not, download from storage account location.
-# #
-# - name:             Check for Microsoft Supplied BOM ({{ bom_base_name }})
-#   local_action:     stat path=BOM-catalog/{{ bom_base_name }}/{{ bom_base_name }}.yaml
-#   register:         microsoft_supplied_bom
-
-
-# # If Microsoft supplied BOM found
-# - name:             Register Microsoft Supplied BOM {{ bom_base_name }}
-#   include_vars:
-#     file:           "{{ microsoft_supplied_bom.stat.path }}"
-#     name:           bom_base
-#   when:             microsoft_supplied_bom.stat.exists == true
-
-# # If Microsoft supplied BOM not found
-# - name:             Retrieve BOM ({{ bom_base_name }}) from Storage Account
-#   ansible.builtin.block:
-#     - name:             Download BOM ({{ bom_base_name }}) from Storage Account
-#       get_url:
-#         url:            "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/boms/{{ bom_base_name }}/{{ bom_base_name }}.yaml{{ sapbits_sas_token }}"
-#         dest:           "{{ inventory_dir }}/{{ bom_base_name }}.yaml"
-#         mode:           0644
-#       register:         result
-#       until:            result is succeeded
-#       retries:          10
-#       delay:            6
-#       delegate_to:      localhost                                               # Causes action to occur on the Ansible Controller
-#       become:           no
-
-#     - name:             Register downloaded BOM ({{ bom_base_name }})
-#       include_vars:
-#         file:           "{{ inventory_dir }}/{{ bom_base_name }}.yaml"
-#         name:           bom_base
-#   when:             microsoft_supplied_bom.stat.exists != true
-# # -------------------------------------+---------------------------------------8
-
+- name:                                Save the BOM
+  ansible.builtin.set_fact:
+    bom_base:                          "{{ bom }}"
 
 
 # -------------------------------------+---------------------------------------8
@@ -100,11 +61,11 @@
 # TODO:
 #       Enhance so a single task loops over base bom and dependencies
 #
-- include_tasks:    "bom_processor.yaml"
+- name:                                Process main BOM
+  include_tasks:                       "bom_processor.yaml"
   vars:
-    bom_name:       "{{ bom_base_name }}"
+    bom_name:                          "{{ bom_base_name }}"
 # -------------------------------------+---------------------------------------8
-
 
 
 # -------------------------------------+---------------------------------------8
@@ -112,13 +73,14 @@
 # Description:  Process BOM dependencies.
 #               Call BOM processor, passing dependent BOM names.
 #
-- include_tasks:    "bom_processor.yaml"
+- name:                                Process dependent BOMs
+  include_tasks:                       "bom_processor.yaml"
   vars:
-    bom_name:       "{{ bom_dependency.name }}"
-  loop:             "{{ bom_base.materials.dependencies | flatten(levels=1) }}"
+    bom_name:                          "{{ bom_dependency.name }}"
+  loop:                                "{{ bom_base.materials.dependencies | flatten(levels=1) }}"
   loop_control:
-    loop_var:       bom_dependency
-  when:             
+    loop_var:                          bom_dependency
+  when:
     - bom_base.materials.dependencies is defined
     - bom_base.materials.dependencies|length>0
 # -------------------------------------+---------------------------------------8

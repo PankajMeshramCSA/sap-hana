@@ -14,7 +14,7 @@
 
 # -------------------------------------+---------------------------------------8
 #
-# <Comment Header> 
+# <Comment Header>
 #
 # -------------------------------------+---------------------------------------8
 
@@ -39,35 +39,35 @@
     path: /etc/zypp/repos.d/server_monitoring.repo
   register: monitor_repo
 
-- name: Add monitoring repository if it does not exist 
+- name: Add monitoring repository if it does not exist
   zypper_repository:
     repo: "https://download.opensuse.org/repositories/server:/monitoring/{{ distro }}/server:monitoring.repo"
     state: present
-  when: monitor_repo.stat.exists == false
+  when: not monitor_repo.stat.exists
   register: add_repo_status
-  ignore_errors: yes
+  ignore_errors: true
 
 - name: Ensure Prometheus is installed and configured
   when: not (add_repo_status.failed is defined and add_repo_status.failed == true)
-  ansible.builtin.block:
-  - name: Install Prometheus with Node and HA Cluster exporters
-    zypper:
-      name: "{{ item }}"
-      disable_gpg_check: yes
-    loop:
-      - golang-github-prometheus-node_exporter
-      - prometheus-ha_cluster_exporter
+  block:
+    - name: Install Prometheus with Node and HA Cluster exporters
+      zypper:
+        name: "{{ item }}"
+        disable_gpg_check: true
+      loop:
+        - golang-github-prometheus-node_exporter
+        - prometheus-ha_cluster_exporter
 
-  - name: Set arguments for Node exporter
-    ansible.builtin.lineinfile:
-      path: /etc/sysconfig/prometheus-node_exporter
-      regexp: 'ARGS=.*'
-      line: 'ARGS="--collector.systemd"'
+    - name: Set arguments for Node exporter
+      ansible.builtin.lineinfile:
+        path: /etc/sysconfig/prometheus-node_exporter
+        regexp: 'ARGS=.*'
+        line: 'ARGS="--collector.systemd"'
 
-  - name: Start the Node exporter
-    service:
-      name: prometheus-node_exporter
-      state: started
+    - name: Start the Node exporter
+      service:
+        name: prometheus-node_exporter
+        state: started
 
 # TODO: fix this for HA
   # - name: Start the HA Cluster exporter (HA Clusters only)

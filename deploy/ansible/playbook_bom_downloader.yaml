@@ -15,9 +15,9 @@
   name:           BOM Downloader
   gather_facts:   false
   connection:     local
-  become:         yes
+  become:         false
   become_user:    root
- 
+
   vars_files:
     - vars/ansible-input-api.yaml                               # API Input template with defaults
 
@@ -25,30 +25,44 @@
   tasks:
 # -------------------------------------+---------------------------------------8
 #
-# Build the list of tasks to be executed in order here. 
+# Build the list of tasks to be executed in order here.
 #
 # -------------------------------------+---------------------------------------8
 
-  - block:
-    - include_role:
-        name:     roles-misc/0.3.sap-installation-media-storage-details
-        public:   yes      
-    tags:
-      - 0.3.sap-installation-media-storage-details
+    - block:
+        - name: Set the bom tier
+          ansible.builtin.set_fact:
+            tier:     bom
 
-  - ansible.builtin.set_fact:
-      tier:     preparation
+    - block:
+        - name: Load the keyvault secrets
+          include_role:
+            name:     roles-misc/0.2-kv-secrets
+            public:   true
+      tags:
+        - 0.2-kv-secrets
 
-  - block:
-    - include_role:
-        name:     roles-sap/0.1-bom-validator
-    vars:
-      sapbits_location_base_path: "{{ hostvars.localhost.sapbits-location-base-path }}"
-      sapbits_sas_token:          "{{ hostvars.localhost.sapbits_sas_token }}"
-    tags:
-      - 0.1-bom-validator
-  
+    - block:
+        - name: Load the storage account details
+          include_role:
+            name:     roles-misc/0.3.sap-installation-media-storage-details
+            public:   true
+      tags:
+        - 0.3.sap-installation-media-storage-details
 
+    - name: Set the preparation tier
+      ansible.builtin.set_fact:
+        tier:     preparation
+
+    - block:
+        - name: Run the bom-validator
+          include_role:
+            name:     roles-sap/0.1-bom-validator
+      vars:
+        sapbits_location_base_path: "{{ hostvars.localhost.sapbits-location-base-path }}"
+        sapbits_sas_token:          "{{ hostvars.localhost.sapbits_sas_token }}"
+      tags:
+        - 0.1-bom-validator
 ...
 # /*---------------------------------------------------------------------------8
 # |                                   END                                      |

@@ -49,7 +49,7 @@ module "common_infrastructure" {
   deployment                         = var.deployment
   license_type                       = var.license_type
   enable_purge_control_for_keyvaults = var.enable_purge_control_for_keyvaults
-  anf_shared_volume_size             = var.anf_shared_volume_size
+  anf_transport_volume_size          = var.anf_transport_volume_size
   anf_sapmnt_volume_size             = var.anf_sapmnt_volume_size
   use_ANF                            = var.use_ANF
 
@@ -88,6 +88,7 @@ module "hdb_node" {
   cloudinit_growpart_config                    = null # This needs more consideration module.common_infrastructure.cloudinit_growpart_config
   license_type                                 = var.license_type
   use_loadbalancers_for_standalone_deployments = var.use_loadbalancers_for_standalone_deployments
+  hana_dual_nics                               = var.hana_dual_nics
 
 }
 
@@ -202,6 +203,8 @@ module "output_files" {
   ansible_user          = module.common_infrastructure.sid_username
   scs_lb_ip             = module.app_tier.scs_lb_ip
   db_lb_ip              = upper(try(local.databases[0].platform, "HANA")) == "HANA" ? module.hdb_node.db_lb_ip : module.anydb_node.db_lb_ip
+  database_admin_ips    = upper(try(local.databases[0].platform, "HANA")) == "HANA" ? module.hdb_node.db_ip : module.anydb_node.anydb_db_ip #TODO Change to use Admin IP
   sap_mnt               = module.common_infrastructure.sapmnt_path
+  sap_transport         = module.common_infrastructure.saptransport_path
 
 }

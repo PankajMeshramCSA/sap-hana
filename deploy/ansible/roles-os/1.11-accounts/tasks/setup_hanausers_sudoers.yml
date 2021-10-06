@@ -1,4 +1,3 @@
-
 ---
 # /*---------------------------------------------------------------------------8
 # |                                                                            |
@@ -16,7 +15,7 @@
 # Required variables when including this task list:
 #   * hanasudoers_file - the file name to create a sudoers.d file;
 #                    must be specified and must be a valid user name
-#                    This file will have the hdb_sid entry required for 
+#                    This file will have the db_sid entry required for
 #                    clustering
 #   * hanasudoers_role - the type of sudoers entry to create; optional
 #                    defaulting to 'hanaadmin_no_password'. Specified
@@ -27,27 +26,26 @@
 # -------------------------------------+---------------------------------------8
 #
 
-- name:         Create sudoers file for {{ hanasudoers_file }} with
-                role {{ hanasudoers_role }} if required
+- name:                                Create sudoers file for {{ hanasudoers_file }} with
+                                       role {{ hanasudoers_role }} if required
   debug:
-    msg:       "{{ sudoers_path }}/{{ hanasudoers_file }}"
-    verbosity: 2
+    msg:                               "{{ sudoers_path }}/{{ hanasudoers_file }}"
+    verbosity:                         2
 
-- name:         Deb2
+- name:                                Debug hanasudoers
   debug:
-    msg:       "sudoers_{{ hanasudoers_role }}.j2"
-    verbosity: 2
+    msg:                               "sudoers_{{ hanasudoers_role }}.j2"
+    verbosity:                         2
 
 
-- name:         Create sudoers file for {{ hanasudoers_file }} with
-                role {{ hanasudoers_role }} if required
+- name:                                Create sudoers file for {{ hanasudoers_file }} with
+                                       role {{ hanasudoers_role }} if required
   template:
-    src:        "sudoers_{{ hanasudoers_role }}.j2"
-    dest:       "{{ sudoers_path }}/{{ hanasudoers_file }}"
-    mode:       "0440"
-    owner:      root
-    group:      root
-    validate:   /usr/sbin/visudo -cf %s
+    src:                               "sudoers_{{ hanasudoers_role }}.j2"
+    dest:                              "{{ sudoers_path }}/{{ hanasudoers_file }}"
+    mode:                              "0440"
+    owner:                             root
+    group:                             root
+    validate:                          /usr/sbin/visudo -cf %s
   when:
-    -           sudoers_state == "present"
-
+    - sudoers_state == "present"

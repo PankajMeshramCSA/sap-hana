@@ -1,89 +1,93 @@
 ---
-# Implement the Python system replication hook SAPHanaSR
-# Ref: https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/sap/sap-hana-high-availability
-# Begin: configuration for SAPHanaSR python hook 
 
-- name:                          HANA 2.0 only - Implement the Python system replication hook SAPHanaSR
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |  Implement the Python system replication hook SAPHanaSR                    |
+# |  Ref: https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/sap/sap-hana-high-availability
+# |  Begin: configuration for SAPHanaSR python hook                            |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+
+- name:                                HANA 2.0 only - Implement the Python system replication hook SAPHanaSR
   when:
     - hdb_version[0:2] == "2."
   block:
       
 
-    - name:                      Ensure a list of package version is available for checking the SAPHanaSR package version
+
+    - name:                            Ensure a list of package version is available for checking the SAPHanaSR package version
       ansible.builtin.package_facts:
 
-    - name:                      Verify that package SAPHanaSR is at least version 0.153
-      when:                      
-        - ansible_os_family | upper == "SUSE"
-        - ansible_facts.packages['SAPHanaSR'] is defined 
-        - (ansible_facts.packages['SAPHanaSR'][0].version | float) < 0.153
-        
+    - name:                            Verify that package SAPHanaSR is at least version 0.153
       ansible.builtin.package:
-        name:                    SAPHanaSR>=0.153
-        state:                   present
-    
-    - name:                     Check if "myHooks" file exists in /hana/shared directory
-      ansible.builtin.stat:     path=/hana/shared/myHooks
-      register:                 myHooks_stat
-
-    - name:                     Rename myHooks
-      ansible.builtin.command:  mv /hana/shared/myHooks /hana/shared/myHooks.Sample
-      when:                     
-       - myHooks_stat.stat.exists
-       - ansible_hostname == primary_instance_name
-
-  
-    - name:                    copy SAPHanaSR.py (SUSE)
-      ansible.builtin.copy:
-        src:                   /usr/share/SAPHanaSR/SAPHanaSR.py
-        dest:                  /hana/shared/myHooks/
-        remote_src:            yes
-        owner:                 root
-        group:                 root      #TODO - check the correct group once the python hook package is installed
-        mode:                  '0644'
-      when:                      
+        name:                          SAPHanaSR>=0.153
+        state:                         present
+      when:
         - ansible_os_family | upper == "SUSE"
-        - myHooks_stat.stat.exists == false
-      
-    - name:                    copy SAPHanaSR.py (RHEL)
+        - ansible_facts.packages['SAPHanaSR'] is defined
+        - (ansible_facts.packages['SAPHanaSR'][0].version | float) < 0.153
+
+    - name:                            Check if "myHooks" file exists in /hana/shared directory
+      ansible.builtin.stat:            path=/hana/shared/myHooks
+      register:                        myHooks_stat
+
+    - name:                            Rename myHooks
+      ansible.builtin.command:         mv /hana/shared/myHooks /hana/shared/myHooks.Sample
+      when:
+        - myHooks_stat.stat.exists
+        - ansible_hostname == primary_instance_name
+
+
+    - name:                            copy SAPHanaSR.py (SUSE)
       ansible.builtin.copy:
-        src:                   /usr/share/SAPHanaSR/srHook/SAPHanaSR.py
-        dest:                  /hana/shared/myHooks/
-        remote_src:            yes
-        owner:                 root
-        group:                 root      #TODO - check the correct group once the python hook package is installed
-        mode:                  '0644'
-      when:                      
+        src:                           /usr/share/SAPHanaSR/SAPHanaSR.py
+        dest:                          /hana/shared/myHooks/
+        remote_src:                    true
+        owner:                         root
+        group:                         root      # TODO - check the correct group once the python hook package is installed
+        mode:                          '0644'
+      when:
+        - ansible_os_family | upper == "SUSE"
+        - not myHooks_stat.stat.exists
+
+    - name:                            copy SAPHanaSR.py (RHEL)
+      ansible.builtin.copy:
+        src:                           /usr/share/SAPHanaSR/srHook/SAPHanaSR.py
+        dest:                          /hana/shared/myHooks/
+        remote_src:                    true
+        owner:                         root
+        group:                         root      # TODO - check the correct group once the python hook package is installed
+        mode:                          '0644'
+      when:
         - ansible_os_family | upper == "REDHAT"
-        - myHooks_stat.stat.exists == false
+        - not myHooks_stat.stat.exists
 
 
-    - name:                    Change ownership of the directory
+    - name:                            Change ownership of the directory
       ansible.builtin.file:
-        path:                  /hana/shared/myHooks
-        state:                 directory
-        recurse:               yes
-        owner:                 "{{ hdb_sid | lower }}adm"
-        group:                 sapsys
-    
-    - name:                    Stop HANA Database 
-      import_tasks:            stop_hana.yml
+        path:                          /hana/shared/myHooks
+        state:                         directory
+        recurse:                       true
+        owner:                         "{{ db_sid | lower }}adm"
+        group:                         sapsys
 
-    - name:                  Adjust global.ini on each cluster node
+    - name:                            Stop HANA Database
+      import_tasks:                    ../../../roles-misc/0.4-helpers/tasks/04.02-stop_hana.yml
+
+    - name:                            Adjust global.ini on each cluster node
       ansible.builtin.blockinfile:
-        path:                /hana/shared/{{ hdb_sid | upper }}/global/hdb/custom/config/global.ini 
+        path:                          /hana/shared/{{ db_sid | upper }}/global/hdb/custom/config/global.ini
         block: |
-                             [ha_dr_provider_SAPHanaSR]
-                             provider = SAPHanaSR
-                             path = /hana/shared/myHooks
-                             execution_order = 1
-                          
-                             [trace]
-                             ha_dr_saphanasr = info
-          
-        
-    - name:                 Start HANA Database
-      import_tasks:         start_hana.yml
-     
+                                       [ha_dr_provider_SAPHanaSR]
+                                       provider = SAPHanaSR
+                                       path = /hana/shared/myHooks
+                                       execution_order = 1
+                                       [trace]
+                                       ha_dr_saphanasr = info
 
-# End of configuration for SAPHanaSR python hook 
+
+    - name:                           Start HANA Database
+      import_tasks:                   ../../../roles-misc/0.4-helpers/tasks/04.01-start_hana.yml
+
+
+# End of configuration for SAPHanaSR python hook

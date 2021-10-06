@@ -1,41 +1,44 @@
 # /*---------------------------------------------------------------------------8
 # |                                                                            |
-# |                      Playbook for SAP PAS Install                          |
+# |                       Prepare for SAP PAS Install                          |
 # |                                                                            |
 # +------------------------------------4--------------------------------------*/
 ---
 
-- hosts: localhost
-  name: Get SAP Password from KeyVault
-  remote_user:    "{{ orchestration_ansible_user }}"
-  become:         no
-  become_user:    root
-  gather_facts:   yes
+- hosts:                               localhost
+  name:                                Get SAP Password from KeyVault
+  gather_facts:                        true
   vars_files:
     - vars/ansible-input-api.yaml                               # API Input template with defaults
   tasks:
 
-  - include_role:
-      name:     roles-misc/0.1-passwords
-      public:   yes      
-    tags:
-       - 0.1-passwords
+    - name:                            Remove .step502 flag
+      ansible.builtin.file:
+        path:                          "{{ _workspace_directory }}/.step502"
+        state:                         absent
 
-  - ansible.builtin.file:
-      path: "{{ _workspace_directory }}/.step502"
-      state: absent
+    - name:                            Include 0.1 passwords role
+      ansible.builtin.include_role:
+        name:                          roles-misc/0.1-passwords
+        public:                        true
+      tags:
+        - 0.1-passwords
 
 
-#      hana_password_master:    "{{ hostvars.localhost.sap_password }}"
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |                       Playbook for SAP PAS Install                         |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
 
 
-- hosts:          "{{ sap_sid|upper }}_PAS"
+- hosts:                               "{{ sap_sid|upper }}_PAS"
 
-  name:           SAP Installation - PAS
-  remote_user:    "{{ orchestration_ansible_user }}"                
-  become:         yes
-  become_user:    root
-  gather_facts:   true
+  name:                                SAP Installation - PAS
+  remote_user:                         "{{ orchestration_ansible_user }}"
+  become:                              true
+  become_user:                         root
+  gather_facts:                        true
   vars_files:
     - vars/ansible-input-api.yaml                                               # API Input template with defaults
 
@@ -43,56 +46,50 @@
   tasks:
 # -------------------------------------+---------------------------------------8
 #
-# Build the list of tasks to be executed in order here. 
+# Build the list of tasks to be executed in order here.
 #
 # -------------------------------------+---------------------------------------8
-  - ansible.builtin.set_fact:
-      tier:     pas                                                             # SAP Install phase: PAS - Primary Application Server
-      hana_password_master:    "{{ hostvars.localhost.sap_password }}"
-    tags:
-      - always
 
-
+    - name:                            Set 'pas' tier facts
+      ansible.builtin.set_fact:
+        tier:                          pas
+        main_password:                 "{{ hostvars.localhost.sap_password }}"
+      tags:
+        - always
 
 # -------------------------------------+---------------------------------------8
-# Role: 5.1-dbload
+# Role: 5.2-PAS Installation
 #
-# Description: 
-#              
+# Description:
 #
-# - role: sap-users                                             # --> roles-sap/sap-users (playbook_02_os_sap_specific_config)
-  - block:
-    - include_role:
-        name:     roles-sap-os/2.5-sap-users                          # TODO: Centiq copy (rework done)
-    tags:
-      - 2.5-sap-users
+# -------------------------------------+---------------------------------------8
 
-  - block:
-      - include_role:
-          name:     roles-sap-os/2.6-sap-mounts
-    tags:
-      - 2.6-sap-mounts
+    - block:
+        - name:                        Include 5.2-pas-install
+          ansible.builtin.include_role:
+            name:     roles-sap/5.2-pas-install
+      tags:
+        - 5.2-pas-install
+
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |                       Playbook for SAP SCS Logging                         |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
 
 
-  - block:
-      - include_role:
-          name:     roles-sap/5.2-pas-install
-    tags:
-      - 5.2-pas-install
-
-- hosts: localhost
-  name: Log results
-  remote_user:    "{{ orchestration_ansible_user }}"
-  become:         no
-  become_user:    root
-  gather_facts:   yes
+- hosts:                               localhost
+  name:                                Log results
+  gather_facts:                        true
   vars_files:
     - vars/ansible-input-api.yaml                               # API Input template with defaults
-  tasks:
-  - ansible.builtin.file:
-      path: "{{ _workspace_directory }}/.step502"
-      state: touch
 
+  tasks:
+    - name:                            Create .step502 flag
+      ansible.builtin.file:
+        path:                          "{{ _workspace_directory }}/.step502"
+        state:                         touch
+        mode:                          0755
 
 
 ...

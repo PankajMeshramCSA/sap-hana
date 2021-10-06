@@ -8,31 +8,29 @@
 - hosts: localhost
   name: Get SAP Password from KeyVault
   remote_user:    "{{ orchestration_ansible_user }}"
-  become:         no
+  become:         false
   become_user:    root
-  gather_facts:   yes
+  gather_facts:   true
   vars_files:
     - vars/ansible-input-api.yaml                               # API Input template with defaults
   tasks:
+    - name: Run the password role
+      include_role:
+        name:     roles-misc/0.1-passwords
+        public:   true
+      tags:
+        - 0.1-passwords
 
-  - include_role:
-      name:     roles-misc/0.1-passwords
-      public:   yes      
-    tags:
-       - 0.1-passwords
-
-- hosts:          "{{ sap_sid|upper }}_SCS"                                           
+- hosts:          "{{ sap_sid|upper }}_SCS"
 
   name:           PACEMAKER - SCS and ERS
-  remote_user:    "{{ orchestration_ansible_user }}"                
-  become:         yes
+  remote_user:    "{{ orchestration_ansible_user }}"
+  become:         true
   become_user:    root
   gather_facts:   true
   vars_files:
     - vars/ansible-input-api.yaml                               # API Input template with defaults
 
-
-  tasks:
 
   # - name: Test Connection                                     # Simple connection test for troubleshooting
   #   ping:
@@ -40,30 +38,34 @@
   tasks:
 # -------------------------------------+---------------------------------------8
 #
-# Build the list of tasks to be executed in order here. 
+# Build the list of tasks to be executed in order here.
 #
 # -------------------------------------+---------------------------------------8
 
-  # Specify the active tier for this playbook run
-   - set_fact:
-       password_ha_db_cluster:     "{{ hostvars.localhost.db_cluster_password }}"
+    # Specify the active tier for this playbook run
+    - name: Set the password for cluster
+      set_fact:
+        password_ha_db_cluster:     "{{ hostvars.localhost.db_cluster_password }}"
 
-   - include_role:
-      name:     roles-os/6.0.0.01-HANA
-     when: db_high_availability == true          
+    - name: Run the HANA role
+      include_role:
+        name:     roles-os/6.0.0.01-HANA
+      when: db_high_availability
 
 - hosts: localhost
   name: Log results
   remote_user:    "{{ orchestration_ansible_user }}"
-  become:         no
+  become:         false
   become_user:    root
-  gather_facts:   yes
+  gather_facts:   true
   vars_files:
     - vars/ansible-input-api.yaml                               # API Input template with defaults
   tasks:
-  - ansible.builtin.file:
-      path: "{{ _workspace_directory }}/.step601"
-      state: touch
+    - name: Ensure step file exists
+      ansible.builtin.file:
+        path: "{{ _workspace_directory }}/.step601"
+        state: touch
+        mode:  0755
 
 
 ...

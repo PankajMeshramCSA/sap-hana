@@ -27,16 +27,23 @@ function save_config_vars() {
 }
 
 function load_config_vars() {
-    local var_file="${1}"
-    local var_name="${2}"
-    local var_value
+    local var_file="${1}" var_name var_value
 
-    for var_name; do
-        if [ -f "${var_file}" ]; then
-            var_value="$(grep -m1 "^${var_name}=" "${var_file}" | cut -d'=' -f2 | tr -d '"')"
-        fi
+    shift # shift params 1 place to remove var_file value from front of list
 
-        [[ -z "${var_value}" ]] && continue #switch to compound command `[[` instead of `[`
+    # We don't assign values to variables if they aren't found in the var_file
+    # so there is nothing to do if the specified var_file doesn't exist
+    if [[ ! -f "${var_file}" ]]; then
+        return
+    fi
+
+    for var_name; do # iterate over function params
+        # NOTE: Should we care if we fail to retrieve a value from the file?
+        var_value="$(grep -m1 "^${var_name}=" "${var_file}" | cut -d'=' -f2 | tr -d '"')"
+
+        # NOTE: this continue means we skip setting an empty value for a variable
+        # whose value is empty in the var_file...
+        [[ -z "${var_value}" ]] && continue # switch to compound command `[[` instead of `[`
 
         typeset -g "${var_name}" # declare the specified variable as global
 
@@ -294,14 +301,8 @@ function set_executing_user_environment_variables() {
 
         case "${az_client_id}" in
         "systemAssignedIdentity")
-            az_user_name=$(az ad signed-in-user show --query userPrincipalName -o tsv)
             echo -e "\t[set_executing_user_environment_variables]: logged in using '${az_exec_user_type}'"
             echo -e "\t[set_executing_user_environment_variables]: Nothing to do"
-            # echo -e "\t[set_executing_user_environment_variables]: ARM_SUBSCRIPTION_ID: '$ARM_SUBSCRIPTION_ID}'"
-            # echo -e "\t[set_executing_user_environment_variables]: ARM_TENANT_ID: '$ARM_TENANT_ID}'"
-            # echo -e "\t[set_executing_user_environment_variables]: ARM_CLIENT_ID: '$ARM_CLIENT_ID}'"
-            # echo -e "\t[set_executing_user_environment_variables]: ARM_CLIENT_SECRET: '$ARM_CLIENT_SECRET}'"
-            # echo -e "\t[set_executing_user_environment_variables]: ARM_USE_MSI: '$ARM_USE_MSI}'"
             ;;
         "userAssignedIdentity")
             echo -e "\t[set_executing_user_environment_variables]: logged in using User Assigned Identity: '${az_exec_user_type}'"
@@ -360,6 +361,25 @@ function unset_executing_user_environment_variables() {
 # print the script name and function being called
 function print_script_name_and_function() {
     echo -e "\t[$(basename "")]: $(basename "$0") $1"
+}
+
+#
+# Input validation routines
+#
+
+# An environment value must be a string that is at most 5 characters
+# long, made up of uppercase letters and numbers, and must start with
+# an uppercase letter.
+function valid_environment() {
+    [[ "${environment}" =~ ^[[:upper:]][[:upper:][:digit:]]{1,4}$ ]]
+}
+
+# A region name must be a valid Azure lowercase region name, made
+# up of lowercase latters optionally followed by numbers.
+# NOTE: If we have the list of possible regions in a file somewhere
+# we can validate it is one of the entries in that list.
+function valid_region_name() {
+    [[ "${region}" =~ ^[[:lower:]]+[[:digit:]]?$ ]]
 }
 
 #print the function name being executed

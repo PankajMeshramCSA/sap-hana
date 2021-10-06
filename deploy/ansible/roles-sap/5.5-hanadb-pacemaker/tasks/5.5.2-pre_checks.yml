@@ -1,7 +1,15 @@
 ---
 
-- name: Check the fencing agent configuration variables are set
-  assert:
+# sapcontrol EXITCODES
+
+# /*---------------------------------------------------------------------------8
+# |                                                                            |
+# |     Pre checks                                                             |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+
+- name:                                Check the fencing agent configuration variables are set
+  ansible.builtin.assert:
     that:
       - "sap_hana_fencing_spn_subscription_id is defined"
       - "sap_hana_fencing_spn_subscription_id | trim | length > 0"
@@ -12,33 +20,32 @@
       - "sap_hana_fencing_spn_client_pwd is defined"
       - "sap_hana_fencing_spn_client_pwd | trim | length > 0"
 
-- name: Check the required cluster password is set
-  assert:
+- name:                                Check the required cluster password is set
+  ansible.builtin.assert:
     that:
       - "password_ha_db_cluster is defined"
       - "password_ha_db_cluster | trim | length > 0"
 
-- name: Check the required Clustering scripts are available
+- name:                                Check the required Clustering scripts are available
   ansible.builtin.stat:
-    path: "{{ item }}"
+    path:                              "{{ item }}"
   loop:
     - "/usr/sbin/ha-cluster-init"
     - "/usr/sbin/ha-cluster-join"
-  register: cluster_scripts_status_results
-  failed_when: not cluster_scripts_status_results.stat.exists
+  register:                            cluster_scripts_status_results
+  failed_when:                         not cluster_scripts_status_results.stat.exists
   when: ansible_os_family == 'Suse'
 
-- name: Check if a cluster has already been prepared
-  ansible.builtin.shell: "{{ cluster_status_cmd[ansible_os_family] }}"
-  register: cluster_existence_check_result
-  changed_when: false
-  failed_when: false
+- name:                                Check if a cluster has already been prepared
+  ansible.builtin.command:             "{{ cluster_status_cmd[ansible_os_family] }}"
+  register:                            cluster_existence_check_result
+  changed_when:                        false
+  failed_when:                         false
 
-- name: Check if a cluster has already been prepared (save)
-  ansible.builtin.set_fact: 
-    cluster_existence_check: "{{ cluster_existence_check_result.rc }}"
+- name:                                Check if a cluster has already been prepared (save)
+  ansible.builtin.set_fact:
+    cluster_existence_check:           "{{ cluster_existence_check_result.rc }}"
 
-- name: Check if a cluster has already been prepared (show)
-  debug: 
-    msg: "Cluster check return value: {{ cluster_existence_check }}"
-
+- name:                                Check if a cluster has already been prepared (show)
+  ansible.builtin.debug:
+    msg:                               "Cluster check return value: {{ cluster_existence_check }}"

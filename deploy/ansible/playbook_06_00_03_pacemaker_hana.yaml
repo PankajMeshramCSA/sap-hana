@@ -5,11 +5,11 @@
 # +------------------------------------4--------------------------------------*/
 ---
 
-- hosts:          "{{ sap_sid|upper }}_DB" 
+- hosts:          "{{ sap_sid|upper }}_DB"
 
   name:           PACEMAKER - HANA
-  remote_user:    "{{ orchestration_ansible_user }}"                
-  become:         yes
+  remote_user:    "{{ orchestration_ansible_user }}"
+  become:         true
   become_user:    root
   gather_facts:   true
   vars_files:
@@ -20,7 +20,7 @@
 
 # -------------------------------------+---------------------------------------8
 #
-# Build the list of tasks to be executed in order here. 
+# Build the list of tasks to be executed in order here.
 #
 # -------------------------------------+---------------------------------------8
 
@@ -38,31 +38,34 @@
 - hosts: localhost
   name: Get SPN from KeyVault
   remote_user:    "{{ orchestration_ansible_user }}"
-  become:         no
+  become:         false
   become_user:    root
-  gather_facts:   yes
+  gather_facts:   true
   vars_files:
     - vars/ansible-input-api.yaml                               # API Input template with defaults
   tasks:
-  - ansible.builtin.set_fact:
-      tier:  fencing
+    - name: Initialize tier
+      ansible.builtin.set_fact:
+        tier:  fencing
 
-  # - ansible.builtin.debug:
-  #     msg: "Currently running in Tier: {{ tier }}"
-  
-  - include_role:
-      name:     roles-misc/0.2-kv-secrets
-    tags:
-       - kv-secrets
+    # - ansible.builtin.debug:
+    #     msg: "Currently running in Tier: {{ tier }}"
 
-  - include_role:
-      name:     roles-misc/0.1-passwords
-      public:   yes      
-    tags:
-       - 0.1-passwords
-  
-  # - ansible.builtin.debug:
-  #     msg: "Currently finishing in Tier: {{ tier }}"
+    - name: Run the keyvault role
+      include_role:
+        name:     roles-misc/0.2-kv-secrets
+      tags:
+        - kv-secrets
+
+    - name: Run the password role
+      include_role:
+        name:     roles-misc/0.1-passwords
+        public:   true
+      tags:
+        - 0.1-passwords
+
+    # - ansible.builtin.debug:
+    #     msg: "Currently finishing in Tier: {{ tier }}"
 
 # /*---------------------------------------------------------------------------8
 # |                                                                            |
@@ -70,11 +73,10 @@
 # |                                                                            |
 # +------------------------------------4--------------------------------------*/
 
-
 - hosts:          "{{ sap_sid|upper }}_DB"
   name:           "PACEMAKER - HANA"
-  remote_user:    "{{ orchestration_ansible_user }}"                
-  become:         yes
+  remote_user:    "{{ orchestration_ansible_user }}"
+  become:         true
   become_user:    root
   gather_facts:   true
   vars_files:
@@ -83,36 +85,40 @@
   tasks:
 # -------------------------------------+---------------------------------------8
 #
-# Build the list of tasks to be executed in order here. 
+# Build the list of tasks to be executed in order here.
 #
 # -------------------------------------+---------------------------------------8
-  - debug:
-      msg: "{{ hostvars.localhost.sap_fencing_spn_tenant_id }}"
+    - name: Print the fencing tenant id
+      debug:
+        msg: "{{ hostvars.localhost.sap_fencing_spn_tenant_id }}"
 
-  - set_fact:
-      tier:                                      ha
-      password_ha_db_cluster:                    "{{ hostvars.localhost.db_cluster_password }}"
-      hana_password_master:                      "{{ hostvars.localhost.sap_password }}"
-      primary_instance_name:                     "{{ ansible_play_hosts_all[0] }}"         # Setting up Primary Instance Name
-      secondary_instance_name:                   "{{ ansible_play_hosts_all[1] }}"         # Setting up Secondary Instance Name
-      sap_hana_fencing_spn_client_id:            "{{ hostvars.localhost.sap_fencing_spn_client_id }}"
-      sap_hana_fencing_spn_client_pwd:           "{{ hostvars.localhost.sap_fencing_spn_pwd }}"
-      sap_hana_fencing_spn_tenant_id:            "{{ hostvars.localhost.sap_fencing_spn_tenant_id }}"
-    tags:
-      - always
+    - name: Initialize facts
+      set_fact:
+        tier:                                      ha
+        password_ha_db_cluster:                    "{{ hostvars.localhost.db_cluster_password }}"
+        main_password:                             "{{ hostvars.localhost.sap_password }}"
+        primary_instance_name:                     "{{ ansible_play_hosts_all[0] }}"         # Setting up Primary Instance Name
+        secondary_instance_name:                   "{{ ansible_play_hosts_all[1] }}"         # Setting up Secondary Instance Name
+        sap_hana_fencing_spn_client_id:            "{{ hostvars.localhost.sap_fencing_spn_client_id }}"
+        sap_hana_fencing_spn_client_pwd:           "{{ hostvars.localhost.sap_fencing_spn_pwd }}"
+        sap_hana_fencing_spn_tenant_id:            "{{ hostvars.localhost.sap_fencing_spn_tenant_id }}"
+      tags:
+        - always
 
-  - block:
-      - include_role:
-          name:     roles-os/1.11-accounts
-          tasks_from: setup_hanausers_sudoers.yml
-    tags:
-      - 1.11-accounts
-  - block:
-      - include_role:
-          name:     roles-sap/5.5-hanadb-pacemaker
-        when: db_high_availability == true          
-    tags:
-      - 5.5-hanadb-pacemaker
+    - block:
+        - name: Run the hana sudoers role
+          include_role:
+            name:     roles-os/1.11-accounts
+            tasks_from: setup_hanausers_sudoers.yml
+      tags:
+        - 1.11-accounts
+    - block:
+        - name: Run the pacmaker role
+          include_role:
+            name:     roles-sap/5.5-hanadb-pacemaker
+          when: db_high_availability
+      tags:
+        - 5.5-hanadb-pacemaker
 
 # /*---------------------------------------------------------------------------8
 # |                                                                            |
@@ -140,17 +146,19 @@
 - hosts: localhost
   name: Log results
   remote_user:    "{{ orchestration_ansible_user }}"
-  become:         no
+  become:         false
   become_user:    root
-  gather_facts:   yes
+  gather_facts:   true
   vars_files:
     - vars/ansible-input-api.yaml                               # API Input template with defaults
-  
   tasks:
-  - ansible.builtin.file:
-      path: "{{ _workspace_directory }}/.step603"
-      state: touch
+    - name: Ensure the step file exists
+      ansible.builtin.file:
+        path: "{{ _workspace_directory }}/.step603"
+        state: touch
+        mode:  0755
 
+...
 
 ...
 

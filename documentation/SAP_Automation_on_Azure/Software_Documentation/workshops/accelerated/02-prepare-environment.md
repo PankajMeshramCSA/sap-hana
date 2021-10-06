@@ -130,7 +130,7 @@
         }
       },
       "options": {
-        "enable_deployer_public_ip"           : true
+        "deployer_enable_public_ip"           : true
       },
       "firewall_deployment"                   : true,
       "enable_purge_control_for_keyvaults"    : false
@@ -139,7 +139,7 @@
     ```
     <br/>
     
-    For a deployment to *westeurope* use this:
+    For a deployment to **westeurope** use this:
 
     ```bash
     mkdir -p ~/Azure_SAP_Automated_Deployment/WORKSPACES/DEPLOYER/DEMO-WEEU-DEP00-INFRASTRUCTURE; cd $_
@@ -163,7 +163,7 @@
         }
       },
       "options": {
-        "enable_deployer_public_ip"           : true
+        "deployer_enable_public_ip"           : true
       },
       "firewall_deployment"                   : true,
       "enable_purge_control_for_keyvaults"    : false
@@ -193,7 +193,7 @@
     ```
     <br/>
     
-    For a deployment to *westeurope* use this:
+    For a deployment to **westeurope** use this:
     
     ```bash
     mkdir -p ~/Azure_SAP_Automated_Deployment/WORKSPACES/LIBRARY/DEMO-WEEU-SAP_LIBRARY; cd $_
@@ -231,7 +231,9 @@
     ```
 
     <br/>
-    For a deployment to *westeurope* use this:
+    
+    For a deployment to **westeurope** use this:
+    
     
     ```bash
     ${DEPLOYMENT_REPO_PATH}/deploy/scripts/validate.sh --parameterfile DEPLOYER/DEMO-WEEU-DEP00-INFRASTRUCTURE/DEMO-WEEU-DEP00-INFRASTRUCTURE.json \
@@ -249,7 +251,9 @@
         --auto-approve
     ```
     <br/>
-    For a deployment to *westeurope* use this:
+    
+    
+
 
     ```bash
     ${DEPLOYMENT_REPO_PATH}/deploy/scripts/prepare_region.sh                                                   \
@@ -266,6 +270,42 @@
           - SPN App Password:
           - SPN Tenant ID:
           - SPN Subscription:
+
+    
+    Execute
+    ```bash
+    subscription=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    spn_id=yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+    spn_secret=zzzzzzzzzzzzzzz                                          
+    tenant_id=ttttttttt-tttt-tttt-tttt-ttttttttttt
+ 
+    ${DEPLOYMENT_REPO_PATH}/deploy/scripts/prepare_region.sh                                                   \
+        --deployer_parameter_file DEPLOYER/DEMO-SCUS-DEP00-INFRASTRUCTURE/DEMO-SCUS-DEP00-INFRASTRUCTURE.json  \
+        --library_parameter_file LIBRARY/DEMO-SCUS-SAP_LIBRARY/DEMO-SCUS-SAP_LIBRARY.json                      \
+        --subscription $subscription                                                                           \ 
+        --spn_id $spn_id                                                                                       \
+        --spn_secret "$spn_secret"                                                                             \
+        --tenant_id $tenant_id                                                                                 \
+        --auto-approve
+    ```
+
+For a deployment to **westeurope** use this:
+    
+        ```bash
+    subscription=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+    spn_id=yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy
+    spn_secret=zzzzzzzzzzzzzzz                                          
+    tenant_id=ttttttttt-tttt-tttt-tttt-ttttttttttt
+
+    ${DEPLOYMENT_REPO_PATH}/deploy/scripts/prepare_region.sh                                                   \
+        --deployer_parameter_file DEPLOYER/DEMO-WEEU-DEP00-INFRASTRUCTURE/DEMO-WEEU-DEP00-INFRASTRUCTURE.json  \
+        --library_parameter_file LIBRARY/DEMO-WEEU-SAP_LIBRARY/DEMO-WEEU-SAP_LIBRARY.json                      \
+        --subscription $subscription                                                                           \ 
+        --spn_id $spn_id                                                                                       \
+        --spn_secret "$spn_secret"                                                                             \
+        --tenant_id $tenant_id                                                                                 \
+        --auto-approve
+    ```
 
 
 For a deployment to *westeurope* use this:

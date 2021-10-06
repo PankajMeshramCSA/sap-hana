@@ -109,8 +109,9 @@ function missing {
 }
 
 force=0
+recover=0
 
-INPUT_ARGUMENTS=$(getopt -n prepare_region -o d:l:s:c:p:t:ifoh --longoptions deployer_parameter_file:,library_parameter_file:,subscription:,spn_id:,spn_secret:,tenant_id:,auto-approve,force,only_deployer,help -- "$@")
+INPUT_ARGUMENTS=$(getopt -n prepare_region -o d:l:s:c:p:t:a:ifohr --longoptions deployer_parameter_file:,library_parameter_file:,subscription:,spn_id:,spn_secret:,tenant_id:,storageaccountname:,auto-approve,force,only_deployer,help,recover -- "$@")
 VALID_ARGUMENTS=$?
 
 if [ "$VALID_ARGUMENTS" != "0" ]; then
@@ -127,8 +128,10 @@ do
         -c | --spn_id)                             client_id="$2"                   ; shift 2 ;;
         -p | --spn_secret)                         spn_secret="$2"                  ; shift 2 ;;
         -t | --tenant_id)                          tenant_id="$2"                   ; shift 2 ;;
+        -a | --storageaccountname)                 REMOTE_STATE_SA="$2"             ; shift 2 ;;
         -f | --force)                              force=1                          ; shift ;;
         -o | --only_deployer)                      only_deployer=1                  ; shift ;;
+        -r | --recover)                            recover=1                        ; shift ;;
         -i | --auto-approve)                       approve="--auto-approve"         ; shift ;;
         -h | --help)                               showhelp
         exit 3                           ; shift ;;
@@ -139,7 +142,6 @@ done
 this_ip=$(curl ipinfo.io/ip)
 
 root_dirname=$(pwd)
-
 
 if [ ! -z "$approve" ]; then
     approveparam=" -i"
@@ -344,6 +346,17 @@ set_executing_user_environment_variables "${spn_secret}"
 
 load_config_vars "${deployer_config_information}" "step"
 
+
+if [ $recover == 1 ]; then
+    if [ -n $REMOTE_STATE_SA ]; then
+        save_config_var "REMOTE_STATE_SA" "${deployer_config_information}"
+        get_and_store_sa_details ${REMOTE_STATE_SA} "${deployer_config_information}"
+        #Support running prepare_region on new host when the resources are already deployed
+        step=3
+        save_config_var "step" "${deployer_config_information}"
+    fi
+fi
+
 curdir=$(pwd)
 if [ 0 == $step ]; then
     echo ""
@@ -451,13 +464,6 @@ if [ 1 = "${only_deployer:-}" ]; then
     echo ""
     echo -e "Please ${cyan}login${resetformatting} to the deployer node (${boldred}${deployer_public_ip_address}${resetformatting}) and re-run ${boldred}$(basename ${0})${resetformatting} to continue."
     unset TF_DATA_DIR
-    exit 0
-fi
-
-unset TF_DATA_DIR
-
-
-if [ -z "$client_id" ]; then
     printf -v secretname '%-40s' "${environment}"-client-id
     printf -v secretname2 '%-40s' "${environment}"-client-secret
     printf -v secretname3 '%-40s' "${environment}"-subscription-id
