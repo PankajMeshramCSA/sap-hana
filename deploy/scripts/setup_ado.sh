@@ -48,11 +48,26 @@ if [ $answer == 'Y' ]; then
 
     echo "Cloning the repo"
 
+    DIRECTORY="WORKSPACES"
+
     cd /home/azureadm/Azure_SAP_Automated_Deployment || exit
+    
 
-    git -c http.extraHeader="Authorization: Basic ${B64_PAT}" clone https://dev.azure.com/$ORGANIZATION/$PROJECT/_git/$REPONAME WORKSPACES
+    if [[ -d "$DIRECTORY" ]]; then
+      echo "$DIRECTORY exists on your filesystem."
+
+      mv $DIRECTORY ${DIRECTORY}2
+
+      git -c http.extraHeader="Authorization: Basic ${B64_PAT}" clone https://dev.azure.com/$ORGANIZATION/$PROJECT/_git/$REPONAME $DIRECTORY
+
+      cp -r  ${DIRECTORY}2 $DIRECTORY
+
+      rm -r  ${DIRECTORY}2
+
+    fi
+
 fi
-
+  
 
 read -p "Make the VM the Azure DevOps agent? Y/N "  ans
 answer=${ans^^}

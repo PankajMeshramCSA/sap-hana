@@ -54,4 +54,4 @@ backup_exists_cmd_for_tenant: "SELECT SYS.M_BACKUP_CATALOG.BACKUP_ID FROM SYS.M_
   AND SYS.M_BACKUP_CATALOG_FILES.DESTINATION_PATH LIKE '{{ backup_file_for_tenant_full_path }}%'"
 
 # Expected response if no backups have been taken
-backup_cmd_no_rows_found: "BACKUP_ID\\n0 rows selected"
+backup_cmd_no_rows_found: "BACKUP_ID\n0 rows selected"

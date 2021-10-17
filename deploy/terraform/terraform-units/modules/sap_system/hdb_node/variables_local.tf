@@ -197,7 +197,7 @@ locals {
 
   hdb_ins = try(local.hdb.instance, {})
   hdb_sid = try(local.hdb_ins.sid, local.sid) // HANA database sid from the Databases array for use as reference to LB/AS
-  hdb_nr  = try(local.hdb_ins.instance_number, "01")
+  hdb_nr  = try(local.hdb_ins.instance_number, "00")
 
   dbnodes = local.hdb_ha ? (
     flatten([for idx, dbnode in try(local.hdb.dbnodes, [{}]) :

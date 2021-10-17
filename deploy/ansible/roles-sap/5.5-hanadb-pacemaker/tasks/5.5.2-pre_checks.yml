@@ -19,12 +19,14 @@
       - "sap_hana_fencing_spn_client_id | trim | length > 0"
       - "sap_hana_fencing_spn_client_pwd is defined"
       - "sap_hana_fencing_spn_client_pwd | trim | length > 0"
+    fail_msg:                          Fencing SPN details are missing
 
 - name:                                Check the required cluster password is set
   ansible.builtin.assert:
     that:
       - "password_ha_db_cluster is defined"
       - "password_ha_db_cluster | trim | length > 0"
+    fail_msg:                          The cluster password is not defined
 
 - name:                                Check the required Clustering scripts are available
   ansible.builtin.stat:
@@ -36,15 +38,26 @@
   failed_when:                         not cluster_scripts_status_results.stat.exists
   when: ansible_os_family == 'Suse'
 
-- name:                                Check if a cluster has already been prepared
-  ansible.builtin.command:             "{{ cluster_status_cmd[ansible_os_family] }}"
-  register:                            cluster_existence_check_result
-  changed_when:                        false
-  failed_when:                         false
+- name:                                "HANA PCM Install: Create run flag directory"
+  ansible.builtin.file:
+    path:                              /etc/sap_deployment_automation
+    state:                             directory
+    mode:                              0755
+
+- name:                                "HANA PCM Install: reset"
+  ansible.builtin.file:
+    path:                              /etc/sap_deployment_automation/sap_deployment_hana_pcm.txt
+    state:                             absent
+  when:                                reinstall
+
+- name:                                "HANA PCM Install: check if deployed"
+  ansible.builtin.stat:
+    path:                              /etc/sap_deployment_automation/sap_deployment_hana_pcm.txt
+  register:                            hanaPCM
 
 - name:                                Check if a cluster has already been prepared (save)
   ansible.builtin.set_fact:
-    cluster_existence_check:           "{{ cluster_existence_check_result.rc }}"
+    cluster_existence_check:           "{{ hanaPCM.stat.exists }}"
 
 - name:                                Check if a cluster has already been prepared (show)
   ansible.builtin.debug:

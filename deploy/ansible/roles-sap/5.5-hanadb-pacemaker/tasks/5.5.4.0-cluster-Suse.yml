@@ -44,26 +44,33 @@
 
     - name: Ensure SAP HANA Topology clone set resource is configured
       ansible.builtin.shell: >
-        crm configure clone cln_SAPHanaTopology_{{ hdb_sid | upper }}_HDB{{ hdb_instance_number }}
-        rsc_SAPHanaTopology_{{ hdb_sid | upper }}_HDB{{ hdb_instance_number }}
-        meta clone-node-max="1" target-role="Started" interleave="true"
-    - name: Ensure SAP HANA primitive resource is configured
+                                       crm configure clone cln_SAPHanaTopology_{{ db_sid | upper }}_HDB{{ hdb_instance_number }}
+                                       rsc_SAPHanaTopology_{{ db_sid | upper }}_HDB{{ hdb_instance_number }}
+                                       meta clone-node-max="1" target-role="Started" interleave="true"
+      register:                        SAPHanaTopology_cln
+      failed_when:                     SAPHanaTopology_cln.rc > 1
+
+
+    - name:                            Ensure SAP HANA primitive resource is configured
       ansible.builtin.shell: >
-        crm configure primitive rsc_SAPHana_{{ hdb_sid | upper }}_HDB{{ hdb_instance_number }}
-        ocf:suse:SAPHana
-        operations \$id="rsc_sap_{{ hdb_sid | upper }}_HDB{{ hdb_instance_number }}-operations"
-        op start interval="0" timeout="{{ cluster_SAPHana_timeouts.start }}"
-        op stop interval="0" timeout="{{ cluster_SAPHana_timeouts.stop }}"
-        op promote interval="0" timeout="{{ cluster_SAPHana_timeouts.promote }}"
-        op monitor interval="60" role="Master" timeout="{{ cluster_SAPHana_timeouts.monitor_master }}"
-        op monitor interval="61" role="Slave" timeout="{{ cluster_SAPHana_timeouts.monitor_slave }}"
-        params
-        SID="{{ hdb_sid | upper }}"
-        InstanceNumber="{{ hdb_instance_number }}"
-        PREFER_SITE_TAKEOVER="true"
-        DUPLICATE_PRIMARY_TIMEOUT="7200"
-        AUTOMATED_REGISTER="false"
-    - name: Ensure SAP HANA master-slave resource is configured
+                                       crm configure primitive rsc_SAPHana_{{ db_sid | upper }}_HDB{{ hdb_instance_number }}
+                                       ocf:suse:SAPHana
+                                       operations \$id="rsc_sap_{{ db_sid | upper }}_HDB{{ hdb_instance_number }}-operations"
+                                       op start interval="0" timeout="{{ cluster_SAPHana_timeouts.start }}"
+                                       op stop interval="0" timeout="{{ cluster_SAPHana_timeouts.stop }}"
+                                       op promote interval="0" timeout="{{ cluster_SAPHana_timeouts.promote }}"
+                                       op monitor interval="60" role="Master" timeout="{{ cluster_SAPHana_timeouts.monitor_master }}"
+                                       op monitor interval="61" role="Slave" timeout="{{ cluster_SAPHana_timeouts.monitor_slave }}"
+                                       params
+                                       SID="{{ db_sid | upper }}"
+                                       InstanceNumber="{{ hdb_instance_number }}"
+                                       PREFER_SITE_TAKEOVER="true"
+                                       DUPLICATE_PRIMARY_TIMEOUT="7200"
+                                       AUTOMATED_REGISTER="false"
+      register:                        SAPHanaTopology_rsc
+      failed_when:                     SAPHanaTopology_rec.rc > 1
+
+    - name:                            Ensure SAP HANA master-slave resource is configured
       ansible.builtin.shell: >
         crm configure ms msl_SAPHana_{{ hdb_sid | upper }}_HDB{{ hdb_instance_number }}
         rsc_SAPHana_{{ hdb_sid | upper }}_HDB{{ hdb_instance_number }}

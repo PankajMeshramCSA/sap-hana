@@ -4,5 +4,6 @@
 - import_tasks: 5.5.3-SAPHanaSR.yml
 
 - import_tasks: 5.5.4-provision.yml
-  when:         cluster_existence_check_result.rc != 0
+#  when:         not cluster_existence_check
+
 - import_tasks: 5.5.5-post_provision_report.yml

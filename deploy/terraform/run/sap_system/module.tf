@@ -206,5 +206,6 @@ module "output_files" {
   database_admin_ips    = upper(try(local.databases[0].platform, "HANA")) == "HANA" ? module.hdb_node.db_ip : module.anydb_node.anydb_db_ip #TODO Change to use Admin IP
   sap_mnt               = module.common_infrastructure.sapmnt_path
   sap_transport         = module.common_infrastructure.saptransport_path
+  ers_lb_ip             = module.app_tier.ers_lb_ip
 
 }

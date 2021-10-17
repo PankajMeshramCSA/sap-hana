@@ -17,11 +17,6 @@
     state: enabled
     permanent: True
 
-- name: Ensure the Pacemaker service is started and enabled
-  ansible.builtin.systemd:
-    name: pcsd
-    state: started
-    enabled: True
 
 # Basic Pacemaker cluster configuration:
 # https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/sap/high-availability-guide-rhel-pacemaker
@@ -95,45 +90,50 @@
     # If this changes, the pcmk_host_map should be used
     - name: Ensure the STONTIH device is configured
       ansible.builtin.shell: >
-        pcs stonith create rsc_st_azure fence_azure_arm
-        login="{{ sap_hana_fencing_spn_client_id }}"
-        passwd="{{ sap_hana_fencing_spn_client_pwd }}"
-        resourceGroup="{{ resource_group_name }}"
-        tenantId="{{ sap_hana_fencing_spn_tenant_id }}"
-        subscriptionId="{{ sap_hana_fencing_spn_subscription_id }}"
-        power_timeout=240 
-        pcmk_reboot_timeout=900
-        pcmk_monitor_timeout=120
-        pcmk_monitor_retries=4 
-        pcmk_action_limit=3
-        pcmk_delay_max=15
-        op monitor interval=3600
-      when: ansible_distribution_major_version == "7"
-        
-    
-    - name: Ensure the STONTIH device is configured
+                                       pcs stonith create rsc_st_azure fence_azure_arm
+                                         login="{{ sap_hana_fencing_spn_client_id }}"
+                                         passwd="{{ sap_hana_fencing_spn_client_pwd }}"
+                                         resourceGroup="{{ resource_group_name }}"
+                                         tenantId="{{ sap_hana_fencing_spn_tenant_id }}"
+                                         subscriptionId="{{ sap_hana_fencing_spn_subscription_id }}"
+                                         power_timeout=240
+                                         pcmk_reboot_timeout=900
+                                         pcmk_monitor_timeout=120
+                                         pcmk_monitor_retries=4
+                                         pcmk_action_limit=3
+                                         pcmk_delay_max=15
+                                         op monitor interval=3600
+                                         
+      when:                            ansible_distribution_major_version == "7"
+
+
+    - name:                            Ensure the STONTIH device is configured
       ansible.builtin.shell: >
-        pcs stonith create rsc_st_azure fence_azure_arm
-        login="{{ sap_hana_fencing_spn_client_id }}"
-        passwd="{{ sap_hana_fencing_spn_client_pwd }}"
-        resourceGroup="{{ resource_group_name }}"
-        tenantId="{{ sap_hana_fencing_spn_tenant_id }}"
-        subscriptionId="{{ sap_hana_fencing_spn_subscription_id }}"
-        power_timeout=240
-        pcmk_reboot_timeout=900
-        pcmk_monitor_timeout=120
-        pcmk_monitor_retries=4 
-        pcmk_action_limit=3
-        pcmk_delay_max=15
-        op monitor interval=3600
-      when: ansible_distribution_major_version == "8"
+                                      pcs stonith create rsc_st_azure fence_azure_arm
+                                        login="{{ sap_hana_fencing_spn_client_id }}"
+                                        passwd="{{ sap_hana_fencing_spn_client_pwd }}"
+                                        resourceGroup="{{ resource_group_name }}"
+                                        tenantId="{{ sap_hana_fencing_spn_tenant_id }}"
+                                        subscriptionId="{{ sap_hana_fencing_spn_subscription_id }}"
+                                        power_timeout=240
+                                        pcmk_reboot_timeout=900
+                                        pcmk_monitor_timeout=120
+                                        pcmk_monitor_retries=4
+                                        pcmk_action_limit=3
+                                        pcmk_delay_max=15
+      when:                           ansible_distribution_major_version == "8"
 
-    - name: Ensure the STONITH action is set to reboot
-      ansible.builtin.shell: pcs property set stonith-action=reboot
-
-    - name: Ensure the STONITH device is enabled
-      ansible.builtin.shell: pcs property set stonith-enabled=true
-  when: ansible_hostname == primary_instance_name
+    - name:                           Update Monitor interval
+      ansible.builtin.command:        pcs resource update rsc_st_azure op monitor interval=3600s
 
 
-#End of Generic Pacemaker setup 
+    - name:                           Ensure the STONITH action is set to reboot
+      ansible.builtin.command:        pcs property set stonith-action=reboot
+
+    - name:                           Ensure the STONITH device is enabled
+      ansible.builtin.command:        pcs property set stonith-enabled=true
+  when:                               ansible_hostname == primary_instance_name
+
+
+# End of Generic Pacemaker setup
+

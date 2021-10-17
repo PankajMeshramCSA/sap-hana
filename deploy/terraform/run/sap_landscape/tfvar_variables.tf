@@ -42,6 +42,11 @@ variable "network_name" {
   default = ""
 }
 
+variable "network_logical_name" {
+  default = ""
+}
+
+
 variable "network_arm_id" {
   default = ""
 }

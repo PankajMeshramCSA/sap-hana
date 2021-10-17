@@ -22,6 +22,8 @@ provider "azurerm" {
   client_id       = local.spn.client_id
   client_secret   = local.spn.client_secret
   tenant_id       = local.spn.tenant_id
+
+  partner_id      = "3179cd51-f54b-4c73-ac10-8e99417efce7"
 }
 
 provider "azurerm" {

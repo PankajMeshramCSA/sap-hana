@@ -24,25 +24,26 @@
 - name: HSR - Perform pre-flight backup checks
   become_user: "{{ hdb_sid_admin_user }}"
   block:
-
-    - name: HSR - Check backup file exists for SYSTEMDB database for System Identifier {{ hdb_sid }}
+    - name:                            HSR - Check backup file exists for SYSTEMDB database for System Identifier {{ db_sid }}
       ansible.builtin.stat:
         path: "{{ hdb_sid_backup_dir }}/INITIAL_SYSTEMDB_BACKUP_databackup_0_1"
       register: systemdb_backup_file
       failed_when: not systemdb_backup_file.stat.exists
       changed_when: false
 
-    - name: HSR - Check backup file exists for tenant {{ hana_tenant_database_name }} database for System Identifier {{ hdb_sid }}
+    - name: HSR - Check backup file exists for tenant {{ hana_tenant_database_name }} database for System Identifier {{ db_sid }}
       ansible.builtin.stat:
-        path: "{{ hdb_sid_backup_dir }}/INITIAL_{{ hana_tenant_database_name }}_BACKUP_databackup_0_1"
-      register: tenant_backup_file
-      failed_when: not tenant_backup_file.stat.exists
-      changed_when: false
-      when: hana_has_tenant_db
-  when: ansible_hostname == primary_instance_name
+        path:                          "{{ db_sid_backup_dir }}/INITIAL_{{ hana_tenant_database_name }}_BACKUP_databackup_0_1"
+      register:                        tenant_backup_file
+      failed_when:                     not tenant_backup_file.stat.exists
+      changed_when:                    false
+      when:                            
+        - hana_has_tenant_db is defined
+        - hana_has_tenant_db
+  when:                                ansible_hostname == primary_instance_name
 
-- name: HSR - Ensure HANA is configured for System Replication
-  become_user: "{{ hdb_sid_admin_user }}"
+- name:                                HSR - Ensure HANA is configured for System Replication
+  become_user:                         "{{ db_sid_admin_user }}"
   block:
 
     - name: HSR - Ensure Primary node is configured for System Replication

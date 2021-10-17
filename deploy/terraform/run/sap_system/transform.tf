@@ -102,7 +102,7 @@ locals {
 
   instance = {
     sid             = try(coalesce(var.database_sid, try(var.databases[0].sid, "")), upper(var.databases[0].platform) == "HANA" ? "hdb" : lower(substr(var.databases[0].platform, 0, 3)))
-    instance_number = upper(local.databases_temp.platform) == "HANA" ? coalesce(var.database_instance_number, try(var.databases[0].instance_number, "01")) : ""
+    instance_number = upper(local.databases_temp.platform) == "HANA" ? coalesce(var.database_instance_number, try(var.databases[0].instance_number, "00")) : ""
   }
 
   app_authentication = {

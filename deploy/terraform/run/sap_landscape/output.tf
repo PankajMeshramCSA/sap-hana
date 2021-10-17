@@ -113,3 +113,7 @@ output "dns_label" {
 output "spn_kv_id" {
   value = local.spn_key_vault_arm_id
 }
+
+output "infra" {
+  value = local.infrastructure
+}

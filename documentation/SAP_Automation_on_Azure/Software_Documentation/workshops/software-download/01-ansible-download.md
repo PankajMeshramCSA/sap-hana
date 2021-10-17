@@ -64,7 +64,7 @@ This step will leverage an Ansible playbool to download software from SAP, the d
     mkdir -p ~/Azure_SAP_Automated_Deployment/WORKSPACES/BOMS; cd $_
     cat <<EOF > sap-parameters.yaml
     ---
-    bom_base_name:               S41909SPS03_v0004ms
+    bom_base_name:               S41909SPS03_v0005ms
     sapbits_location_base_path:  https://<storage_account_FQDN>/sapbits
     kv_name:                      
     ...
@@ -82,7 +82,7 @@ This step will leverage an Ansible playbool to download software from SAP, the d
 
     | Parameter                  | Value                                     |
     | -------------------------- | ----------------------------------------- |
-    | bom_base_name              | S41909SPS03_v0004ms                       |
+    | bom_base_name              | S41909SPS03_v0005ms                       |
     | sapbits_location_base_path | https://<storage_account_FQDN>/sapbits    |
     | kv_name                    | Name of Key Vault containing the secrets  |
 

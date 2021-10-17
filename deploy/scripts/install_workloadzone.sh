@@ -113,7 +113,7 @@ do
     -o | --storageaccountname)                 REMOTE_STATE_SA="$2"             ; shift 2 ;;
     -s | --subscription)                       subscription="$2"                ; shift 2 ;;
     -c | --spn_id)                             client_id="$2"                   ; shift 2 ;;
-    -v | --vault)                              keyvault="$2"                    ; shift 2 ;;
+    -v | --keyvault)                           keyvault="$2"                    ; shift 2 ;;
     -p | --spn_secret)                         spn_secret="$2"                  ; shift 2 ;;
     -a | --ado)                                called_from_ado=1                ; shift ;;
     -t | --tenant_id)                          tenant_id="$2"                   ; shift 2 ;;
@@ -241,8 +241,6 @@ var_file="${param_dirname}"/"${parameterfile}"
 if [ ! -z $subscription ]
 then
     if is_valid_guid "subscription" ; then
-      save_config_var "subscription" "${workload_config_information}"
-    else
         printf -v val %-40.40s "$subscription"
         echo "#########################################################################################"
         echo "#                                                                                       #"
@@ -250,6 +248,8 @@ then
         echo "#                                                                                       #"
         echo "#########################################################################################"
         exit 65
+    else
+        save_config_var "subscription" "${workload_config_information}"
     fi
 fi
 
@@ -257,8 +257,6 @@ if [ ! -z $STATE_SUBSCRIPTION ]
 then
     echo "Saving the state subscription"
     if is_valid_guid "STATE_SUBSCRIPTION" ; then
-      save_config_var "STATE_SUBSCRIPTION" "${workload_config_information}"
-    else
         printf -v val %-40.40s "$STATE_SUBSCRIPTION"
         echo "#########################################################################################"
         echo "#                                                                                       #"
@@ -266,6 +264,8 @@ then
         echo "#                                                                                       #"
         echo "#########################################################################################"
         exit 65
+    else
+        save_config_var "STATE_SUBSCRIPTION" "${workload_config_information}"
     fi
     
 fi
@@ -273,8 +273,6 @@ fi
 if [ ! -z $client_id ]
 then
     if is_valid_guid "client_id" ; then
-      save_config_var "client_id" "${workload_config_information}"
-    else
         printf -v val %-40.40s "$client_id"
         echo "#########################################################################################"
         echo "#                                                                                       #"
@@ -282,6 +280,8 @@ then
         echo "#                                                                                       #"
         echo "#########################################################################################"
         exit 65
+    else
+      save_config_var "client_id" "${workload_config_information}"
     fi
 fi
 
@@ -293,8 +293,6 @@ fi
 if [ ! -z $tenant_id ]
 then
     if is_valid_guid "tenant_id" ; then
-      save_config_var "tenant_id" "${workload_config_information}"
-    else
         printf -v val %-40.40s "$tenant_id"
         echo "#########################################################################################"
         echo "#                                                                                       #"
@@ -302,6 +300,8 @@ then
         echo "#                                                                                       #"
         echo "#########################################################################################"
         exit 65
+    else
+        save_config_var "tenant_id" "${workload_config_information}"
     fi
     
 fi
@@ -469,6 +469,7 @@ fi
 if [ -n $keyvault ]
 then
     secretname="${environment}"-client-id
+
     az keyvault secret show --name "$secretname" --vault "$keyvault" --only-show-errors 2>error.log
     if [ -s error.log ]
     then
@@ -485,19 +486,19 @@ then
             read -p "Do you want to specify the Workload SPN Details Y/N?"  ans
             answer=${ans^^}
             if [ $answer == 'Y' ]; then
-                load_config_vars ${workload_config_information} "keyvault"
-                if [ ! -z $keyvault ]
-                then
-                    # Key vault was specified in ~/.sap_deployment_automation in the deployer file
-                    keyvault_param=$(printf " -v %s " "${keyvault}")
-                fi
+                envParams=$(printf " --environment %s" "${environment}" )
+                echo $envParams
+                regParams=$(printf " --region %s" "${region}" )
+                echo $regParams
+                vaultParams=$(printf " --vault %s" "${keyvault}" )
+                echo $vaultParams
+
                 
-                env_param=$(printf " -e %s " "${environment}")
-                region_param=$(printf " -r %s " "${region}")
-                
-                allParams="${env_param}""${keyvault_param}""${region_param}"
-                
-                "${DEPLOYMENT_REPO_PATH}"/deploy/scripts/set_secrets.sh $allParams -w
+                allParams=("${envParams}" "${regParams}" "${vaultParams}")
+
+                echo $allParams
+
+                "${DEPLOYMENT_REPO_PATH}"/deploy/scripts/set_secrets.sh "${allParams}" "${envParams}" "${regParams}" "${vaultParams}"
                 if [ $? -eq 255 ]
                 then
                     exit $?

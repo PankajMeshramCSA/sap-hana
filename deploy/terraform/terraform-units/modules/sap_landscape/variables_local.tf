@@ -138,7 +138,7 @@ locals {
   // SAP vnet
   vnet_sap_arm_id = try(var.infrastructure.vnets.sap.arm_id, "")
   vnet_sap_exists = length(local.vnet_sap_arm_id) > 0
-  vnet_sap_name   = local.vnet_sap_exists ? try(split("/", local.vnet_sap_arm_id)[8], "") : format("%s%s", local.prefix, local.resource_suffixes.vnet)
+  vnet_sap_name   = local.vnet_sap_exists ? try(split("/", local.vnet_sap_arm_id)[8], "") : coalesce(var.infrastructure.vnets.sap.name, format("%s%s", local.prefix, local.resource_suffixes.vnet))
   vnet_sap_addr   = local.vnet_sap_exists ? "" : try(var.infrastructure.vnets.sap.address_space, "")
 
   // By default, Ansible ssh key for SID uses generated public key. Provide sshkey.path_to_public_key and path_to_private_key overides it

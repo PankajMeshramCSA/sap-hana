@@ -139,6 +139,11 @@ variable "scs_lb_ip" {
   default     = ""
 }
 
+variable "ers_lb_ip" {
+  description = "ERS Load Balancer IP"
+  default     = ""
+}
+
 variable "sap_mnt" {
   description = "ANF Volume for SAP mount"
   default     = ""

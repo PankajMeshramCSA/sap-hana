@@ -37,6 +37,6 @@ module "sap_namegenerator" {
   iscsi_server_count = try(local.infrastructure.iscsi.iscsi_count, 0)
   codename           = lower(try(local.infrastructure.codename, ""))
   random_id          = module.sap_landscape.random_id
-  sap_vnet_name      = local.vnet_logical_name
+  sap_vnet_name      = local.infrastructure.vnets.sap.logical_name
 }
 

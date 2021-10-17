@@ -125,8 +125,8 @@
   block: 
     - name:  Enable Stonith
       ansible.builtin.shell: |
-        sudo crm configure property stonith-enabled=true
-        crm configure property concurrent-fencing=true
+                                     crm configure property stonith-enabled=true
+                                     crm configure property concurrent-fencing=true
 
     - name: Create Azure Fencing Agent 
       ansible.builtin.shell: >

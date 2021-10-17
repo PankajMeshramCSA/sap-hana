@@ -66,11 +66,6 @@ locals {
 
   vnet_logical_name = local.infrastructure.vnets.sap.name
 
-  // SAP vnet
-  var_infra       = try(local.infrastructure, {})
-  var_vnet_sap    = try(local.var_infra.vnets.sap, {})
-  vnet_sap_arm_id = try(local.var_vnet_sap.arm_id, "")
-  vnet_sap_exists = length(local.vnet_sap_arm_id) > 0 ? true : false
 
   // Locate the tfstate storage account
   saplib_subscription_id       = split("/", var.tfstate_resource_id)[2]

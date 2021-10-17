@@ -83,9 +83,38 @@
   loop:       "{{ bom.materials.media|flatten(levels=1) }}"
 # ------------------</DEBUGGING>------------------
 
+- name:                                "BOM: Set Python version {{ distro_id }}"
+  ansible.builtin.set_fact:
+    python_version:                    'python2'
+
+- name:                                "BOM: Set Python version {{ distro_id }}"
+  ansible.builtin.set_fact:
+    python_version:                    'python3'
+  when:                                distro_id in ['suse15']
+
 
 #   04) Download media from bom
-# Loop throough BOM media files and download to correct location
+# Loop through BOM media files and download to correct location
+- name:                                "BOM: Download Files SUSE15"
+  ansible.builtin.get_url:
+    url:                               "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}\
+                                       {% if sapbits_sas_token is not undefined %}{{ sapbits_sas_token }}{% endif %}"
+    dest:                              "{{ target_media_location }}/{% if item.path is undefined %}downloads{% else %}{{ item.path }}{% endif %}/\
+                                       {% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
+    mode:                              "{% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
+    tmp_dest:                          '/mnt/resource'
+    validate_certs:                    true
+  register:                            result
+  until:                               result is succeeded
+  retries:                             2
+  delay:                               5
+  loop:                                "{{ bom.materials.media|flatten(levels=1) }}"
+  vars:
+    ansible_python_interpreter:        "{{ python_version }}"
+  when:                                
+    - item.download is undefined or item.download
+    - "distro_id == 'suse15'"
+
 - name:                                "BOM: Download Files"
   ansible.builtin.get_url:
     url:                               "{{ sapbits_location_base_path }}/{{ sapbits_bom_files }}/archives/{{ item.archive }}\
@@ -94,12 +123,15 @@
                                        {% if item.filename is undefined %}{{ item.archive }}{% else %}{{ item.filename }}{% endif %}"
     mode:                              "{% if item.permissions is undefined %}0644{% else %}{{ item.permissions }}{% endif %}"
     tmp_dest:                          '/mnt/resource'
+    validate_certs:                    true
   register:                            result
   until:                               result is succeeded
   retries:                             2
   delay:                               5
   loop:                                "{{ bom.materials.media|flatten(levels=1) }}"
-  when:                                item.download is undefined or item.download
+  when:                                
+    - item.download is undefined or item.download
+    - distro_id != 'suse15'
 
 
 #   05) Extract files - SAPCAR

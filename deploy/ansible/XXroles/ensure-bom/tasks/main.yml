@@ -1,5 +1,0 @@
----
-
-- include_tasks: pre_checks.yaml
-
-- include_tasks: ensure-bom.yaml
