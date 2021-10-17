@@ -65,22 +65,31 @@
   when: inventory_hostname == primary_instance_name
   block:
     - name: Ensure csync2 is configured
-      shell: crm cluster init -y csync2 --interface eth1
+      shell: crm cluster init -y csync2 --interface eth0
 
     - name: Ensure corosync is configured
-      shell: crm cluster init -y -u corosync --interface eth1
+      shell: crm cluster init -y -u corosync --interface eth0
 
-    - name: Ensure cluster (hdb_{{ hdb_sid | upper }}) is configured
-      shell: "crm cluster init -y cluster --name 'hdb_{{ hdb_sid | upper }}' --interface eth1"
+    - name: Ensure cluster (hdb_{{ db_sid | upper }}) is configured
+      shell: "crm cluster init -y cluster --name 'hdb_{{ db_sid | upper }}' --interface eth0"
+    
+    - name: Ensure cluster (scs_{{ sap_sid | upper }}) is configured
+      shell: "crm cluster init -y cluster --name 'scs_{{ sap_sid | upper }}' --interface eth0"
+      when: node_tier == 'scs'
+
+    - name: Ensure cluster (db2_{{ db_sid | upper }}) is configured
+      shell: "crm cluster init -y cluster --name 'db2_{{ db_sid | upper }}' --interface eth0"
+      when: node_tier == 'db2'
+
 
 - name: Ensure Secondary node joins the Cluster
   when: inventory_hostname == secondary_instance_name
   block:
     - name: Ensure the configuration files are synchronised
-      shell: "crm cluster join -y -c {{ primary_instance_ip_db }} csync2 --interface eth1"
+      shell: "crm cluster join -y -c {{ primary_instance_ip }} csync2 --interface eth0"
 
     - name: Ensure the cluster is joined
-      shell: "crm cluster join -y -c {{ primary_instance_ip_db }} cluster --interface eth1"
+      shell: "crm cluster join -y -c {{ primary_instance_ip }} cluster --interface eth0"
 
 - name: Ensure HA Cluster password is set to something secure
   ansible.builtin.user:

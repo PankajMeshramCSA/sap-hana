@@ -37,15 +37,23 @@
     resource_group_name: "{{ jsondata | json_query('compute.resourceGroupName') }}"
   no_log: true
    
-- name: set the primary intance db nic and admin nic IP
-  ansible.builtin.set_fact:
-    primary_instance_ip_db: "{{ hostvars[primary_instance_name]['ansible_eth0']['ipv4']['address'] }}"
-    primary_instance_ip_admin: "{{ hostvars[primary_instance_name]['ansible_eth1']['ipv4']['address'] }}"
+# Commented these variables to make them more generic with SCS, HANA , DB2 etc.    
+#- name: set the primary intance db nic and admin nic IP
+#  ansible.builtin.set_fact:
+#    primary_instance_ip_db: "{{ hostvars[primary_instance_name]['ansible_eth0']['ipv4']['address'] }}"
+#    primary_instance_ip_admin: "{{ hostvars[primary_instance_name]['ansible_eth1']['ipv4']['address'] }}"
 
-- name: set the secondary intance db nic and admin nic IP
-  set_fact:
-    secondary_instance_ip_db: "{{ hostvars[secondary_instance_name]['ansible_eth0']['ipv4']['address'] }}"
-    secondary_instance_ip_admin: "{{ hostvars[secondary_instance_name]['ansible_eth1']['ipv4']['address'] }}"
+#- name: set the secondary intance db nic and admin nic IP
+#  set_fact:
+#    secondary_instance_ip_db: "{{ hostvars[secondary_instance_name]['ansible_eth0']['ipv4']['address'] }}"
+#    secondary_instance_ip_admin: "{{ hostvars[secondary_instance_name]['ansible_eth1']['ipv4']['address'] }}"
+
+
+- name: set the primary and secondary instance nic IP - eth0 
+  ansible.builtin.set_fact:
+    primary_instance_ip: "{{ hostvars[primary_instance_name]['ansible_eth0']['ipv4']['address'] }}"
+    secondary_instance_ip: "{{ hostvars[secondary_instance_name]['ansible_eth0']['ipv4']['address'] }}"
+
 
 - name: "Show Subscription ID"
   ansible.builtin.debug:

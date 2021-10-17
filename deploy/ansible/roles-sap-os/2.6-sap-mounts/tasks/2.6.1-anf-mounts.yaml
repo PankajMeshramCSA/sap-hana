@@ -29,6 +29,46 @@
   when:
     - tier == 'sapos'
 
+- name:                                "ANF Mount: Disable ID mapping (ANF)- Verify nfs4_disable_idmapping"
+  ansible.builtin.command:             cat /sys/module/nfs/parameters/nfs4_disable_idmapping
+  register:                            nfs4_disable_idmapping
+  when:
+    - tier == 'sapos'
+
+- name:                                "ANF Mount: Disable ID mapping (ANF)- set nfs4_disable_idmapping to Y"
+  block:
+    -name:                             "ANF Mount: create /mnt/tmp"
+     ansible.builtin.command:           mkdir /mnt/tmp
+
+    -name:                             "ANF Mount: Mount sapmnt on /mnt/tmp"
+     ansible.builtin.mount:
+        src:                           "{{ sap_mnt }}"
+        path:                          "/mnt/tmp"
+        fstype:                        "nfs4"
+        opts:                          "rw,hard,rsize=65536,wsize=65536,sec=sys,vers=4.1,tcp"
+        state:                         mounted
+
+    -name:                             "ANF Mount: Unmount sapmnt on /mnt/tmp"
+     ansible.builtin.mount:
+        src:                           "{{ sap_mnt }}"
+        path:                          "/mnt/tmp"
+        fstype:                        "nfs4"
+        opts:                          "rw,hard,rsize=65536,wsize=65536,sec=sys,vers=4.1,tcp"
+        state:                         unmounted
+
+                                        
+    - name:                             "ANF Mount: update the setting on nfs4_disable_idmapping"                                  
+      ansible.builtin.command:          echo "Y" > /sys/module/nfs/parameters/nfs4_disable_idmapping
+    
+    - name:                             "ANF Mount: Make the configuration permanent"
+      ansible.builtin.command:          echo "options nfs nfs4_disable_idmapping=Y" >> /etc/modprobe.d/nfs.conf
+
+  when:
+    - tier == 'sapos' 
+    - nfs4_disable_idmapping.stdout == 'N'
+
+
+
 - name:                                "ANF Mount: Ensure the services are restarted"
   block:
     - name:                            "AF Mount: Ensure the rpcbind service is restarted"
@@ -351,6 +391,7 @@
                                       /sapmnt/{{ sap_sid|upper }} -nfsvers=4.1,nobind,sec=sys {{ sap_mnt }}/sapmnt{{ sap_sid|upper }}
                                       /usr/sap/{{ sap_sid|upper }}/SYS -nfsvers=4.1,nobind,sec=sys {{ sap_mnt }}/usrsap{{ sap_sid|upper }}sys
                                       /usr/sap/{{ sap_sid|upper }}/ASCS{{ scs_instance_number }} -nfsvers=4.1,nobind,sec=sys {{ sap_mnt }}/usrsap{{ sap_sid|upper }}ascs{{ scs_instance_number }}
+                                      /usr/sap/trans -nfsvers=4.1,nobind,sec=sys {{ sap_trans }}/usrsaptrans
   register: autofs_configuration_changed_scs
   when:
     - tier == 'sapos'

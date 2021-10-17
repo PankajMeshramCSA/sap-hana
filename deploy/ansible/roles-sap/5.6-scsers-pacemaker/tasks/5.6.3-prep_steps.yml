@@ -1,0 +1,99 @@
+---
+
+#######################################################################################################################
+# This file details all the preparation steps required before installing ASCS/ERS and                                 #
+# the cluster resources.                                                                                              #
+# https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/sap/high-availability-guide-suse-netapp-files    #8
+#######################################################################################################################
+
+
+
+#The following items are prefixed with either [A] - applicable to all nodes, [1] - only applicable to node 1 or [2] - only applicable to node 2.
+
+
+# [A] Update SAP resource agents 
+- name:                                "SLES - Check patch for the resource-agents package"
+  ansible.builtin.command:             sudo grep 'parameter name="IS_ERS"' /usr/lib/ocf/resource.d/heartbeat/SAPInstance
+  register:                            rscagentpatch
+
+- name:                                "SLES - Update SAP resource agents" - Ref - Bugzilla 1036486 - SLES 12 SP1" 
+  ansible.builtin.command:             sudo zypper in -t patch SUSE-SLE-HA-12-SP1-2017-885=1
+  when:                               
+                                      - ansible_distribution == 'SLES'
+                                      - ansible_distribution_major_version == "12"
+                                      - ansible_distribution_release == "1" 
+                                      - rscagentpatch.stdout.find('IS_ERS') = -1
+
+- name:                                "SLES - Update SAP resource agents" - Ref - Bugzilla 1036486 - SLES 12 SP2" 
+  ansible.builtin.command:             sudo zypper in -t patch SUSE-SLE-HA-12-SP2-2017-886=1
+  when:                               
+                                      - ansible_distribution == 'SLES'
+                                      - ansible_distribution_major_version == "12"
+                                      - ansible_distribution_release == "2" 
+                                      - rscagentpatch.stdout.find('IS_ERS') = -1
+  
+#@TODO - Update of SAP resouce agents - do we need to do anything for SLES 15 ? The documentation is not clear
+
+
+# [A] Setup host name resolution 
+# @TODO - if the following does not work we can keep it simple 
+
+- name:                               "Hostname: Setup Virtual host name resolution - SCS & ERS "
+  ansible.builtin.blockinfile:
+    path: /etc/hosts
+    block: |
+                                       {{ item.ip }} {{ item.hostname }}
+                                       marker: "# {mark} ASCS/ERS Entries {{ item.hostname }}"
+    loop:
+      - { ip: "{{ scs_lb_ip }}", hostname: "{{ scs_virtual_hostname }}" }
+      - { ip: "{{ ers_lb_ip }}", hostname: "{{ ers_virtual_hostname }}" }
+
+  register: scsersvirhosts
+
+
+# [A] Add mount entries - RHEL 
+
+# [A] Configure SWAP file
+
+- name:                                "Configure SWAP file" 
+  block:
+    - name:                            "Swap file: Comment old value of ResourceDisk.EnableSwap"
+      ansible.builtin.replace:
+        path:                           /etc/waagent.conf
+        regexp:                         '^ResourceDisk.SwapSizeMB'
+        replace:                        '#ResourceDisk.SwapSizeMB'
+      tags:
+        -                                commentswapsize
+
+    - name:                             "Swap file: Comment old value of ResourceDisk.SwapSizeMB"
+      ansible.builtin.replace:
+        path:                           /etc/waagent.conf
+        regexp:                         '^ResourceDisk.SwapSizeMB'
+        replace:                        '#ResourceDisk.SwapSizeMB'
+      tags:
+        -                                commentswapsize
+
+    - name:                              "Swap file: Configure values in SWAP file - EnableSwap & SwapSizeMB"
+      vars:
+        waagent:
+          ResourceDisk.EnableSwap:       y
+          ResourceDisk.SwapSizeMB:       2000
+      lineinfile:                        dest=/etc/waagent.conf line="{{ item.key }}={{ item.value }}"
+      with_dict:                         "{{ waagent }}"
+      tags:
+        -                                swapfilesetup
+
+    - name:                              "Swap file: restart waagent"
+      service:
+        name:                            waagent
+        state:                           restarted
+      tags:
+        -                                waagentrestart
+
+# [A] RHEL configuration - as per OSS note - SAP Note 2002167 - should we get this reviewed by RHEL ? 
+
+# TODO - check the actions required for RHEL & add those actions here 
+
+#End of all the preparation actions required to Install ASCS / ERS and cluster resources 
+
+...

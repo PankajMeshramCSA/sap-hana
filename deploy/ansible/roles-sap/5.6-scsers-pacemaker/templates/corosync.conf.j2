@@ -43,11 +43,11 @@ logging {
 
 nodelist {
     node {
-        ring0_addr: {{ primary_instance_ip }}
+        ring0_addr: {{ primary_instance.ip_db }}
         nodeid:     1
     }
     node {
-        ring0_addr: {{ secondary_instance_ip }}
+        ring0_addr: {{ secondary_instance.ip_db }}
         nodeid:     2
     }
 }

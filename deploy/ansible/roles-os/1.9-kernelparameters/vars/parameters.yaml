@@ -63,6 +63,7 @@ parameters:
     - { tier: 'ha',    name: 'vm.dirty_bytes',                                value: '629145600',  state: 'present' }
     - { tier: 'ha',    name: 'vm.dirty_background_bytes',                     value: '314572800',  state: 'present' }
     - { tier: 'sapos', name: 'fs.nfs.idmap_cache_timer',                      value: '60',         state: 'present' }
+    - { tier: 'ha',    name: 'net.ipv4.tcp_keepalive_time',                   value: '300',        state: 'present' }
 
   suse12:
     - { tier: 'os',    name: 'fs.protected_hardlinks',                        value: '1',          state: 'present' }
@@ -74,6 +75,7 @@ parameters:
     - { tier: 'ha',    name: 'vm.dirty_bytes',                                value: '629145600',  state: 'present' }
     - { tier: 'ha',    name: 'vm.dirty_background_bytes',                     value: '314572800',  state: 'present' }
     - { tier: 'sapos', name: 'fs.nfs.idmap_cache_timer',                      value: '60',         state: 'present' }
+    - { tier: 'ha',    name: 'net.ipv4.tcp_keepalive_time',                   value: '300',        state: 'present' }
 
   redhat7:
     - { tier: 'os', name: 'kernel.yama.ptrace_scope',                      value: '1',          state: 'present' }

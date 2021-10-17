@@ -1,0 +1,72 @@
+# /*----------------------------------------------------------------------------8
+# |                                                                            |
+# |                      Playbook for PACEMAKER config of ERS                   |
+# |                                                                            |
+# +------------------------------------4--------------------------------------*/
+---
+
+- hosts: localhost
+  name: Get SAP Password from KeyVault
+  remote_user:    "{{ orchestration_ansible_user }}"
+  become:         no
+  become_user:    root
+  gather_facts:   yes
+  vars_files:
+    - vars/ansible-input-api.yaml                               # API Input template with defaults
+  tasks:
+
+  - include_role:
+      name:     roles-misc/0.1-passwords
+      public:   yes      
+    tags:
+       - 0.1-passwords
+
+- hosts:          "{{ sap_sid|upper }}_SCS"                                           
+
+  name:           PACEMAKER - SCS and ERS
+  remote_user:    "{{ orchestration_ansible_user }}"                
+  become:         yes
+  become_user:    root
+  gather_facts:   true
+  vars_files:
+    - vars/ansible-input-api.yaml                               # API Input template with defaults
+
+
+  tasks:
+
+  # - name: Test Connection                                     # Simple connection test for troubleshooting
+  #   ping:
+
+  tasks:
+# -------------------------------------+---------------------------------------8
+#
+# Build the list of tasks to be executed in order here. 
+#
+# -------------------------------------+---------------------------------------8
+
+  # Specify the active tier for this playbook run
+   - set_fact:
+       password_ha_db_cluster:     "{{ hostvars.localhost.db_cluster_password }}"
+
+   - include_role:
+      name:     roles-os/6.0.0.01-HANA
+     when: db_high_availability == true          
+
+- hosts: localhost
+  name: Log results
+  remote_user:    "{{ orchestration_ansible_user }}"
+  become:         no
+  become_user:    root
+  gather_facts:   yes
+  vars_files:
+    - vars/ansible-input-api.yaml                               # API Input template with defaults
+  tasks:
+  - ansible.builtin.file:
+      path: "{{ _workspace_directory }}/.step601"
+      state: touch
+
+
+...
+# /*----------------------------------------------------------------------------8
+# |                                    END                                      |
+# +------------------------------------4--------------------------------------*/

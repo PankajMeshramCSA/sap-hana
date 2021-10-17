@@ -1,0 +1,112 @@
+---
+
+# SLES Clustering - Deploy ASCS/ERS clustering Resources 
+# Ref: https://docs.microsoft.com/en-us/azure/virtual-machines/workloads/sap/high-availability-guide-rhel-netapp-files
+
+
+ # [1] Create a virtual IP resource and health-probe for the ASCS instance
+
+- name:                                "SCS - Cluster Configuration before Install "
+  block: 
+    - name :                           "Put Secondary host on standby"
+      ansible.builtin.shell:           crm node standby {{ secondary_instance_name }}
+
+    - name:                            "SCS - Configure File system resources"
+      ansible.builtin.shell: >
+                                       crm configure primitive fs_{{ sap_sid }}_ASCS Filesystem \
+                                       device='{{ sap_mnt }}/usrsap{{ sap_sid }}ascs{{ scs_instance_number }}' \
+                                       directory='/usr/sap/{{ sap_sid }}/ASCS{{ scs_instance_number }}' fstype='nfs' options='sec=sys,vers=4.1' \
+                                       op start timeout="{{ cluster_SAPSCS_timeouts.start }}" interval=0 \
+                                       op stop timeout="{{ cluster_SAPSCS_timeouts.stop }}"  interval=0 \
+                                       op monitor interval="20s" timeout="40s" 
+          
+
+    - name:                            "SCS - Create ASCS VIP - This is LB frontend ASCS/SCS IP"
+      ansible.builtin.shell: >
+                                       crm configure primitive vip_{{ sap_sid }}_ASCS IPaddr2 \
+                                       params ip={{ scs_lb_ip }} cidr_netmask=24 \
+                                       op monitor interval="10s" timeout="20s"
+          
+
+    - name:                            "SCS - create Azure LB resource "
+      ansible.builtin.shell:           crm configure primitive nc_{{ sap_sid }}_ASCS azure-lb port=620{{ scs_instance_number }}
+          
+                                           
+    - name:                            "SCS - Create Health Probe"
+      ansible.builtin.shell: >
+                                       crm configure group g-{{ sap_sid }}_ASCS fs_{{ sap_sid }}_ASCS nc_{{ sap_sid }}_ASCS \ 
+                                       vip_{{ sap_sid }}_ASCS meta resource-stickiness=3000  
+
+  when: inventory_hostname == primary_instance_name
+
+
+# [1] Install SAP NetWeaver ASCS - here we can call the SCS installation playbook - 
+
+#- block:
+ #     - include_role:
+ #         name:                         roles-sap/5.0.1-scs-ha-install
+ #         when:                         inventory_hostname == primary_instance_name
+
+- name:                                 "SCS - Install SCS on Primary host"
+  include_role:                         
+    name:                               roles-sap/5.0.1-scs-ha-install
+  when: inventory_hostname == primary_instance_name
+
+
+# [1] Create a virtual IP resource and health-probe for the ERS instance
+
+
+- name:                                "ERS - Cluster Configuration before Install "
+  block: 
+    - name:                           "Bring Secondary host online"
+      ansible.builtin.shell:           crm node online {{ secondary_instance_name }}
+    
+    - name:                           "Put Primary host on standby"
+      ansible.builtin.shell:           crm node standby {{ primary_instance_name }}
+
+    - name:                            "ERS - Configure File system resources"
+      ansible.builtin.shell: >
+                                       crm configure primitive fs_{{ sap_sid }}_ERS Filesystem \
+                                       device='{{ sap_mnt }}/usrsap{{ sap_sid }}ers{{ ers_instance_number }}' \
+                                       directory='/usr/sap/{{ sap_sid }}/ERS{{ ers_instance_number }}' fstype='nfs' options='sec=sys,vers=4.1' \
+                                       op start timeout="{{ cluster_SAPSCS_timeouts.start }}" interval=0 \
+                                       op stop timeout="{{ cluster_SAPSCS_timeouts.stop }}"  interval=0 \
+                                       op monitor interval="20s" timeout="40s" 
+          
+
+    - name:                            "ERS - Create ERS VIP - This is LB frontend ERS IP"
+      ansible.builtin.shell: >
+                                       crm configure primitive vip_{{ sap_sid }}_ERS IPaddr2 \
+                                       params ip={{ ers_lb_ip }} cidr_netmask=24 \
+                                       op monitor interval="10s" timeout="20s"
+          
+
+    - name:                            "ERS - create Azure LB resource "
+      ansible.builtin.shell:           crm configure primitive nc_{{ sap_sid }}_ERS azure-lb port=621{{ ers_instance_number }}
+          
+                                           
+    - name:                            "SCS - Create Health Probe"
+      ansible.builtin.shell: >
+                                       crm configure group g-{{ sap_sid }}_ERS fs_{{ sap_sid }}_ERS nc_{{ sap_sid }}_ERS \ 
+                                       vip_{{ sap_sid }}_ERS meta resource-stickiness=3000  
+
+  when: inventory_hostname == primary_instance_name
+
+  
+# [2] Install SAP NetWeaver ERS - Create a new playbook for Installation of ERS - done
+ 
+#- block:
+ #     - include_role:
+ #         name:                         roles-sap/5.0.1-scs-ha-install
+ #         when:                         inventory_hostname == primary_instance_name
+
+- name:                                 "ERS - Install on Secondary host"
+  include_role:                         
+    name:                               roles-sap/5.0.2-ers-ha-install
+  when: inventory_hostname == secondary_instance_name
+
+
+
+# END of playbook. 
+
+...

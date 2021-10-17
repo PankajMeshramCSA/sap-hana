@@ -56,6 +56,8 @@ packages:
     - { tier: 'ha',    package: 'pacemaker',                                                state: 'present' }
     - { tier: 'ha',    package: 'nmap-ncat',                                                state: 'present' }
     - { tier: 'ha',    package: 'resource-agents-sap-hana',                                 state: 'present' }
+    - { tier: 'ha',    package: 'resource-agents',                     node_tier: 'scs',    state: 'present' }
+    - { tier: 'ha',    package: 'resource-agents-sap>=3.9.5',          node_tier: 'scs',    state: 'present' }
     # ------------------------- End - Packages required for Clustering -----------------------------------------8
   redhat7.4:
     # Install Right Version of Azure Fence Agent
@@ -120,6 +122,8 @@ packages:
     - { tier: 'ha',    package: 'nmap-ncat',                                                state: 'present' }
     - { tier: 'ha',    package: 'fence-agents-azure-arm',                                   state: 'present' }
     - { tier: 'ha',    package: 'resource-agents-sap-hana',                                 state: 'present' }
+    - { tier: 'ha',    package: 'resource-agents',                     node_tier: 'scs',    state: 'present' }
+    - { tier: 'ha',    package: 'resource-agents-sap>=3.9.5',          node_tier: 'scs',    state: 'present' }
   # ------------------------- End - Packages required for Clustering -----------------------------------------8
   redhat8.1:
     - { tier: 'ha',    package: 'fence-agents-azure-arm',                                   state: 'present' }
@@ -148,7 +152,7 @@ packages:
   # Assumption: Public_Cloud_Module_x86_64 already available
     - { tier: 'ha',    package: 'python-azure-mgmt-compute=4.6.2',                          state: 'present' }
     - { tier: 'ha',    package: 'jq',                                                       state: 'present' }
-    - { tier: 'ha',    package: 'sap-suse-cluster-connector',         node_tier: 'scs',     state: 'present' }
+    - { tier: 'ha',    package: 'sap-suse-cluster-connector>=3.1.1',  node_tier: 'scs',     state: 'present' }
   # -------------------------- End - packages required for Clustering ------------------------------------8
   suse12.4:
   suse12.5:
@@ -177,7 +181,7 @@ packages:
     - { tier: 'ha',    package: 'python3-azure-mgmt-compute=4.6.2',   node_tier: 'scs',     state: 'present' }
     - { tier: 'ha',    package: 'jq',                                 node_tier: 'scs',     state: 'present' }
     - { tier: 'ha',    package: 'jq',                                 node_tier: 'hana',    state: 'present' }
-    - { tier: 'ha',    package: 'sap-suse-cluster-connector',         node_tier: 'scs',     state: 'present' }
+    - { tier: 'ha',    package: 'sap-suse-cluster-connector>=3.1.1',  node_tier: 'scs',     state: 'present' }
   # ------------------------ End - packages required for Clustering --------------------------------------8
     # TODO(rtamalin): Ensure SLE 15 SP2 uses /usr/bin/python3 rather
     # than /usr/bin/python.

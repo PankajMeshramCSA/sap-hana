@@ -37,12 +37,28 @@
 
     # Ref https://docs.microsoft.com/en-us/azure/virtual-machines/maintenance-and-updates#maintenance-that-doesnt-require-a-reboot
     - name: Ensure the cluster is created with a token large enough to allow memory preserving maintenance
-      ansible.builtin.shell: "pcs cluster setup --name {{ hdb_sid | upper }}_cluster {{ primary_instance_name }} {{ secondary_instance_name }} --token {{ cluster_totem.token }}"
-      when: ansible_distribution_major_version == "7"
+      ansible.builtin.shell: "pcs cluster setup --name {{ db_sid | upper }}_cluster {{ primary_instance_name }} {{ secondary_instance_name }} --token {{ cluster_totem.token }}"
+      when: ansible_distribution_major_version == "7" and node_tier == 'hana'
 
     - name: Ensure the cluster is created with a token large enough to allow memory preserving maintenance
-      ansible.builtin.shell: "pcs cluster setup {{ hdb_sid | upper }}_cluster {{ primary_instance_name }} {{ secondary_instance_name }} totem token={{ cluster_totem.token }}"
-      when: ansible_distribution_major_version == "8"
+      ansible.builtin.shell: "pcs cluster setup {{ db_sid | upper }}_cluster {{ primary_instance_name }} {{ secondary_instance_name }} totem token={{ cluster_totem.token }}"
+      when: ansible_distribution_major_version == "8" and node_tier == 'hana'
+
+    - name: Ensure the cluster is created with a token large enough to allow memory preserving maintenance
+      ansible.builtin.shell: "pcs cluster setup --name {{ sap_sid | upper }}_cluster {{ primary_instance_name }} {{ secondary_instance_name }} --token {{ cluster_totem.token }}"
+      when: ansible_distribution_major_version == "7" and node_tier == 'scs'
+
+    - name: Ensure the cluster is created with a token large enough to allow memory preserving maintenance
+      ansible.builtin.shell: "pcs cluster setup {{ sap_sid | upper }}_cluster {{ primary_instance_name }} {{ secondary_instance_name }} totem token={{ cluster_totem.token }}"
+      when: ansible_distribution_major_version == "8" and node_tier == 'scs'
+
+    - name: Ensure the cluster is created with a token large enough to allow memory preserving maintenance
+      ansible.builtin.shell: "pcs cluster setup --name {{ db_sid | upper }}_cluster {{ primary_instance_name }} {{ secondary_instance_name }} --token {{ cluster_totem.token }}"
+      when: ansible_distribution_major_version == "7" and node_tier == 'db2'
+
+    - name: Ensure the cluster is created with a token large enough to allow memory preserving maintenance
+      ansible.builtin.shell: "pcs cluster setup {{ db_sid | upper }}_cluster {{ primary_instance_name }} {{ secondary_instance_name }} totem token={{ cluster_totem.token }}"
+      when: ansible_distribution_major_version == "8" and node_tier == 'db2'
 
     - name: Ensure the cluster is starting on all nodes
       ansible.builtin.shell: pcs cluster start --all
